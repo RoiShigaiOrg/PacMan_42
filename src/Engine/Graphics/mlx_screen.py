@@ -28,4 +28,29 @@ class mlx_screen:
         self.__win_ptr = sess.mlx_new_window(mlx_ptr, width, height, title)
 
     def clear(self, mlx_ptr) -> None:
+        """
+        clear the window completely
+        """
         self.__session.mlx_clear_window(mlx_ptr, self.__win_ptr)
+
+    def size(self) -> tuple:
+        """
+        Return a tuple containing the size in pixel of the window
+
+        tuple: (x: int, y: int)
+        """
+        return tuple(self.__width, self.__height)
+
+    def create_form(self, width: int, height: int):
+        """
+        Return a data buffer containing 'width' * 'heigth' pixel
+
+        This buffer can be use to write image/form in it
+        """
+        result = mlx.mlx_new_image(self.__session, width, height)
+        if result:
+            return result
+        return None
+
+    def draw(self, img, x: int, y: int) -> None:
+        mlx.mlx_put_image_to_window(self.__session, self.__win_ptr, img, x, y)
