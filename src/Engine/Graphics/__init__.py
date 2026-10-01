@@ -1,3 +1,3 @@
-from .mlx_screen import MlxScreen
+from .MlxScreen import MlxScreen
 
 __all__ = ["MlxScreen"]

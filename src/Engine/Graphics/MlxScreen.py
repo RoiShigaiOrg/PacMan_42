@@ -1,8 +1,4 @@
-"""High-level screen abstraction backed by an MLX image buffer."""
-
 from typing import Any, Literal
-
-__all__ = ["MlxScreen"]
 
 
 class MlxScreen:

@@ -83,7 +83,7 @@ wheels = [
 [[package]]
 name = "pac-man"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "flake8" },
     { name = "mlx" },
