@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from Engine.Graphics.mlx_screen import MlxScreen
+from Engine.Graphics.MlxScreen import MlxScreen
 
 
 class FakeMlx:
