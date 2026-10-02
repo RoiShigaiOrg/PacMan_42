@@ -10,6 +10,6 @@ class SpriteLoader(Loader):
             all the sprite used for the entitys and map textures.
     """
 
-    def load(self, filename: Path) -> dict:
+    def load(self, filename: Path) -> None:
         """ Load Method of the SpriteLoader Class """
-        ...
+        print("Load from SpriteLoader class not implemented yet")

@@ -1,5 +1,5 @@
 from typing import Dict
-from Loader import ConfigLoader, ScoreLoader, SpriteLoader, Loader
+from .Loader import ConfigLoader, ScoreLoader, SpriteLoader, Loader
 
 
 CONFIG_KEY: str = "config"

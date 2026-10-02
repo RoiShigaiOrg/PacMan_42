@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from Engine.Graphics import MlxScreen
+from src.Engine.Graphics import MlxScreen
 
 
 class Screen(ABC):

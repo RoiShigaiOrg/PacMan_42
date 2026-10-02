@@ -36,7 +36,11 @@ class MlxScreen:
         if not self.__window_ptr:
             raise RuntimeError("failed to create MLX window")
 
-        self.__image_ptr = session.mlx_new_image(mlx_ptr, self.__width, self.__height)
+        self.__image_ptr = session.mlx_new_image(
+                mlx_ptr,
+                self.__width,
+                self.__height
+                )
         if not self.__image_ptr:
             session.mlx_destroy_window(mlx_ptr, self.__window_ptr)
             raise RuntimeError("failed to create MLX screen buffer")

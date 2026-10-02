@@ -19,8 +19,8 @@ class ConfigLoader(Loader):
 
     def store(
             self,
-            filename: Path = Path(".config.json"),
-            config: dict) -> None:
+            config: dict,
+            filename: Path = Path(".config.json")) -> None:
         """ Write the actual config into the JSON config file """
         with open(filename, "w+", encoding="utf-8") as f:
-            f.write(json.dump(config, indent=4))
+            json.dump(f, config, indent=4)

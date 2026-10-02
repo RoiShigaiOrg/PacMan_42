@@ -20,3 +20,10 @@ mlx = { path = "dependencies/ubuntu/mlx-2.2-py3-none-any.whl" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[mypy-aws_xray_sdk]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mlx"
+ignore_missing_imports = true

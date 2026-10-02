@@ -2,10 +2,10 @@ from typing import Any
 
 import mlx
 
-from Engine.Graphics import MlxScreen
-from Engine import Engine
-from ScreenManager import ScreenManager
-from ScreenManager.Screen import Screen
+from .Engine.Graphics import MlxScreen
+from .Engine import Engine
+from .ScreenManager import ScreenManager
+from .ScreenManager.Screen import Screen
 
 
 class DemoScreen(Screen):

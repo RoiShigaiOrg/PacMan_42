@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from Pathlib import Path
+from pathlib import Path
 
 
 class Loader(ABC):
