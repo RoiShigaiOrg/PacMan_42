@@ -2,7 +2,13 @@ from typing import Any, Literal
 
 
 class MlxScreen:
-    """Main application window and its persistent drawing buffer."""
+    """
+    Main application window and its persistent Mlx drawing buffer.
+
+    This object is used to represent a window where we can draw any
+        Graphical object using it's buffer. The goal of this object is to mimic pygame
+        display object.
+    """
 
     def __init__(
         self,
@@ -12,6 +18,7 @@ class MlxScreen:
         height: int,
         title: str,
     ) -> None:
+        """ Init Method of the MlxScreen object """
         if width <= 0 or height <= 0:
             raise ValueError("screen dimensions must be positive")
 
