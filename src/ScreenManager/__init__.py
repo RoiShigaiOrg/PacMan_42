@@ -1,4 +1,4 @@
-from ScreenManager import ScreenManager
+from .ScreenManager import ScreenManager
 
 
 __all__ = [

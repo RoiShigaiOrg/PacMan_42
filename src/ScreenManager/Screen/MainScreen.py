@@ -1,14 +1,11 @@
 from .Screen import Screen
-from ..ScreenManager import ScreenManager
+from Engine.Graphics import MlxScreen
 
 
 class MainScreen(Screen):
+    """Small example screen that draws a centered Pac-Man-like marker."""
 
-    def __init__(
-            self,
-            engine: Engine,
-            scene_manager: SceneManager) -> None:
-        """ Init Method for the MainScreen """
-        self.__screen_manager: ScreenManager = scene_manager
-        self.__engine = engine
-        self.__name = "main_screen"
+    def render(self, screen: MlxScreen) -> None:
+        center_x = screen.width // 2
+        center_y = screen.height // 2
+        screen.pixel(center_x, center_y, 0xFFFFFF00)

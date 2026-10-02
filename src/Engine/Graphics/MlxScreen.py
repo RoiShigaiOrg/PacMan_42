@@ -6,8 +6,8 @@ class MlxScreen:
     Main application window and its persistent Mlx drawing buffer.
 
     This object is used to represent a window where we can draw any
-        Graphical object using it's buffer. The goal of this object is to mimic pygame
-        display object.
+        Graphical object using its buffer. The goal of this object is to mimic
+        the pygame display object.
     """
 
     def __init__(

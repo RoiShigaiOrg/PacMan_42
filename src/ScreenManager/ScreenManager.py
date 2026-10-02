@@ -1,6 +1,8 @@
-from .Graphics import MlxScreen
-from Screen import Screen
 from typing import Dict
+
+from Engine.Graphics import MlxScreen
+
+from .Screen import Screen
 
 
 class ScreenManager:
@@ -15,19 +17,38 @@ class ScreenManager:
     def __init__(
             self,
             mlx_screen: MlxScreen,
-            screen_dict: Dict[str, Screen]) -> None:
+            screen_dict: Dict[str, Screen] | None = None) -> None:
         """ Init Method of the ScreenManager Object """
         self.__main_window: MlxScreen = mlx_screen
-        self.__screens: Dict[str, Screen] = screen_dict
-        self.actual_screen: Screen
+        self.__screens: Dict[str, Screen] = dict(screen_dict or {})
+        self.__actual_screen: Screen | None = None
+
+        if self.__screens:
+            self.__actual_screen = next(iter(self.__screens.values()))
+
+    @property
+    def actual_screen(self) -> Screen | None:
+        """Return the currently selected screen, if one is registered."""
+        return self.__actual_screen
 
     def change_screen(self, screen_id: str) -> None:
         """ Change to the given screen_id to render in the mlx window """
-        if screen_id in self.screens:
-            self.actual_screen = self.__screens[screen_id]
+        if screen_id in self.__screens:
+            self.__actual_screen = self.__screens[screen_id]
         else:
             raise ValueError(f"ScreenManager Error: {screen_id} do not exist")
 
-    def add_screen(self, screen: Dict[str, Screen]) -> None:
-        """ Add a screen into the screens dict of the ScreenManager """
-        self.__screens.update(screen)
+    def add_screen(self, screen_id: str, screen: Screen) -> None:
+        """Register a screen under ``screen_id``."""
+        self.__screens[screen_id] = screen
+        if self.__actual_screen is None:
+            self.__actual_screen = screen
+
+    def render(self) -> None:
+        """Render and present the currently selected screen."""
+        if self.__actual_screen is None:
+            raise RuntimeError("ScreenManager has no active screen")
+
+        self.__main_window.clear()
+        self.__actual_screen.render(self.__main_window)
+        self.__main_window.screen_update()
