@@ -1,4 +1,5 @@
-from FileManager import FileManager, CONFIG_KEY, SCORE_KEY, SPRITE_KEY
+from FileManager import FileManager
+from typing import Any
 
 
 class Engine:
@@ -17,3 +18,12 @@ class Engine:
         """ Init method for the Engine """
 
         self.__file_manager: FileManager()
+        self.__config = self.__file_manager.load_config()
+
+    def get_config_key(self, key: str) -> Any:
+        """ Return the value stored in the given key from the config """
+        return self.__config[key]
+
+    def update_config(self, data: dict) -> None:
+        """ Update the config with the new value """
+        self.__config.update(data)

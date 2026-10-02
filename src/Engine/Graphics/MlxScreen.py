@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, Tuple
 
 
 class MlxScreen:
@@ -14,30 +14,29 @@ class MlxScreen:
         self,
         session: Any,
         mlx_ptr: Any,
-        width: int,
-        height: int,
+        dimension: Tuple[int, int],
         title: str,
     ) -> None:
         """ Init Method of the MlxScreen object """
-        if width <= 0 or height <= 0:
+        if dimension[0] <= 0 or dimension[1] <= 0:
             raise ValueError("screen dimensions must be positive")
 
         self.__session = session
         self.__mlx_ptr = mlx_ptr
-        self.__width = width
-        self.__height = height
+        self.__width = dimension[0]
+        self.__height = dimension[1]
         self.__title = title
         self.__closed = False
         self.__window_ptr = session.mlx_new_window(
             mlx_ptr,
-            width,
-            height,
+            self.__width,
+            self.__height,
             title,
         )
         if not self.__window_ptr:
             raise RuntimeError("failed to create MLX window")
 
-        self.__image_ptr = session.mlx_new_image(mlx_ptr, width, height)
+        self.__image_ptr = session.mlx_new_image(mlx_ptr, self.__width, self.__height)
         if not self.__image_ptr:
             session.mlx_destroy_window(mlx_ptr, self.__window_ptr)
             raise RuntimeError("failed to create MLX screen buffer")

@@ -3,6 +3,7 @@ from typing import Any
 import mlx
 
 from Engine.Graphics import MlxScreen
+from Engine import Engine
 from ScreenManager import ScreenManager
 from ScreenManager.Screen import Screen
 
@@ -27,11 +28,17 @@ class DemoScreen(Screen):
 
 
 def main() -> None:
+    """
+        Test function for the mlx implementation
+        DO NOT WRITE ANYTHING INTO IT !!!!
+
+        This function will be deleted when the PacMan class is working
+    """
+
     session = mlx.Mlx()
     mlx_ptr: Any = session.mlx_init()
     if not mlx_ptr:
         raise RuntimeError("failed to initialize MLX")
-
     screen = MlxScreen(session, mlx_ptr, 320, 240, "Pac-Man")
     manager = ScreenManager(screen)
     manager.add_screen("demo", DemoScreen())
@@ -43,6 +50,23 @@ def main() -> None:
     finally:
         screen.close()
         session.mlx_release(mlx_ptr)
+
+
+class PacMan:
+
+    def __init__(self) -> None:
+        """ Init Method of the PacMan """
+        self._session = mlx.Mlx()
+        self._mlx_ptr: Any = self._session.mlx_init()
+        if not self._mlx_ptr:
+            raise RuntimeError("failed to initialize MLX")
+        self._engine = Engine()
+        self._screen = MlxScreen(
+                self._session,
+                self._mlx_ptr,
+                tuple(self._engine.get_config_key("dimension")),
+                "Pac-Man"
+                )
 
 
 if __name__ == "__main__":
