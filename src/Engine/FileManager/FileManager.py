@@ -1,5 +1,4 @@
-from typing import Dict
-from .Loader import ConfigLoader, ScoreLoader, SpriteLoader, Loader
+from .Loader import ConfigLoader
 
 
 CONFIG_KEY: str = "config"
@@ -22,16 +21,12 @@ class FileManager:
 
     def __init__(self) -> None:
         """ Init Method of the FileManager """
-        self.__parser: Dict[str, Loader] = {
-                CONFIG_KEY: ConfigLoader(),
-                SPRITE_KEY: SpriteLoader(),
-                SCORE_KEY: ScoreLoader()
-                }
+        self.__config_loader = ConfigLoader()
 
     def load_config(self) -> dict:
         """ Return the config of the application """
-        return self.__parser[CONFIG_KEY].load()
+        return self.__config_loader.load()
 
     def store_config(self, config: dict) -> None:
         """ Store the actual config in the Config file """
-        self.__parser[CONFIG_KEY].store(config=config)
+        self.__config_loader.store(config=config)

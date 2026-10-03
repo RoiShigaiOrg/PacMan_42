@@ -1,4 +1,4 @@
-from typing import Any, Literal, Tuple
+from typing import Any, Literal, overload
 
 
 class MlxScreen:
@@ -10,14 +10,43 @@ class MlxScreen:
         the pygame display object.
     """
 
+    @overload
     def __init__(
         self,
         session: Any,
         mlx_ptr: Any,
-        dimension: Tuple[int, int],
+        dimension: tuple[int, int],
         title: str,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        session: Any,
+        mlx_ptr: Any,
+        dimension: int,
+        title: int,
+        legacy_title: str,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        session: Any,
+        mlx_ptr: Any,
+        dimension: tuple[int, int] | int,
+        title: str | int,
+        legacy_title: str | None = None,
     ) -> None:
         """ Init Method of the MlxScreen object """
+        if isinstance(dimension, int):
+            if not isinstance(title, int) or legacy_title is None:
+                raise TypeError("invalid screen dimensions")
+            dimension = (dimension, title)
+            title = legacy_title
+        else:
+            if not isinstance(title, str) or legacy_title is not None:
+                raise TypeError("invalid screen title")
+
         if dimension[0] <= 0 or dimension[1] <= 0:
             raise ValueError("screen dimensions must be positive")
 

@@ -17,7 +17,7 @@ class Engine:
     def __init__(self) -> None:
         """ Init method for the Engine """
 
-        self.__file_manager: FileManager()
+        self.__file_manager: FileManager = FileManager()
         self.__config = self.__file_manager.load_config()
 
     def get_config_key(self, key: str) -> Any:

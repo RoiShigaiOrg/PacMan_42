@@ -12,6 +12,6 @@ class Loader(ABC):
     """
 
     @abstractmethod
-    def load(self, filename: Path) -> dict:
+    def load(self, filename: Path = Path(".config.json")) -> dict:
         """ Load Method of the Loader Class """
         ...

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Tuple, Any
+from typing import Any
 
 
 class Entity(ABC):
@@ -13,20 +13,20 @@ class Entity(ABC):
     def __init__(
             self,
             name: str,
-            coord: Tuple[int, int],
+            coord: tuple[int, int],
             sprites: Any) -> None:
         """ Init Method of the Entity Class """
         self._name = name
-        self._coord: List[int] = [coord[0], coord[1]]
+        self._coord = coord
         self._sprites = sprites
 
     @property
-    def coord(self) -> Tuple[int, int]:
+    def coord(self) -> tuple[int, int]:
         """ Getter method for the Object position """
-        return tuple(self._coord)
+        return self._coord
 
     @coord.setter
-    def coord(self, coord: Tuple[int, int]) -> None:
+    def coord(self, coord: tuple[int, int]) -> None:
         """ Setter method for the Object position """
         self._coord = coord
 

@@ -39,7 +39,7 @@ def main() -> None:
     mlx_ptr: Any = session.mlx_init()
     if not mlx_ptr:
         raise RuntimeError("failed to initialize MLX")
-    screen = MlxScreen(session, mlx_ptr, 320, 240, "Pac-Man")
+    screen = MlxScreen(session, mlx_ptr, (320, 240), "Pac-Man")
     manager = ScreenManager(screen)
     manager.add_screen("demo", DemoScreen())
 

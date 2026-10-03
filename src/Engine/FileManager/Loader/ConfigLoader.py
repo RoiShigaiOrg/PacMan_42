@@ -23,4 +23,4 @@ class ConfigLoader(Loader):
             filename: Path = Path(".config.json")) -> None:
         """ Write the actual config into the JSON config file """
         with open(filename, "w+", encoding="utf-8") as f:
-            json.dump(f, config, indent=4)
+            json.dump(config, f, indent=4)

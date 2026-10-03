@@ -11,9 +11,9 @@ class ScoreLoader(Loader):
             in a JSON file.
     """
 
-    def load(self, filename: Path) -> None:
+    def load(self, filename: Path = Path(".")) -> dict:
         """ Load method for the ScoreLoader """
-        print("Load from ScoreLoader class not implemented yet")
+        raise NotImplementedError("ScoreLoader.load is not implemented")
 
     def store(self, filename: Path, score: dict) -> None:
         """ Store the score into a JSON file """

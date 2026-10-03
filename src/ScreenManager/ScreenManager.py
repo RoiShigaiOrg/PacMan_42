@@ -1,6 +1,12 @@
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
-from Engine.Graphics import MlxScreen
+if TYPE_CHECKING:
+    from src.Engine.Graphics import MlxScreen
+else:
+    try:
+        from ..Engine.Graphics import MlxScreen
+    except ImportError:
+        from Engine.Graphics import MlxScreen
 
 from .Screen import Screen
 
