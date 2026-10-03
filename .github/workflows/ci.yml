@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - dev
+env:
+  UV_SYSTEM_PYTHON: 1
 
 jobs:
   lint-and-test:
@@ -20,18 +22,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install Python
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "pip"
+
 
       # Install dependencies
-      - name: Install dependencies
+      - name: Install requirements
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          uv pip install -r requirements-dev.txt
 
       # Check code style
       - name: Run flake8
@@ -39,8 +39,8 @@ jobs:
 
       # Check type annotations
       - name: Run mypy
-        run: mypy src
+        run: uv run mypy src
 
       # Run unit tests
       - name: Run tests
-        run: pytest tests
+        run: uv run pytest tests
