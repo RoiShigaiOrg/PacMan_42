@@ -220,3 +220,4 @@ __marimo__/
 requirement-fedora.txt
 requirements.txt
 AGENT.md
+*.whl
