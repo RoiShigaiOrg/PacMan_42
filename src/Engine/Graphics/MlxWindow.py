@@ -1,4 +1,5 @@
-from typing import Any, Literal, overload
+from typing import Any, Literal, overload, Tuple
+from .MlxDisplay import MlxDisplay
 
 
 class MlxWindow:
@@ -65,27 +66,6 @@ class MlxWindow:
         if not self.__window_ptr:
             raise RuntimeError("failed to create MLX window")
 
-        self.__image_ptr = session.mlx_new_image(
-                mlx_ptr,
-                self.__width,
-                self.__height
-                )
-        if not self.__image_ptr:
-            session.mlx_destroy_window(mlx_ptr, self.__window_ptr)
-            raise RuntimeError("failed to create MLX screen buffer")
-
-        (
-            self.__data,
-            self.__bits_per_pixel,
-            self.__stride,
-            self.__format,
-        ) = session.mlx_get_data_addr(self.__image_ptr)
-        if self.__bits_per_pixel != 32:
-            session.mlx_destroy_image(mlx_ptr, self.__image_ptr)
-            session.mlx_destroy_window(mlx_ptr, self.__window_ptr)
-            self.__closed = True
-            raise RuntimeError("MLX screen buffer is not a 32-bit image")
-
         self.clear()
 
     @property
@@ -106,19 +86,6 @@ class MlxWindow:
     def size(self) -> tuple[int, int]:
         """Return ``(width, height)`` in pixels."""
         return self.__width, self.__height
-
-    def pixel(self, x: int, y: int, color: int) -> None:
-        """Write one ARGB pixel to the persistent screen buffer."""
-        if not 0 <= x < self.__width or not 0 <= y < self.__height:
-            raise ValueError("pixel coordinates are outside the screen")
-        if not 0 <= color <= 0xFFFFFFFF:
-            raise ValueError("color must be a 32-bit unsigned integer")
-
-        offset = y * self.__stride + x * (self.__bits_per_pixel // 8)
-        byte_order: Literal["little", "big"] = (
-            "little" if self.__format == 0 else "big"
-        )
-        self.__data[offset:offset + 4] = color.to_bytes(4, byte_order)
 
     def clear(self, color: int = 0x00000000) -> None:
         """Fill the entire persistent buffer with an ARGB color."""
@@ -162,3 +129,32 @@ class MlxWindow:
         self.__session.mlx_destroy_image(self.__mlx_ptr, self.__image_ptr)
         self.__session.mlx_destroy_window(self.__mlx_ptr, self.__window_ptr)
         self.__closed = True
+
+    def create_display(self, size: Tuple[int, int]) -> MlxDisplay:
+        """ Create a Subwindow where we can draw in before pushing to the window """
+
+        if size[0] > self.__width or size[1] > self.__height:
+            self.__session.mlx_destroy_window(
+                    self.__mlx_ptr, self.__window_ptr
+                    )
+            raise RuntimeError("Invalide SubWindow Size")
+        image_ptr = self.__session.mlx_new_image(
+                self.__mlx_ptr,
+                size[0],
+                size[1]
+                )
+        if not image_ptr:
+            self.__session.mlx_destroy_window(
+                    self.__mlx_ptr, self.__window_ptr
+                    )
+            raise RuntimeError("failed to create MLX screen buffer")
+
+        try:
+            subwindow = MlxDisplay(self.__session, image_ptr, self.__mlx_ptr, self.__window_ptr, size)
+            return subwindow
+        except:
+            self.__session.mlx_destroy_window(
+                    self.__window_ptr
+                    )
+            self.__closed = True
+            raise RuntimeError("Failed to create Subwindow")
