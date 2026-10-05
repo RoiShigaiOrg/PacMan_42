@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.Engine.Graphics import MlxScreen
+    from src.Engine.Graphics import MlxWindow
 else:
     try:
-        from ...Engine.Graphics import MlxScreen
+        from ...Engine.Graphics import MlxWindow
     except ImportError:
-        from Engine.Graphics import MlxScreen
+        from Engine.Graphics import MlxWindow
 
 
 class Screen(ABC):
@@ -21,6 +21,6 @@ class Screen(ABC):
     """
 
     @abstractmethod
-    def render(self, screen: MlxScreen) -> None:
+    def render(self, screen: MlxWindow) -> None:
         """Render this screen into the shared MLX screen buffer."""
         ...

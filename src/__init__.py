@@ -1,5 +1,5 @@
-from .Engine import MlxScreen
+from .Engine import MlxWindow
 
 __all__ = [
-        "MlxScreen"
+        "MlxWindow"
         ]
