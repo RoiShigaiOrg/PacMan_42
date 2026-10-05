@@ -1,3 +1,3 @@
-from .MlxScreen import MlxScreen
+from .MlxWindow import MlxWindow
 
-__all__ = ["MlxScreen"]
+__all__ = ["MlxWindow"]

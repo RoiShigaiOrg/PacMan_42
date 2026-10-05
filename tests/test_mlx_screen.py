@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from Engine.Graphics.MlxScreen import MlxScreen
+from Engine.Graphics.MlxWindow import MlxWindow
 
 
 class FakeMlx:
@@ -39,7 +39,7 @@ class FakeMlx:
 
 def test_screen_metadata_and_size() -> None:
     session = FakeMlx()
-    screen = MlxScreen(session, "mlx", 2, 2, "Pac-Man")
+    screen = MlxWindow(session, "mlx", 2, 2, "Pac-Man")
 
     assert screen.width == 2
     assert screen.height == 2
@@ -49,7 +49,7 @@ def test_screen_metadata_and_size() -> None:
 
 def test_pixel_and_clear_write_to_persistent_buffer() -> None:
     session = FakeMlx()
-    screen = MlxScreen(session, "mlx", 2, 2, "Pac-Man")
+    screen = MlxWindow(session, "mlx", 2, 2, "Pac-Man")
 
     screen.pixel(1, 0, 0xFF112233)
     assert bytes(session.data[4:8]) == bytes.fromhex("332211FF")
@@ -61,7 +61,7 @@ def test_pixel_and_clear_write_to_persistent_buffer() -> None:
 
 def test_format_one_uses_big_endian_argb_bytes() -> None:
     session = FakeMlx(image_format=1)
-    screen = MlxScreen(session, "mlx", 1, 1, "Pac-Man")
+    screen = MlxWindow(session, "mlx", 1, 1, "Pac-Man")
 
     screen.pixel(0, 0, 0xFF112233)
 
@@ -70,7 +70,7 @@ def test_format_one_uses_big_endian_argb_bytes() -> None:
 
 def test_screen_update_presents_buffer() -> None:
     session = FakeMlx()
-    screen = MlxScreen(session, "mlx", 2, 2, "Pac-Man")
+    screen = MlxWindow(session, "mlx", 2, 2, "Pac-Man")
 
     screen.screen_update()
 
@@ -79,7 +79,7 @@ def test_screen_update_presents_buffer() -> None:
 
 def test_close_is_idempotent() -> None:
     session = FakeMlx()
-    screen = MlxScreen(session, "mlx", 2, 2, "Pac-Man")
+    screen = MlxWindow(session, "mlx", 2, 2, "Pac-Man")
 
     screen.close()
     screen.close()
@@ -92,7 +92,7 @@ def test_pixel_rejects_coordinates_outside_screen(
     coordinates: tuple[int, int],
 ) -> None:
     session = FakeMlx()
-    screen = MlxScreen(session, "mlx", 2, 2, "Pac-Man")
+    screen = MlxWindow(session, "mlx", 2, 2, "Pac-Man")
 
     with pytest.raises(ValueError):
         screen.pixel(*coordinates, 0xFFFFFFFF)

@@ -2,7 +2,7 @@ from typing import Any
 
 import mlx
 
-from .Engine.Graphics import MlxScreen
+from .Engine.Graphics import MlxWindow
 from .Engine import Engine
 from .ScreenManager import ScreenManager
 from .ScreenManager.Screen import Screen
@@ -11,7 +11,7 @@ from .ScreenManager.Screen import Screen
 class DemoScreen(Screen):
     """Draw a small static scene into the shared screen buffer."""
 
-    def render(self, screen: MlxScreen) -> None:
+    def render(self, screen: MlxWindow) -> None:
         for y in range(20, screen.height - 20):
             for x in range(20, screen.width - 20):
                 if x in (20, screen.width - 21) or y in (
@@ -39,7 +39,7 @@ def main() -> None:
     mlx_ptr: Any = session.mlx_init()
     if not mlx_ptr:
         raise RuntimeError("failed to initialize MLX")
-    screen = MlxScreen(session, mlx_ptr, (320, 240), "Pac-Man")
+    screen = MlxWIndow(session, mlx_ptr, (320, 240), "Pac-Man")
     manager = ScreenManager(screen)
     manager.add_screen("demo", DemoScreen())
 
@@ -61,7 +61,7 @@ class PacMan:
         if not self._mlx_ptr:
             raise RuntimeError("failed to initialize MLX")
         self._engine = Engine()
-        self._screen = MlxScreen(
+        self._screen = MlxWindow(
                 self._session,
                 self._mlx_ptr,
                 tuple(self._engine.get_config_key("dimension")),

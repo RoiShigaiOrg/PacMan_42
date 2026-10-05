@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
-    from src.Engine.Graphics import MlxScreen
+    from src.Engine.Graphics import MlxWindow
 else:
     try:
-        from ..Engine.Graphics import MlxScreen
+        from ..Engine.Graphics import MlxWindow
     except ImportError:
-        from Engine.Graphics import MlxScreen
+        from Engine.Graphics import MlxWindow
 
 from .Screen import Screen
 
@@ -22,10 +22,10 @@ class ScreenManager:
 
     def __init__(
             self,
-            mlx_screen: MlxScreen,
+            mlx_screen: MlxWindow,
             screen_dict: Dict[str, Screen] | None = None) -> None:
         """ Init Method of the ScreenManager Object """
-        self.__main_window: MlxScreen = mlx_screen
+        self.__main_window: MlxWindow = mlx_screen
         self.__screens: Dict[str, Screen] = dict(screen_dict or {})
         self.__actual_screen: Screen | None = None
 

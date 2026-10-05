@@ -1,7 +1,7 @@
 from typing import Any, Literal, overload
 
 
-class MlxScreen:
+class MlxWindow:
     """
     Main application window and its persistent Mlx drawing buffer.
 
@@ -37,7 +37,7 @@ class MlxScreen:
         title: str | int,
         legacy_title: str | None = None,
     ) -> None:
-        """ Init Method of the MlxScreen object """
+        """ Init Method of the MlxWindow object """
         if isinstance(dimension, int):
             if not isinstance(title, int) or legacy_title is None:
                 raise TypeError("invalid screen dimensions")
