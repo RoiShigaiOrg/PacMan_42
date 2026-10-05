@@ -56,7 +56,7 @@ class MlxDisplay:
                 self.__image,
                 0, 0
                 )
-        
+
     def __draw_pixel(self, x: int, y: int, color: int) -> None:
         """Write one ARGB pixel to the persistent screen buffer."""
         if not 0 <= x < self.__width or not 0 <= y < self.__height:
