@@ -87,20 +87,6 @@ class MlxWindow:
         """Return ``(width, height)`` in pixels."""
         return self.__width, self.__height
 
-    def clear(self, color: int = 0x00000000) -> None:
-        """Fill the entire persistent buffer with an ARGB color."""
-        if not 0 <= color <= 0xFFFFFFFF:
-            raise ValueError("color must be a 32-bit unsigned integer")
-
-        byte_order: Literal["little", "big"] = (
-            "little" if self.__format == 0 else "big"
-        )
-        pixel = color.to_bytes(4, byte_order)
-        for y in range(self.__height):
-            row_start = y * self.__stride
-            row_end = row_start + self.__width * 4
-            self.__data[row_start:row_end] = pixel * self.__width
-
     def draw(self, image: Any, x: int, y: int) -> None:
         """Draw an MLX image into the window at ``(x, y)``."""
         self.__session.mlx_put_image_to_window(

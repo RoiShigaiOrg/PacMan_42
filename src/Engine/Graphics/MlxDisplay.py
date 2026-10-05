@@ -49,8 +49,14 @@ class MlxDisplay:
         return self.__width, self.__height
 
     def render(self) -> None:
-
-
+        """ Render the actual image to the window """
+        self.mlx_put_image_to_window(
+                self.__mlx_pointer,
+                self.__window_ptr,
+                self.__image,
+                0, 0
+                )
+        
     def __draw_pixel(self, x: int, y: int, color: int) -> None:
         """Write one ARGB pixel to the persistent screen buffer."""
         if not 0 <= x < self.__width or not 0 <= y < self.__height:
@@ -63,3 +69,23 @@ class MlxDisplay:
             "little" if self.__format == 0 else "big"
         )
         self.__data[offset:offset + 4] = color.to_bytes(4, byte_order)
+
+    def clear(self, color: int = 0x00000000) -> None:
+        """Fill the entire persistent buffer with an ARGB color."""
+        if not 0 <= color <= 0xFFFFFFFF:
+            raise ValueError("color must be a 32-bit unsigned integer")
+
+        byte_order: Literal["little", "big"] = (
+            "little" if self.__format == 0 else "big"
+        )
+        pixel = color.to_bytes(4, byte_order)
+        for y in range(self.__height):
+            row_start = y * self.__stride
+            row_end = row_start + self.__width * 4
+            self.__data[row_start:row_end] = pixel * self.__width
+
+    def fill(self, color: int) -> None:
+        """ Fill the entire Display with a given color """
+        for y in range(self.__height):
+            for x in range(self.__width):
+                self.__draw_pixel(x, y, color)
