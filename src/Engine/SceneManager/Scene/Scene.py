@@ -10,7 +10,7 @@ else:
         from Engine.Graphics import MlxWindow
 
 
-class Screen(ABC):
+class Scene(ABC):
     """
         Screen Abstract Class Definition
 

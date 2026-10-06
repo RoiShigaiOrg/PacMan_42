@@ -11,7 +11,7 @@ else:
 from .Screen import Screen
 
 
-class ScreenManager:
+class SceneManager:
     """
         ScreenManager Object Class Definition
 

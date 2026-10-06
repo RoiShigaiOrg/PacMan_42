@@ -53,25 +53,7 @@ def main() -> None:
         session.mlx_release(mlx_ptr)
 
 
-class PacMan:
-    """
-        Main Class of the Project.
-
-        This PacMac Class will compose with all different objects needed
-            to run the Game.
-    """
-
-    def __init__(self) -> None:
-        """ Init Method of the PacMan """
-        self._engine: Engine = Engine("pac-man")
-
-    def run(self) -> None:
-        """ Main method that will contain the loop of the proram """
-
-        self._screen_manager.render()
-        self.__session.mlx_loop(self.__mlx_ptr)
 
 
 if __name__ == "__main__":
-    pacman = PacMan()
-    pacman.run()
+    engine = Engine("pac-man")
