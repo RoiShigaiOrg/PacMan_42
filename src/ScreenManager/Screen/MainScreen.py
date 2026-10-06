@@ -30,5 +30,6 @@ class MainScreen(Screen):
         self.__display = display
 
     def render(self) -> None:
+        self.__display.clear()
         self.__display.fill(0xFF0000)
         self.__display.render()

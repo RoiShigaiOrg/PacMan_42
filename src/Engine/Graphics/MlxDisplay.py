@@ -88,4 +88,5 @@ class MlxDisplay:
         """ Fill the entire Display with a given color """
         for y in range(self.__height):
             for x in range(self.__width):
+                print(f"x: {x} y: {y}")
                 self.draw_pixel(x, y, color)
