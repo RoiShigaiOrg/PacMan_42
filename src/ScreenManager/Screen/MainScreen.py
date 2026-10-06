@@ -3,17 +3,32 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.Engine.Graphics import MlxWindow
+    from src.Engine.Graphics import MlxDisplay
 else:
     try:
         from ...Engine.Graphics import MlxWindow
+        from ...Engine.Graphics import MlxDisplay
     except ImportError:
         from Engine.Graphics import MlxWindow
+        from Engine.Graphics import MlxDisplay
 
 
 class MainScreen(Screen):
-    """Small example screen that draws a centered Pac-Man-like marker."""
+    """
+        Main Screen Class Definition
 
-    def render(self, screen: MlxWindow) -> None:
-        center_x = screen.width // 2
-        center_y = screen.height // 2
-        screen.pixel(center_x, center_y, 0xFFFFFF00)
+        The Main screen is the hub Scene where we get when starting the Game.
+        It contain all path to:
+            - Start: Start a new game
+            - LeaderBoard: Link to the actual LeaderBoard Scene
+            - Option: Link to the Option Scene
+            - Quit: Exit the program normally
+    """
+
+    def __init__(self, display: MlxDisplay) -> None:
+        """ Init Method of the MainScreen Class """
+        self.__display = display
+
+    def render(self) -> None:
+        self.__display.fill(0xFF0000)
+        self.__display.render()

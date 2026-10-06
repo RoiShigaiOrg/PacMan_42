@@ -22,10 +22,8 @@ class ScreenManager:
 
     def __init__(
             self,
-            mlx_screen: MlxWindow,
             screen_dict: Dict[str, Screen] | None = None) -> None:
         """ Init Method of the ScreenManager Object """
-        self.__main_window: MlxWindow = mlx_screen
         self.__screens: Dict[str, Screen] = dict(screen_dict or {})
         self.__actual_screen: Screen | None = None
 
@@ -55,6 +53,4 @@ class ScreenManager:
         if self.__actual_screen is None:
             raise RuntimeError("ScreenManager has no active screen")
 
-        self.__main_window.clear()
-        self.__actual_screen.render(self.__main_window)
-        self.__main_window.screen_update()
+        self.__actual_screen.render()

@@ -21,6 +21,6 @@ class Screen(ABC):
     """
 
     @abstractmethod
-    def render(self, screen: MlxWindow) -> None:
+    def render(self) -> None:
         """Render this screen into the shared MLX screen buffer."""
         ...

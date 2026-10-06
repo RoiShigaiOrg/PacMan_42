@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any
 from .Components import Components
 
 
@@ -17,11 +17,11 @@ class Rect(Components):
             raise ValueError("Rect: Not valid color value")
         self.__color = color
 
-    def _draw(
+    def draw(
             self,
+            display: Any,
             pos_x: int,
-            pos_y: int,
-            display_pixel_function: Callable) -> None:
+            pos_y: int) -> None:
         """
             Private method to draw the Rect on a Display object.
             This method is not meant to be called by any deveper,
@@ -31,7 +31,7 @@ class Rect(Components):
             raise ValueError("Rect: Negative Position")
         for y in range(pos_y):
             for x in range(pos_x):
-                display_pixel_function(x, y, self.__color)
+                display.draw_pixel(x, y, self.__color)
 
     def update_size(self, x: int, y: int) -> None:
         """ Update the size of the object """

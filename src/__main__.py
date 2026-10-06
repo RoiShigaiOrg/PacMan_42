@@ -2,10 +2,11 @@ from typing import Any
 
 import mlx
 
-from .Engine.Graphics import MlxWindow
-from .Engine import Engine
-from .ScreenManager import ScreenManager
-from .ScreenManager.Screen import Screen
+from Engine.Graphics import MlxWindow
+from Engine import Engine
+from ScreenManager import ScreenManager
+from ScreenManager.Screen import Screen
+from ScreenManager.Screen import MainScreen
 
 
 class DemoScreen(Screen):
@@ -53,21 +54,33 @@ def main() -> None:
 
 
 class PacMan:
+    """
+        Main Class of the Project.
+
+        This PacMac Class will compose with all different objects needed
+            to run the Game.
+    """
 
     def __init__(self) -> None:
         """ Init Method of the PacMan """
-        self._session = mlx.Mlx()
-        self._mlx_ptr: Any = self._session.mlx_init()
-        if not self._mlx_ptr:
-            raise RuntimeError("failed to initialize MLX")
-        self._engine = Engine()
-        self._screen = MlxWindow(
-                self._session,
-                self._mlx_ptr,
-                tuple(self._engine.get_config_key("dimension")),
-                "Pac-Man"
+        self._engine: Engine = Engine("pac-man")
+
+        self._screen_manager: ScreenManager = ScreenManager(
+                    {
+                        "main_scene": MainScreen(
+                        self._engine.create_display(320, 240)
+                        )
+                    }
                 )
+
+    def run(self) -> None:
+        """ Main method that will contain the loop of the proram """
+        self._engine.run = True
+
+        while self._engine.run:
+            self._screen_manager.render()
 
 
 if __name__ == "__main__":
-    main()
+    pacman = PacMan()
+    pacman.run()

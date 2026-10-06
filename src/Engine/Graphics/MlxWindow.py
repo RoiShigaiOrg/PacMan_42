@@ -1,4 +1,4 @@
-from typing import Any, Literal, overload, Tuple
+from typing import Any, overload, Tuple
 from .MlxDisplay import MlxDisplay
 
 
@@ -65,8 +65,6 @@ class MlxWindow:
         )
         if not self.__window_ptr:
             raise RuntimeError("failed to create MLX window")
-
-        self.clear()
 
     @property
     def width(self) -> int:

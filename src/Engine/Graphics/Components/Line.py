@@ -1,5 +1,5 @@
 from .Components import Components
-from typing import Tuple, Callable
+from typing import Tuple, Any
 
 
 class Line(Components):
@@ -17,11 +17,11 @@ class Line(Components):
             raise ValueError("Line: Not valid color value")
         self.__color = color
 
-    def _draw(
+    def draw(
             self,
+            display: Any,
             pos_x: int,
-            pos_y: int,
-            display_pixel_function: Callable) -> None:
+            pos_y: int) -> None:
         """
             Private method to draw the Rect on a Display object.
             This method is not meant to be called by any deveper,
@@ -39,7 +39,7 @@ class Line(Components):
         err = dx - dy
 
         while True:
-            display_pixel_function(x1, y1)
+            display.draw_pixel(x1, y1, self.__color)
 
             if x1 == x2 and y1 == y2:
                 break

@@ -1,6 +1,5 @@
-from typing import Callable
 from .Components import Components
-from typing import Tuple
+from typing import Tuple, Any
 import math
 
 
@@ -18,7 +17,11 @@ class Circle(Components):
             raise ValueError("Circle: Not valid color value")
         self.__color = color
 
-    def _draw(self, pos_x: int, pos_y: int, display_pixel_function: Callable) -> None:
+    def draw(
+            self,
+            display: Any,
+            pos_x: int,
+            pos_y: int) -> None:
         """
             Private method to draw the Circle on a Display object.
             This method is not meant to be called by any deveper,
@@ -30,7 +33,7 @@ class Circle(Components):
             theta = (2 * math.pi / 100) * i
             x = int(pos_x + self.__radius[0] * math.cos(theta))
             y = int(pos_y + self.__radius[1] * math.cos(theta))
-            display_pixel_function(x, y, self.__color)
+            display.draw_pixel(x, y, self.__color)
 
     def update_size(self, radius: Tuple[int, int]) -> None:
         """ Update the size of the object """

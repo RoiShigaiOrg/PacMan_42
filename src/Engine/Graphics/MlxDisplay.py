@@ -50,14 +50,14 @@ class MlxDisplay:
 
     def render(self) -> None:
         """ Render the actual image to the window """
-        self.mlx_put_image_to_window(
-                self.__mlx_pointer,
+        self.__session.mlx_put_image_to_window(
+                self.__mlx_ptr,
                 self.__window_ptr,
                 self.__image,
                 0, 0
                 )
 
-    def __draw_pixel(self, x: int, y: int, color: int) -> None:
+    def draw_pixel(self, x: int, y: int, color: int) -> None:
         """Write one ARGB pixel to the persistent screen buffer."""
         if not 0 <= x < self.__width or not 0 <= y < self.__height:
             raise ValueError("pixel coordinates are outside the screen")
@@ -88,4 +88,4 @@ class MlxDisplay:
         """ Fill the entire Display with a given color """
         for y in range(self.__height):
             for x in range(self.__width):
-                self.__draw_pixel(x, y, color)
+                self.draw_pixel(x, y, color)

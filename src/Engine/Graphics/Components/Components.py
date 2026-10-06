@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from typing import Any
 
 
 class Components(ABC):
@@ -10,6 +11,6 @@ class Components(ABC):
     """
 
     @abstractmethod
-    def _draw(self, pos_x: int, pos_y: int) -> None:
+    def draw(self, display: Any, pos_x: int, pos_y: int) -> None:
         """ Main method to draw the component """
         ...
