@@ -1,5 +1,6 @@
 from ..Engine.Engine import Engine
 from ..Engine.ScreenManager.ScreenManager import ScreenManager
+from .Scenes.MainScene import MainScene
 
 
 class PacMan:

@@ -4,7 +4,7 @@ from .Engine import Engine
 
 __all__ = [
         "MlxWindow",
-        "ScreenManager",
+        "SceneManager",
         "Screen",
         "Engine",
         ]

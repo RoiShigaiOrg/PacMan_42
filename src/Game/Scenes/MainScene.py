@@ -1,4 +1,4 @@
-from .Screen import Screen
+from src.Engine.SceneManager.Scene.Scene import Scene
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ else:
         from Engine.Graphics import MlxDisplay
 
 
-class MainScreen(Screen):
+class MainScene(Scene):
     """
         Main Screen Class Definition
 
