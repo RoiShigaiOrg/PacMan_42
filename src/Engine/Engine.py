@@ -1,7 +1,10 @@
 from .Graphics.MlxDisplay import MlxDisplay
 from .FileManager import FileManager
-from typing import Any
+from typing import Any, Dict
 from .Graphics.MlxWindow import MlxWindow
+from .Application.Application import Application
+from .ScreenManager.ScreenManager import ScreenManager
+from .ScreenManager.Screen.Screen import Screen
 import mlx
 
 
@@ -32,6 +35,13 @@ class Engine:
                 tuple(self.get_config_key("dimension")),
                 program_name
                 )
+        self._screen_manager: ScreenManager = ScreenManager(
+                    {
+                        "main_scene": MainScreen(
+                        self.create_display(320, 240)
+                        )
+                    }
+                )
 
     def get_config_key(self, key: str) -> Any:
         """ Return the value stored in the given key from the config """
@@ -50,3 +60,14 @@ class Engine:
         return self._window.create_display(
                     (width, height)
                 )
+
+    def add_scene(self, scenes: Dict[str: Screen]) -> None:
+        self._screen_manager.add_screen(scenes)
+
+    def run(self, application: Application) -> None:
+        """
+            Core method of the Engine that will run
+                the given Application object (Game or else)
+                created with the Engine API.
+        """
+        self._session.mlx_loop_hook(self._mlx_ptr, )

@@ -65,20 +65,11 @@ class PacMan:
         """ Init Method of the PacMan """
         self._engine: Engine = Engine("pac-man")
 
-        self._screen_manager: ScreenManager = ScreenManager(
-                    {
-                        "main_scene": MainScreen(
-                        self._engine.create_display(320, 240)
-                        )
-                    }
-                )
-
     def run(self) -> None:
         """ Main method that will contain the loop of the proram """
-        self._engine.run = True
 
-        while self._engine.run:
-            self._screen_manager.render()
+        self._screen_manager.render()
+        self.__session.mlx_loop(self.__mlx_ptr)
 
 
 if __name__ == "__main__":

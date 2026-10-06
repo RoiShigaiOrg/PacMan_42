@@ -31,5 +31,5 @@ class MainScreen(Screen):
 
     def render(self) -> None:
         self.__display.clear()
-        self.__display.fill(0xFF0000)
+        self.__display.fill(0xFFFF0000)
         self.__display.render()
