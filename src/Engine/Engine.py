@@ -60,5 +60,11 @@ class Engine:
         """
         self._session.mlx_loop_hook(
                 self._mlx_ptr,
-                application.render
+                application.render,
+                None
                 )
+        try:
+            self._session.mlx_loop(self._mlx_ptr)
+        finally:
+            self._window.close()
+            self._session.mlx_release(self._mlx_ptr)

@@ -8,7 +8,7 @@ else:
     except ImportError:
         from Engine.Graphics import MlxWindow
 
-from .Screen import Screen
+from .Scene.Scene import Scene
 
 
 class SceneManager:
@@ -22,16 +22,16 @@ class SceneManager:
 
     def __init__(
             self,
-            screen_dict: Dict[str, Screen] | None = None) -> None:
+            screen_dict: Dict[str, Scene] | None = None) -> None:
         """ Init Method of the ScreenManager Object """
-        self.__screens: Dict[str, Screen] = dict(screen_dict or {})
-        self.__actual_screen: Screen | None = None
+        self.__screens: Dict[str, Scene] = dict(screen_dict or {})
+        self.__actual_screen: Scene | None = None
 
         if self.__screens:
             self.__actual_screen = next(iter(self.__screens.values()))
 
     @property
-    def actual_screen(self) -> Screen | None:
+    def actual_screen(self) -> Scene | None:
         """Return the currently selected screen, if one is registered."""
         return self.__actual_screen
 
@@ -42,11 +42,9 @@ class SceneManager:
         else:
             raise ValueError(f"ScreenManager Error: {screen_id} do not exist")
 
-    def add_screen(self, screen_id: str, screen: Screen) -> None:
+    def add_scene(self, scene: Dict[str, Scene]) -> None:
         """Register a screen under ``screen_id``."""
-        self.__screens[screen_id] = screen
-        if self.__actual_screen is None:
-            self.__actual_screen = screen
+        self.__screens.update(scene)
 
     def render(self) -> None:
         """Render and present the currently selected screen."""

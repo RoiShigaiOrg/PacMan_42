@@ -1,5 +1,5 @@
-from ..Engine.Engine import Engine
-from ..Engine.ScreenManager.ScreenManager import ScreenManager
+from Engine.Engine import Engine
+from Engine.SceneManager import SceneManager
 from .Scenes.MainScene import MainScene
 
 
@@ -7,14 +7,14 @@ class PacMan:
     """
         Main Class of the Project.
 
-        This PacMac Class will compose with all different objects needed
-            to run the Game.
+        This PacMac Class will compose with all different objects
+        from Engine to run the Game.
     """
 
     def __init__(self) -> None:
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man")
-        self.scenes: ScreenManager = ScreenManager()
+        self.scenes: SceneManager = SceneManager()
         self.scenes.add_scene({
                         "main_scene": MainScene(
                         self.engine.create_display(
@@ -34,4 +34,3 @@ class PacMan:
     def run(self) -> None:
         """ Main method that will contain the loop of the proram """
         self.engine.run(self)
-
