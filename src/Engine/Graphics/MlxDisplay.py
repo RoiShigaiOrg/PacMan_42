@@ -60,7 +60,7 @@ class MlxDisplay:
     def draw_pixel(self, x: int, y: int, color: int) -> None:
         """Write one ARGB pixel to the persistent screen buffer."""
         if not 0 <= x < self.__width or not 0 <= y < self.__height:
-            raise ValueError("pixel coordinates are outside the screen")
+            return
         if not 0 <= color <= 0xFFFFFFFF:
             raise ValueError("color must be a 32-bit unsigned integer")
 

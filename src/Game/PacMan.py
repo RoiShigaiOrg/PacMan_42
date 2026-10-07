@@ -7,8 +7,8 @@ class PacMan:
     """
         Main Class of the Project.
 
-        This PacMac Class will compose with all different objects
-        from Engine to run the Game.
+        This PacMac Class will compose with all different features
+            from Engine to run the Game.
     """
 
     def __init__(self) -> None:
@@ -18,7 +18,7 @@ class PacMan:
         self.scenes.add_scene({
                         "main_scene": MainScene(
                         self.engine.create_display(
-                            320, 240
+                            (1280, 720)
                             )
                         )
                     }
@@ -32,6 +32,6 @@ class PacMan:
         self.scenes.render()
 
     def run(self) -> None:
-        """ Main method that will contain the loop of the proram """
+        """ Main method that will contain the loop of the program """
         self.scenes.change_screen("main_scene")
         self.engine.run(self)

@@ -1,6 +1,6 @@
 from .Graphics.MlxDisplay import MlxDisplay
 from .FileManager import FileManager
-from typing import Any
+from typing import Any, Tuple
 from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application
 import mlx
@@ -47,10 +47,10 @@ class Engine:
         """ Return the MlxWindow Object Instance """
         return self._window
 
-    def create_display(self, width: int, height: int) -> MlxDisplay:
+    def create_display(self, size: Tuple[int, int]) -> MlxDisplay:
         """ Create a Display from the actual window """
         return self._window.create_display(
-                    (width, height)
+                    size
                 )
 
     def run(self, application: Application) -> None:

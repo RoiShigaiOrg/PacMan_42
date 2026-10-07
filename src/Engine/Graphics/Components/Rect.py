@@ -29,8 +29,8 @@ class Rect(Components):
         """
         if pos_x < 0 or pos_y < 0:
             raise ValueError("Rect: Negative Position")
-        for y in range(pos_y):
-            for x in range(pos_x):
+        for y in range(pos_y, pos_y + self.__height):
+            for x in range(pos_x, pos_x + self.__width):
                 display.draw_pixel(x, y, self.__color)
 
     def update_size(self, x: int, y: int) -> None:

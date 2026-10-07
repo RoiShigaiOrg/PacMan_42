@@ -12,7 +12,7 @@ class Circle(Components):
         """ Init Method for the Circle Object """
         if x <= 0 or y <= 0:
             raise ValueError("Circle: Negative dimension")
-        self.__radius: Tuple[int, int] = Tuple(x, y)
+        self.__radius: Tuple[int, int] = (x, y)
         if not 0 <= color <= 0xFFFFFFFF:
             raise ValueError("Circle: Not valid color value")
         self.__color = color
@@ -22,18 +22,36 @@ class Circle(Components):
             display: Any,
             pos_x: int,
             pos_y: int) -> None:
-        """
-            Private method to draw the Circle on a Display object.
-            This method is not meant to be called by any deveper,
-                it is called inside the Display.draw(Circle Obj)
-        """
+        """Draw only the circle circumference."""
         if pos_x < 0 or pos_y < 0:
-            raise ValueError("Rect: Negative Position")
-        for i in range(100):
-            theta = (2 * math.pi / 100) * i
-            x = int(pos_x + self.__radius[0] * math.cos(theta))
-            y = int(pos_y + self.__radius[1] * math.cos(theta))
+            raise ValueError("Circle: Negative Position")
+
+        radius_x, radius_y = self.__radius
+
+        for i in range(500):
+            theta = (2 * math.pi / 500) * i
+            x = int(pos_x + radius_x * math.cos(theta))
+            y = int(pos_y + radius_y * math.sin(theta))
             display.draw_pixel(x, y, self.__color)
+
+    def fill(
+            self,
+            display: Any,
+            pos_x: int,
+            pos_y: int) -> None:
+        """Draw a filled circle or ellipse."""
+        if pos_x < 0 or pos_y < 0:
+            raise ValueError("Circle: Negative Position")
+
+        radius_x, radius_y = self.__radius
+
+        for y in range(pos_y - radius_y, pos_y + radius_y + 1):
+            for x in range(pos_x - radius_x, pos_x + radius_x + 1):
+                normalized_x = (x - pos_x) / radius_x
+                normalized_y = (y - pos_y) / radius_y
+
+                if normalized_x ** 2 + normalized_y ** 2 <= 1:
+                    display.draw_pixel(x, y, self.__color)
 
     def update_size(self, radius: Tuple[int, int]) -> None:
         """ Update the size of the object """
