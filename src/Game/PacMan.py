@@ -15,14 +15,13 @@ class PacMan:
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man")
         self.scenes: SceneManager = SceneManager()
-        self.scenes.add_scene({
-                        "main_scene": MainScene(
-                        self.engine.create_display(
-                            (1280, 720)
-                            )
-                        )
-                    }
+        self.scenes.add_scene(
+            {
+                "main_scene": MainScene(
+                    self.engine.create_display((1280, 720))
                 )
+            }
+        )
 
     def update(self, delta_time: float) -> None:
         self.scenes.update(delta_time)

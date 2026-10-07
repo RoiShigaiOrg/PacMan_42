@@ -1,0 +1,150 @@
+from dataclasses import dataclass
+
+import pytest
+
+from Engine.Graphics import Circle, Line, Rect
+
+
+@dataclass(frozen=True)
+class Pixel:
+    x: int
+    y: int
+    color: int
+
+
+class RecordingDisplay:
+    def __init__(self) -> None:
+        self.pixels: list[Pixel] = []
+
+    def draw_pixel(self, x: int, y: int, color: int) -> None:
+        self.pixels.append(Pixel(x, y, color))
+
+
+def test_rect_draws_all_pixels_at_position() -> None:
+    display = RecordingDisplay()
+
+    Rect(3, 2, 0xFF112233).draw(display, 4, 5)
+
+    assert display.pixels == [
+        Pixel(4, 5, 0xFF112233),
+        Pixel(5, 5, 0xFF112233),
+        Pixel(6, 5, 0xFF112233),
+        Pixel(4, 6, 0xFF112233),
+        Pixel(5, 6, 0xFF112233),
+        Pixel(6, 6, 0xFF112233),
+    ]
+
+
+def test_rect_updates_size_and_color() -> None:
+    display = RecordingDisplay()
+    rect = Rect(1, 1, 0xFF000000)
+
+    rect.update_size(2, 1)
+    rect.update_color(0xFFFFFFFF)
+    rect.draw(display, 0, 0)
+
+    assert display.pixels == [Pixel(0, 0, 0xFFFFFFFF), Pixel(1, 0, 0xFFFFFFFF)]
+
+
+def test_rect_rejects_invalid_updates() -> None:
+    rect = Rect(1, 1, 0)
+
+    with pytest.raises(ValueError):
+        rect.update_size(-1, 1)
+    with pytest.raises(ValueError):
+        rect.update_color(-1)
+
+
+@pytest.mark.parametrize("dimensions", [(0, 1), (-1, 1), (1, 0)])
+def test_rect_rejects_non_positive_dimensions(
+    dimensions: tuple[int, int],
+) -> None:
+    with pytest.raises(ValueError):
+        Rect(*dimensions, 0xFFFFFFFF)
+
+
+def test_circle_draws_a_circumference_using_position_as_center() -> None:
+    display = RecordingDisplay()
+
+    Circle(3, 2, 0xFF123456).draw(display, 10, 10)
+
+    assert len(display.pixels) == 500
+    assert Pixel(13, 10, 0xFF123456) in display.pixels
+    assert Pixel(10, 12, 0xFF123456) in display.pixels
+    assert all(pixel.color == 0xFF123456 for pixel in display.pixels)
+
+
+def test_circle_fill_draws_only_pixels_inside_ellipse() -> None:
+    display = RecordingDisplay()
+
+    Circle(2, 1, 0xFFABCDEF).fill(display, 5, 5)
+
+    assert Pixel(5, 5, 0xFFABCDEF) in display.pixels
+    assert Pixel(3, 5, 0xFFABCDEF) in display.pixels
+    assert Pixel(5, 4, 0xFFABCDEF) in display.pixels
+    assert Pixel(3, 4, 0xFFABCDEF) not in display.pixels
+    assert all(3 <= pixel.x <= 7 and 4 <= pixel.y <= 6 for pixel in display.pixels)
+
+
+def test_circle_updates_size_and_color() -> None:
+    display = RecordingDisplay()
+    circle = Circle(1, 1, 0xFF000000)
+
+    circle.update_size((2, 2))
+    circle.update_color(0xFFFFFFFF)
+    circle.fill(display, 3, 3)
+
+    assert Pixel(3, 3, 0xFFFFFFFF) in display.pixels
+
+
+def test_circle_rejects_invalid_updates() -> None:
+    circle = Circle(1, 1, 0)
+
+    with pytest.raises(ValueError):
+        circle.update_size((0, 1))
+    with pytest.raises(ValueError):
+        circle.update_color(0x100000000)
+
+
+def test_line_draws_endpoints_and_applies_position() -> None:
+    display = RecordingDisplay()
+
+    Line((1, 2), (4, 3), 0xFF00FF00).draw(display, 10, 20)
+
+    assert display.pixels[0] == Pixel(11, 22, 0xFF00FF00)
+    assert display.pixels[-1] == Pixel(14, 23, 0xFF00FF00)
+    assert len(display.pixels) == 4
+
+
+def test_line_handles_steep_reversed_endpoints() -> None:
+    display = RecordingDisplay()
+
+    Line((7, 9), (3, 1), 0xFFFFFFFF).draw(display, 0, 0)
+
+    assert display.pixels[0] == Pixel(7, 9, 0xFFFFFFFF)
+    assert display.pixels[-1] == Pixel(3, 1, 0xFFFFFFFF)
+    assert len(display.pixels) == 9
+
+
+@pytest.mark.parametrize(
+    "component",
+    [
+        lambda: Rect(1, 1, -1),
+        lambda: Circle(1, 1, 0x100000000),
+        lambda: Line((0, 0), (1, 1), -1),
+    ],
+)
+def test_components_reject_invalid_colors(component: object) -> None:
+    with pytest.raises(ValueError):
+        component()  # type: ignore[operator]
+
+
+def test_components_reject_negative_draw_positions() -> None:
+    display = RecordingDisplay()
+
+    with pytest.raises(ValueError):
+        Rect(1, 1, 0).draw(display, -1, 0)
+    with pytest.raises(ValueError):
+        Circle(1, 1, 0).draw(display, 0, -1)
+    with pytest.raises(ValueError):
+        Line((0, 0), (1, 1), 0).draw(display, -1, 0)

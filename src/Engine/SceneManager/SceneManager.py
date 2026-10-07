@@ -1,12 +1,4 @@
-from typing import TYPE_CHECKING, Dict
-
-if TYPE_CHECKING:
-    from src.Engine.Graphics import MlxWindow
-else:
-    try:
-        from ..Engine.Graphics import MlxWindow
-    except ImportError:
-        from Engine.Graphics import MlxWindow
+from typing import Dict
 
 from .Scene.Scene import Scene
 
@@ -54,4 +46,4 @@ class SceneManager:
         self.__actual_screen.render()
 
     def update(self, delta_time: float) -> None:
-        return 
+        return

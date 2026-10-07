@@ -1,69 +1,78 @@
-from typing import Any
-
 import pytest
 
-from ScreenManager import ScreenManager
-from ScreenManager.Screen import Screen
+from Engine.SceneManager import Scene, SceneManager
 
 
-class FakeScreenBuffer:
-    def __init__(self) -> None:
-        self.operations: list[str] = []
-
-    def clear(self) -> None:
-        self.operations.append("clear")
-
-    def screen_update(self) -> None:
-        self.operations.append("update")
-
-
-class RecordingScreen(Screen):
+class RecordingScene(Scene):
     def __init__(self, marker: str) -> None:
         self.marker = marker
-        self.rendered_on: Any = None
+        self.render_count = 0
 
-    def render(self, screen: Any) -> None:
-        self.rendered_on = screen
+    def render(self) -> None:
+        self.render_count += 1
 
 
-def test_first_registered_screen_becomes_active_and_renders() -> None:
-    buffer = FakeScreenBuffer()
-    scene = RecordingScreen("scene")
-    manager = ScreenManager(buffer)  # type: ignore[arg-type]
+def test_empty_manager_has_no_active_scene() -> None:
+    assert SceneManager().actual_screen is None
 
-    manager.add_screen("scene", scene)
+
+def test_first_scene_in_initial_mapping_is_active() -> None:
+    first = RecordingScene("first")
+    second = RecordingScene("second")
+
+    manager = SceneManager({"first": first, "second": second})
+
+    assert manager.actual_screen is first
+
+
+def test_add_scene_registers_scenes_and_preserves_current_scene() -> None:
+    first = RecordingScene("first")
+    second = RecordingScene("second")
+    manager = SceneManager({"first": first})
+
+    manager.add_scene({"second": second})
+
+    assert manager.actual_screen is first
+    manager.change_screen("second")
+    assert manager.actual_screen is second
+
+
+def test_render_calls_active_scene() -> None:
+    scene = RecordingScene("scene")
+    manager = SceneManager({"scene": scene})
+
+    manager.render()
     manager.render()
 
-    assert manager.actual_screen is scene
-    assert scene.rendered_on is buffer
-    assert buffer.operations == ["clear", "update"]
+    assert scene.render_count == 2
 
 
-def test_change_screen_renders_the_selected_screen() -> None:
-    buffer = FakeScreenBuffer()
-    first = RecordingScreen("first")
-    second = RecordingScreen("second")
-    manager = ScreenManager(buffer)  # type: ignore[arg-type]
-    manager.add_screen("first", first)
-    manager.add_screen("second", second)
+def test_change_screen_selects_registered_scene() -> None:
+    first = RecordingScene("first")
+    second = RecordingScene("second")
+    manager = SceneManager({"first": first, "second": second})
 
     manager.change_screen("second")
     manager.render()
 
     assert manager.actual_screen is second
-    assert first.rendered_on is None
-    assert second.rendered_on is buffer
+    assert first.render_count == 0
+    assert second.render_count == 1
 
 
-def test_render_without_a_screen_fails() -> None:
-    manager = ScreenManager(FakeScreenBuffer())  # type: ignore[arg-type]
-
+def test_render_without_a_scene_fails() -> None:
     with pytest.raises(RuntimeError, match="no active screen"):
-        manager.render()
+        SceneManager().render()
 
 
-def test_change_to_unknown_screen_fails() -> None:
-    manager = ScreenManager(FakeScreenBuffer())  # type: ignore[arg-type]
-
+def test_change_to_unknown_scene_fails() -> None:
     with pytest.raises(ValueError, match="missing"):
-        manager.change_screen("missing")
+        SceneManager().change_screen("missing")
+
+
+def test_update_is_available_without_affecting_rendering() -> None:
+    scene = RecordingScene("scene")
+    manager = SceneManager({"scene": scene})
+
+    assert manager.update(0.016) is None
+    assert scene.render_count == 0

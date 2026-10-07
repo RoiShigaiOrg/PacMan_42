@@ -7,7 +7,9 @@ class Line(Components):
         Line Object is a Components representing a Line or a square.
     """
 
-    def __init__(self, x: Tuple[int, int], y: Tuple[int, int], color: int) -> None:
+    def __init__(
+            self, x: Tuple[int, int], y: Tuple[int, int], color: int
+    ) -> None:
         """ Init method for the Line object """
         if x[0] < 0 or x[1] < 0 or y[0] < 0 or y[1] < 0:
             raise ValueError("Line: Negative dimension")

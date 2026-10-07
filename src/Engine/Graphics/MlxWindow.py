@@ -95,50 +95,39 @@ class MlxWindow:
             y,
         )
 
-    def screen_update(self) -> None:
-        """Display the complete persistent buffer in the main window."""
-        self.__session.mlx_put_image_to_window(
-            self.__mlx_ptr,
-            self.__window_ptr,
-            self.__image_ptr,
-            0,
-            0,
-        )
-
     def close(self) -> None:
-        """Release the image buffer and window owned by this screen."""
+        """Release the native window owned by this object."""
         if self.__closed:
             return
 
-        self.__session.mlx_destroy_image(self.__mlx_ptr, self.__image_ptr)
         self.__session.mlx_destroy_window(self.__mlx_ptr, self.__window_ptr)
         self.__closed = True
 
     def create_display(self, size: Tuple[int, int]) -> MlxDisplay:
-        """ Create a Subwindow where we can draw in before pushing to the window """
+        """Create a subwindow where drawing can happen before presentation."""
 
-        if size[0] > self.__width or size[1] > self.__height:
-            self.__session.mlx_destroy_window(
-                    self.__mlx_ptr, self.__window_ptr
-                    )
-            raise RuntimeError("Invalide SubWindow Size")
+        if (
+            size[0] <= 0
+            or size[1] <= 0
+            or size[0] > self.__width
+            or size[1] > self.__height
+        ):
+            raise ValueError(
+                "display dimensions must be positive and fit window"
+            )
+
         image_ptr = self.__session.mlx_new_image(
                 self.__mlx_ptr,
                 size[0],
                 size[1]
                 )
         if not image_ptr:
-            self.__session.mlx_destroy_window(
-                    self.__mlx_ptr, self.__window_ptr
-                    )
-            raise RuntimeError("failed to create MLX screen buffer")
+            raise RuntimeError("failed to create MLX display buffer")
 
-        try:
-            subwindow = MlxDisplay(self.__session, image_ptr, self.__mlx_ptr, self.__window_ptr, size)
-            return subwindow
-        except:
-            self.__session.mlx_destroy_window(
-                    self.__window_ptr
-                    )
-            self.__closed = True
-            raise RuntimeError("Failed to create Subwindow")
+        return MlxDisplay(
+            self.__session,
+            image_ptr,
+            self.__mlx_ptr,
+            self.__window_ptr,
+            size,
+        )
