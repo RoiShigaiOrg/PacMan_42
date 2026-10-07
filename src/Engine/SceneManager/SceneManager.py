@@ -52,3 +52,6 @@ class SceneManager:
             raise RuntimeError("ScreenManager has no active screen")
 
         self.__actual_screen.render()
+
+    def update(self, delta_time: float) -> None:
+        return 

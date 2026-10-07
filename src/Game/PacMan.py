@@ -33,4 +33,5 @@ class PacMan:
 
     def run(self) -> None:
         """ Main method that will contain the loop of the proram """
+        self.scenes.change_screen("main_scene")
         self.engine.run(self)

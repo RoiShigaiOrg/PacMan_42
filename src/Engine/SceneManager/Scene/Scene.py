@@ -1,13 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from src.Engine.Graphics import MlxWindow
-else:
-    try:
-        from ...Engine.Graphics import MlxWindow
-    except ImportError:
-        from Engine.Graphics import MlxWindow
 
 
 class Scene(ABC):

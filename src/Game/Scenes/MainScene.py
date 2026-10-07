@@ -1,16 +1,5 @@
 from Engine.SceneManager.Scene.Scene import Scene
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from src.Engine.Graphics import MlxWindow
-    from src.Engine.Graphics import MlxDisplay
-else:
-    try:
-        from ...Engine.Graphics import MlxWindow
-        from ...Engine.Graphics import MlxDisplay
-    except ImportError:
-        from Engine.Graphics import MlxWindow
-        from Engine.Graphics import MlxDisplay
+from Engine.Graphics.MlxDisplay import MlxDisplay
 
 
 class MainScene(Scene):

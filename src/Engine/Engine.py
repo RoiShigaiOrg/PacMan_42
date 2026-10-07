@@ -4,6 +4,7 @@ from typing import Any
 from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application
 import mlx
+import time
 
 
 class Engine:
@@ -58,9 +59,21 @@ class Engine:
                 the given Application object (Game or else)
                 created with the Engine API.
         """
+        previous_time = time.perf_counter()
+
+        def frame(_param: object) -> None:
+            nonlocal previous_time
+
+            current_time = time.perf_counter()
+            delta_time = current_time - previous_time
+            previous_time = current_time
+
+            application.update(delta_time)
+            application.render()
+
         self._session.mlx_loop_hook(
                 self._mlx_ptr,
-                application.render,
+                frame,
                 None
                 )
         try:
