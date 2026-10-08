@@ -118,6 +118,19 @@ class MlxDisplay:
         """Return a copy of the complete image buffer for layer caching."""
         return bytes(self.__data)
 
+    def write_text(
+            self,
+            pos_x: int,
+            pos_y: int,
+            color: int,
+            text: str) -> None:
+        """ Method to write string to the display """
+        if not 0 <= pos_x < self.__width or not 0 <= pos_y < self.__height:
+            raise ValueError("'write text': No valid coordonates...")
+        if not text:
+            raise ValueError("'write text: Empty string'")
+        self.__session.mlx_string_put(self.__mlx_ptr, self.__window_ptr, pos_x, pos_y, color, text)
+
     def restore_region(
             self,
             snapshot: bytes,

@@ -67,6 +67,7 @@ class MainScene(Scene):
         )
 
     def render(self) -> None:
+        """ Render all the the current frame in the Window """
         if self.__dirty_region is not None:
             x, y, width, height = self.__dirty_region
             self.__display.restore_region(
