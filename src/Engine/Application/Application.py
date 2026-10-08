@@ -1,5 +1,7 @@
 from typing import Protocol
 
+from ..InputHandler import InputHandler
+
 
 class Application(Protocol):
     """
@@ -13,7 +15,9 @@ class Application(Protocol):
             the game from the game being run by the engine.
     """
 
-    def update(self, delta_time: float) -> None:
+    def update(
+            self, delta_time: float, input_handler: InputHandler
+    ) -> None:
         """
             Update method of the Application
 

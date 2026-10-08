@@ -109,6 +109,30 @@ def test_fill_writes_every_pixel() -> None:
     assert bytes(session.data[16:28]) == bytes.fromhex("030201FF" * 3)
 
 
+def test_fill_rect_writes_only_the_requested_pixels() -> None:
+    display, session = make_display()
+    session.data[:] = b"\xAA" * len(session.data)
+
+    display.fill_rect(1, 0, 2, 1, 0xFF010203)
+
+    assert bytes(session.data[0:4]) == b"\xAA" * 4
+    assert bytes(session.data[4:12]) == bytes.fromhex("030201FF" * 2)
+    assert bytes(session.data[12:16]) == b"\xAA" * 4
+
+
+def test_restore_region_restores_only_the_requested_pixels() -> None:
+    display, session = make_display()
+    session.data[:] = bytes(range(32))
+    snapshot = display.snapshot()
+    session.data[:] = b"\xFF" * 32
+
+    display.restore_region(snapshot, 1, 0, 1, 1)
+
+    assert bytes(session.data[0:4]) == b"\xFF" * 4
+    assert bytes(session.data[4:8]) == bytes(range(4, 8))
+    assert bytes(session.data[8:]) == b"\xFF" * 24
+
+
 def test_render_presents_the_display_image() -> None:
     display, session = make_display()
 

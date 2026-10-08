@@ -1,5 +1,6 @@
 from Engine.Engine import Engine
 from Engine.SceneManager import SceneManager
+from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
 
 
@@ -23,8 +24,10 @@ class PacMan:
             }
         )
 
-    def update(self, delta_time: float) -> None:
-        self.scenes.update(delta_time)
+    def update(
+            self, delta_time: float, input_handler: InputHandler
+    ) -> None:
+        self.scenes.update(delta_time, input_handler)
 
     def render(self) -> None:
         """ Render the actual scene in the SceneManager """

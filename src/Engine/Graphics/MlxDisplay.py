@@ -84,6 +84,68 @@ class MlxDisplay:
             row_end = row_start + self.__width * 4
             self.__data[row_start:row_end] = pixel * self.__width
 
+    def fill_rect(
+            self,
+            x: int,
+            y: int,
+            width: int,
+            height: int,
+            color: int,
+    ) -> None:
+        """Fill a clipped rectangle using row-sized memory writes."""
+        if not 0 <= color <= 0xFFFFFFFF:
+            raise ValueError("color must be a 32-bit unsigned integer")
+        if width <= 0 or height <= 0:
+            return
+
+        left = max(0, x)
+        top = max(0, y)
+        right = min(self.__width, x + width)
+        bottom = min(self.__height, y + height)
+        if left >= right or top >= bottom:
+            return
+
+        byte_order: Literal["little", "big"] = (
+            "little" if self.__format == 0 else "big"
+        )
+        pixel = color.to_bytes(4, byte_order)
+        row_pixels = pixel * (right - left)
+        for row in range(top, bottom):
+            row_start = row * self.__stride + left * 4
+            self.__data[row_start:row_start + len(row_pixels)] = row_pixels
+
+    def snapshot(self) -> bytes:
+        """Return a copy of the complete image buffer for layer caching."""
+        return bytes(self.__data)
+
+    def restore_region(
+            self,
+            snapshot: bytes,
+            x: int,
+            y: int,
+            width: int,
+            height: int,
+    ) -> None:
+        """Restore a clipped region from a compatible image snapshot."""
+        if len(snapshot) != len(self.__data):
+            raise ValueError("snapshot does not match display size")
+        if width <= 0 or height <= 0:
+            return
+
+        left = max(0, x)
+        top = max(0, y)
+        right = min(self.__width, x + width)
+        bottom = min(self.__height, y + height)
+        if left >= right or top >= bottom:
+            return
+
+        row_width = (right - left) * 4
+        for row in range(top, bottom):
+            row_start = row * self.__stride + left * 4
+            self.__data[row_start:row_start + row_width] = snapshot[
+                row_start:row_start + row_width
+            ]
+
     def fill(self, color: int) -> None:
         """ Fill the entire Display with a given color """
         for y in range(self.__height):

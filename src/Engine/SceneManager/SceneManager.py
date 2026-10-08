@@ -1,6 +1,7 @@
 from typing import Dict
 
 from .Scene.Scene import Scene
+from ..InputHandler import InputHandler
 
 
 class SceneManager:
@@ -31,6 +32,7 @@ class SceneManager:
         """ Change to the given screen_id to render in the mlx window """
         if screen_id in self.__screens:
             self.__actual_screen = self.__screens[screen_id]
+            self.__actual_screen.render_on_change()
         else:
             raise ValueError(f"ScreenManager Error: {screen_id} do not exist")
 
@@ -45,5 +47,13 @@ class SceneManager:
 
         self.__actual_screen.render()
 
-    def update(self, delta_time: float) -> None:
-        return
+    def update(
+            self,
+            delta_time: float,
+            input_handler: InputHandler | None = None,
+    ) -> None:
+        if self.__actual_screen is None:
+            raise RuntimeError("ScreenManager has no active screen")
+
+        if input_handler is not None:
+            self.__actual_screen.update(delta_time, input_handler)

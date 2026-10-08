@@ -81,6 +81,11 @@ class MlxWindow:
         """Return the screen title."""
         return self.__title
 
+    @property
+    def native_ptr(self) -> Any:
+        """Return the native MLX window pointer for engine services."""
+        return self.__window_ptr
+
     def size(self) -> tuple[int, int]:
         """Return ``(width, height)`` in pixels."""
         return self.__width, self.__height
