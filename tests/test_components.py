@@ -2,7 +2,15 @@ from dataclasses import dataclass
 
 import pytest
 
-from Engine.Graphics import Circle, Line, Rect
+from Engine.Graphics import (
+    Circle,
+    Line,
+    Rect,
+    TextBox,
+    TEXT_CENTER,
+    TEXT_END,
+    TEXT_START_HIGH,
+)
 
 
 @dataclass(frozen=True)
@@ -15,9 +23,69 @@ class Pixel:
 class RecordingDisplay:
     def __init__(self) -> None:
         self.pixels: list[Pixel] = []
+        self.text: list[tuple[int, int, int, str]] = []
 
     def draw_pixel(self, x: int, y: int, color: int) -> None:
         self.pixels.append(Pixel(x, y, color))
+
+    def write_text(self, x: int, y: int, color: int, text: str) -> None:
+        self.text.append((x, y, color, text))
+
+
+def test_text_box_draws_and_updates_text_and_color() -> None:
+    display = RecordingDisplay()
+    text_box = TextBox("Hi", 0xFFFFFFFF)
+
+    text_box.draw(display, 3, 4)
+    text_box.update_text("Bye")
+    text_box.update_color(0xFF00FF00)
+    text_box.draw(display, 5, 6)
+
+    assert display.text == [
+        (3, 4, 0xFFFFFFFF, "Hi"),
+        (5, 6, 0xFF00FF00, "Bye"),
+    ]
+    assert text_box.text_size == (24, 16)
+
+
+def test_rect_draws_centered_linked_text() -> None:
+    display = RecordingDisplay()
+    rect = Rect(100, 50, 0xFF000000)
+    rect.add_text(TextBox("Hi", 0xFFFFFFFF), TEXT_CENTER)
+
+    rect.draw(display, 10, 20)
+
+    assert display.text == [(52, 37, 0xFFFFFFFF, "Hi")]
+
+
+def test_circle_draws_linked_text_at_its_center() -> None:
+    display = RecordingDisplay()
+    circle = Circle(20, 10, 0xFF000000)
+    circle.add_text(TextBox("Hi", 0xFFFFFFFF))
+
+    circle.draw(display, 50, 40)
+
+    assert display.text == [(42, 32, 0xFFFFFFFF, "Hi")]
+
+
+def test_line_draws_text_from_start_and_above_line() -> None:
+    display = RecordingDisplay()
+    line = Line((0, 0), (100, 0), 0xFF000000)
+    line.add_text(TextBox("Hi", 0xFFFFFFFF), TEXT_START_HIGH)
+
+    line.draw(display, 10, 20)
+
+    assert display.text == [(10, 15, 0xFFFFFFFF, "Hi")]
+
+
+def test_line_end_justification_uses_line_endpoint() -> None:
+    display = RecordingDisplay()
+    line = Line((0, 0), (100, 0), 0xFF000000)
+    line.add_text(TextBox("Hi", 0xFFFFFFFF), TEXT_END)
+
+    line.draw(display, 10, 20)
+
+    assert display.text == [(94, 20, 0xFFFFFFFF, "Hi")]
 
 
 def test_rect_draws_all_pixels_at_position() -> None:

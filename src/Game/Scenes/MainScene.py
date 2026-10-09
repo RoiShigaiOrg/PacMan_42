@@ -4,6 +4,8 @@ from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
 from Engine.Graphics.Components.Line import Line
+from Engine.Graphics.Components.TextBox import TextBox
+from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 
 
 Region = tuple[int, int, int, int]
@@ -27,6 +29,7 @@ class MainScene(Scene):
         self.__rect: Rect = Rect(480, 312, 0xFF0000FF)
         self.__circle: Circle = Circle(80, 80, 0xFF00FFFF)
         self.__line: Line = Line((220, 400), (930, 300), 0xFF00FF00)
+        self.__rect.add_text(TextBox("TEST", 0xFFFFFFFF), TEXT_CENTER)
         self.__rectpos = [0, 0]
         self.__rect_size = (480, 312)
         self.__dirty_region: Region | None = (
@@ -49,8 +52,10 @@ class MainScene(Scene):
         """
         old_y = self.__rectpos[0]
         if input_handler.is_key_down(122):
+            print("Up")
             self.__rectpos[0] += 5
         if input_handler.is_key_down(115) and self.__rectpos[0] > 5:
+            print("Down")
             self.__rectpos[0] -= 5
 
         if old_y != self.__rectpos[0]:
@@ -76,8 +81,11 @@ class MainScene(Scene):
             self.__rect.draw(
                 self.__display, 50, 50 + self.__rectpos[0]
             )
+            self.__display.render()
+            self.__rect.draw_text(
+                self.__display, 50, 50 + self.__rectpos[0]
+            )
             self.__dirty_region = None
-        self.__display.render()
 
     def __movement_region(self, y: int) -> Region:
         """Return the rectangle occupied by the moving object."""

@@ -1,15 +1,23 @@
 import pytest
 
 from Engine.SceneManager import Scene, SceneManager
+from Engine.InputHandler import InputHandler
 
 
 class RecordingScene(Scene):
     def __init__(self, marker: str) -> None:
         self.marker = marker
         self.render_count = 0
+        self.change_render = 0
 
     def render(self) -> None:
         self.render_count += 1
+
+    def render_on_change(self) -> None:
+        self.change_render += 1
+
+    def update(self, delta_time: float, input_handler: InputHandler) -> None:
+        print("update")
 
 
 def test_empty_manager_has_no_active_scene() -> None:

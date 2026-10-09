@@ -27,7 +27,9 @@ class FakeMlx:
 
 def make_handler() -> tuple[InputHandler, FakeMlx]:
     session = FakeMlx()
-    return InputHandler(session, "mlx", "window"), session
+    handler = InputHandler(session, "mlx", "window")
+    handler.register_hooks()
+    return handler, session
 
 
 def test_registers_keyboard_mouse_and_close_hooks() -> None:

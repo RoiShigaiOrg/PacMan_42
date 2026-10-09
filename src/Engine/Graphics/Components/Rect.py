@@ -1,18 +1,30 @@
 from .TextBox import TextBox
 from typing import Any
 from .Components import Components
+from .TextJustify import (
+    TEXT_CENTER,
+    TEXT_CENTER_HIGH,
+    TEXT_CENTER_LOW,
+    TEXT_END,
+    TEXT_END_HIGH,
+    TEXT_END_LOW,
+    TEXT_START,
+    TEXT_START_HIGH,
+    TEXT_START_LOW,
+    VALID_TEXT_JUSTIFICATIONS,
+)
 
-TEXT_CENTER: int = 0
-TEXT_RIGHT: int = 1
-TEXT_LEFT: int = 2
-
-TEXT_CENTER_LOW: int = 3
-TEXT_RIGHT_LOW: int = 4
-TEXT_LEFT_LOW: int = 5
-
-TEXT_CENTER_HIGH: int = 6
-TEXT_RIGHT_HIGH: int = 7
-TEXT_LEFT_HIGH: int = 8
+TEXT_JUSTIFICATIONS = {
+    TEXT_CENTER: ("center", "center"),
+    TEXT_END: ("end", "center"),
+    TEXT_START: ("start", "center"),
+    TEXT_CENTER_LOW: ("center", "low"),
+    TEXT_END_LOW: ("end", "low"),
+    TEXT_START_LOW: ("start", "low"),
+    TEXT_CENTER_HIGH: ("center", "high"),
+    TEXT_END_HIGH: ("end", "high"),
+    TEXT_START_HIGH: ("start", "high"),
+}
 
 
 class Rect(Components):
@@ -49,15 +61,27 @@ class Rect(Components):
             for x in range(pos_x, pos_x + self.__width):
                 display.draw_pixel(x, y, self.__color)
         if self.__text_flag:
-            self.__draw_text()
+            self.__draw_text(display, pos_x, pos_y)
+
+    def draw_text(
+            self,
+            display: Any,
+            pos_x: int,
+            pos_y: int,
+    ) -> None:
+        """Draw the linked text after the rectangle is presented."""
+        if self.__text_flag:
+            self.__draw_text(display, pos_x, pos_y)
 
     def add_text(
             self,
             text_box: TextBox,
             justify: int = TEXT_CENTER) -> None:
         """ Link a TextBox Component to be display to the Rect """
-        if text_box is None:
+        if not isinstance(text_box, TextBox):
             raise ValueError("Rect: Invalid TextBox Value")
+        if justify not in VALID_TEXT_JUSTIFICATIONS:
+            raise ValueError("Rect: Invalid text justification")
         self.__text = text_box
         self.__text_flag = True
         self.__justify_text = justify
@@ -75,8 +99,23 @@ class Rect(Components):
             raise ValueError("Rect: Not valid color value")
         self.__color = color
 
-    def draw_text(self) -> None:
-        """ Draw Method to display text on Rect """
-        raise NotImplementedError("Draw Text on components not implemented yet")
-        if self.__justify_text == TEXT_CENTER:
-            ...
+    def __draw_text(self, display: Any, pos_x: int, pos_y: int) -> None:
+        """Draw linked text at the requested position in the rectangle."""
+        if self.__text is None or self.__justify_text is None:
+            return
+        text_width, text_height = self.__text.text_size
+        horizontal, vertical = TEXT_JUSTIFICATIONS[self.__justify_text]
+        if horizontal == "start":
+            text_x = pos_x
+        elif horizontal == "end":
+            text_x = pos_x + self.__width - text_width
+        else:
+            text_x = pos_x + (self.__width - text_width) // 2
+
+        if vertical == "high":
+            text_y = pos_y
+        elif vertical == "low":
+            text_y = pos_y + self.__height - text_height
+        else:
+            text_y = pos_y + (self.__height - text_height) // 2
+        self.__text.draw(display, text_x, text_y)
