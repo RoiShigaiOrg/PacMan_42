@@ -1,5 +1,6 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
+from Engine.InputHandler.KeyCode import KEY_S, KEY_Z
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
@@ -51,10 +52,10 @@ class MainScene(Scene):
                 and Engine Calculation.
         """
         old_y = self.__rectpos[0]
-        if input_handler.is_key_down(122):
+        if input_handler.is_key_down(KEY_S):
             print("Up")
             self.__rectpos[0] += 5
-        if input_handler.is_key_down(115) and self.__rectpos[0] > 5:
+        if input_handler.is_key_down(KEY_Z) and self.__rectpos[0] > 5:
             print("Down")
             self.__rectpos[0] -= 5
 
