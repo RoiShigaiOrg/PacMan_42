@@ -1,6 +1,6 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_S, KEY_Z
+from Engine.InputHandler.KeyCode import KEY_S, KEY_Z, KEY_ESC
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
@@ -53,11 +53,11 @@ class MainScene(Scene):
         """
         old_y = self.__rectpos[0]
         if input_handler.is_key_down(KEY_S):
-            print("Up")
             self.__rectpos[0] += 5
         if input_handler.is_key_down(KEY_Z) and self.__rectpos[0] > 5:
-            print("Down")
             self.__rectpos[0] -= 5
+        if input_handler.is_key_down(KEY_ESC):
+            self.__display.close()
 
         if old_y != self.__rectpos[0]:
             self.__dirty_region = self.__union_regions(

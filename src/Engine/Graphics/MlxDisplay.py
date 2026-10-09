@@ -159,6 +159,10 @@ class MlxDisplay:
                 row_start:row_start + row_width
             ]
 
+    def close(self) -> None:
+        """ Close the Window link to this Display """
+        self.__session.mlx_loop_exit(self.__mlx_ptr)
+
     def fill(self, color: int) -> None:
         """ Fill the entire Display with a given color """
         for y in range(self.__height):
