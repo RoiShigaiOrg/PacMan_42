@@ -50,10 +50,10 @@ def test_text_box_draws_and_updates_text_and_color() -> None:
 
 def test_rect_draws_centered_linked_text() -> None:
     display = RecordingDisplay()
-    rect = Rect(100, 50, 0xFF000000)
+    rect = Rect(100, 50, 0, 0, 0xFF000000)
     rect.add_text(TextBox("Hi", 0xFFFFFFFF), TEXT_CENTER)
 
-    rect.draw(display, 10, 20)
+    rect.draw(display)
 
     assert display.text == [(52, 37, 0xFFFFFFFF, "Hi")]
 
@@ -91,7 +91,7 @@ def test_line_end_justification_uses_line_endpoint() -> None:
 def test_rect_draws_all_pixels_at_position() -> None:
     display = RecordingDisplay()
 
-    Rect(3, 2, 0xFF112233).draw(display, 4, 5)
+    Rect(3, 2, 0, 0, 0xFF112233).draw(display)
 
     assert display.pixels == [
         Pixel(4, 5, 0xFF112233),
@@ -105,17 +105,17 @@ def test_rect_draws_all_pixels_at_position() -> None:
 
 def test_rect_updates_size_and_color() -> None:
     display = RecordingDisplay()
-    rect = Rect(1, 1, 0xFF000000)
+    rect = Rect(1, 1, 0, 0, 0xFF000000)
 
     rect.update_size(2, 1)
     rect.update_color(0xFFFFFFFF)
-    rect.draw(display, 0, 0)
+    rect.draw(display)
 
     assert display.pixels == [Pixel(0, 0, 0xFFFFFFFF), Pixel(1, 0, 0xFFFFFFFF)]
 
 
 def test_rect_rejects_invalid_updates() -> None:
-    rect = Rect(1, 1, 0)
+    rect = Rect(1, 1, 0, 0, 0)
 
     with pytest.raises(ValueError):
         rect.update_size(-1, 1)
@@ -123,7 +123,7 @@ def test_rect_rejects_invalid_updates() -> None:
         rect.update_color(-1)
 
 
-@pytest.mark.parametrize("dimensions", [(0, 1), (-1, 1), (1, 0)])
+@pytest.mark.parametrize("dimensions", [(0, 1, 0, 0), (-1, 1, 0, 0), (1, 0, 0, 0)])
 def test_rect_rejects_non_positive_dimensions(
     dimensions: tuple[int, int],
 ) -> None:
@@ -197,7 +197,7 @@ def test_line_handles_steep_reversed_endpoints() -> None:
 @pytest.mark.parametrize(
     "component",
     [
-        lambda: Rect(1, 1, -1),
+        lambda: Rect(1, 1, 0, 0, -1),
         lambda: Circle(1, 1, 0x100000000),
         lambda: Line((0, 0), (1, 1), -1),
     ],
@@ -205,14 +205,3 @@ def test_line_handles_steep_reversed_endpoints() -> None:
 def test_components_reject_invalid_colors(component: object) -> None:
     with pytest.raises(ValueError):
         component()  # type: ignore[operator]
-
-
-def test_components_reject_negative_draw_positions() -> None:
-    display = RecordingDisplay()
-
-    with pytest.raises(ValueError):
-        Rect(1, 1, 0).draw(display, -1, 0)
-    with pytest.raises(ValueError):
-        Circle(1, 1, 0).draw(display, 0, -1)
-    with pytest.raises(ValueError):
-        Line((0, 0), (1, 1), 0).draw(display, -1, 0)

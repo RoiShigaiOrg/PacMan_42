@@ -7,6 +7,7 @@ from Engine.Graphics.Components.Circle import Circle
 from Engine.Graphics.Components.Line import Line
 from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
+from typing import Tuple
 
 
 Region = tuple[int, int, int, int]
@@ -27,12 +28,10 @@ class MainScene(Scene):
     def __init__(self, display: MlxDisplay) -> None:
         """ Init Method of the MainScreen Class """
         self.__display = display
-        self.__rect: Rect = Rect(480, 312, 0xFF0000FF)
+        self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
         self.__circle: Circle = Circle(80, 80, 0xFF00FFFF)
         self.__line: Line = Line((220, 400), (930, 300), 0xFF00FF00)
         self.__rect.add_text(TextBox("TEST", 0xFFFFFFFF), TEXT_CENTER)
-        self.__rectpos = [0, 0]
-        self.__rect_size = (480, 312)
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
@@ -51,23 +50,24 @@ class MainScene(Scene):
                 in the scene depending on the user input
                 and Engine Calculation.
         """
-        old_y, old_x = (self.__rectpos)
+        old_pos: Tuple[int, int] = self.__rect.pos
+
         if input_handler.is_key_down(KEY_S):
-            self.__rectpos[0] += 5
+            self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
         if input_handler.is_key_down(KEY_Z):
-            self.__rectpos[0] -= 5
+            self.__rect.update_pos(old_pos[0], old_pos[1] - 5)
         if input_handler.is_key_down(KEY_D):
-            self.__rectpos[1] += 5
+            self.__rect.update_pos(old_pos[0] + 5, old_pos[1])
         if input_handler.is_key_down(KEY_Q):
-            self.__rectpos[1] -= 5
+            self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
         if input_handler.is_key_down(KEY_ESC):
             self.__display.close()
 
-        if old_y != self.__rectpos[0] or old_x != self.__rectpos[1]:
-            self.__dirty_region = self.__union_regions(
+        if old_pos != self.__rect.pos:
+            self.__dirty_region = self.union_regions(
                 self.__dirty_region,
-                self.__movement_region(old_y, old_x),
-                self.__movement_region(self.__rectpos[0], self.__rectpos[1]),
+                self.movement_region(self.__rect.size, old_pos),
+                self.movement_region(self.__rect.size, self.__rect.pos),
             )
 
     def render_on_change(self) -> None:
@@ -83,31 +83,8 @@ class MainScene(Scene):
             self.__display.restore_region(
                 self.__static_layer, x, y, width, height
             )
-            self.__rect.draw(
-                self.__display, 50 + self.__rectpos[1], 50 + self.__rectpos[0]
-            )
+            self.__rect.draw(self.__display)
             self.__display.render()
-            self.__rect.draw_text(
-                self.__display, 50 + self.__rectpos[1], 50 + self.__rectpos[0]
-            )
+            self.__rect.draw_text(self.__display)
             self.__dirty_region = None
 
-    def __movement_region(self, y: int = 0, x: int = 0) -> Region:
-        """Return the rectangle occupied by the moving object."""
-        return 50 + x, 50 + y, self.__rect_size[0], self.__rect_size[1]
-
-    @staticmethod
-    def __union_regions(
-            current: Region | None,
-            *regions: Region,
-    ) -> Region:
-        """Return one region containing all supplied dirty regions."""
-        all_regions = list(regions)
-        if current is not None:
-            all_regions.append(current)
-
-        left = min(region[0] for region in all_regions)
-        top = min(region[1] for region in all_regions)
-        right = max(region[0] + region[2] for region in all_regions)
-        bottom = max(region[1] + region[3] for region in all_regions)
-        return left, top, right - left, bottom - top

@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 from ...InputHandler import InputHandler
+
+
+Region = tuple[int, int, int, int]
 
 
 class Scene(ABC):
@@ -34,3 +38,23 @@ class Scene(ABC):
     ) -> None:
         """Update this screen using the current frame's input state."""
         ...
+
+    def movement_region(self, size: Tuple[int, int], pos: Tuple[int, int]) -> Region:
+        """Return the rectangle occupied by the moving object."""
+        return (pos[0], pos[1], size[0], size[1])
+
+    def union_regions(
+            self,
+            current: Region | None,
+            *regions: Region,
+    ) -> Region:
+        """Return one region containing all supplied dirty regions."""
+        all_regions = list(regions)
+        if current is not None:
+            all_regions.append(current)
+
+        left = min(region[0] for region in all_regions)
+        top = min(region[1] for region in all_regions)
+        right = max(region[0] + region[2] for region in all_regions)
+        bottom = max(region[1] + region[3] for region in all_regions)
+        return left, top, right - left, bottom - top
