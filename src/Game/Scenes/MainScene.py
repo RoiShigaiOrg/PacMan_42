@@ -1,6 +1,6 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_S, KEY_Z, KEY_ESC
+from Engine.InputHandler.KeyCode import KEY_S, KEY_Z, KEY_ESC, KEY_Q, KEY_D
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
@@ -51,19 +51,23 @@ class MainScene(Scene):
                 in the scene depending on the user input
                 and Engine Calculation.
         """
-        old_y = self.__rectpos[0]
+        old_y, old_x = (self.__rectpos)
         if input_handler.is_key_down(KEY_S):
             self.__rectpos[0] += 5
-        if input_handler.is_key_down(KEY_Z) and self.__rectpos[0] > 5:
+        if input_handler.is_key_down(KEY_Z):
             self.__rectpos[0] -= 5
+        if input_handler.is_key_down(KEY_D):
+            self.__rectpos[1] += 5
+        if input_handler.is_key_down(KEY_Q):
+            self.__rectpos[1] -= 5
         if input_handler.is_key_down(KEY_ESC):
             self.__display.close()
 
-        if old_y != self.__rectpos[0]:
+        if old_y != self.__rectpos[0] or old_x != self.__rectpos[1]:
             self.__dirty_region = self.__union_regions(
                 self.__dirty_region,
-                self.__movement_region(old_y),
-                self.__movement_region(self.__rectpos[0]),
+                self.__movement_region(old_y, old_x),
+                self.__movement_region(self.__rectpos[0], self.__rectpos[1]),
             )
 
     def render_on_change(self) -> None:
@@ -80,17 +84,17 @@ class MainScene(Scene):
                 self.__static_layer, x, y, width, height
             )
             self.__rect.draw(
-                self.__display, 50, 50 + self.__rectpos[0]
+                self.__display, 50 + self.__rectpos[1], 50 + self.__rectpos[0]
             )
             self.__display.render()
             self.__rect.draw_text(
-                self.__display, 50, 50 + self.__rectpos[0]
+                self.__display, 50 + self.__rectpos[1], 50 + self.__rectpos[0]
             )
             self.__dirty_region = None
 
-    def __movement_region(self, y: int) -> Region:
+    def __movement_region(self, y: int = 0, x: int = 0) -> Region:
         """Return the rectangle occupied by the moving object."""
-        return 50, 50 + y, self.__rect_size[0], self.__rect_size[1]
+        return 50 + x, 50 + y, self.__rect_size[0], self.__rect_size[1]
 
     @staticmethod
     def __union_regions(

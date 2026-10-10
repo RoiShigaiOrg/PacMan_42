@@ -99,6 +99,12 @@ class Rect(Components):
             raise ValueError("Rect: Not valid color value")
         self.__color = color
 
+    def update_text(self, text: str) -> None:
+        """ Update the text displayed in the Rect Component """
+        if not self.__text_flag:
+            raise ValueError("Rect: no text link with this object")
+        self.__text.update_text(text)
+
     def __draw_text(self, display: Any, pos_x: int, pos_y: int) -> None:
         """Draw linked text at the requested position in the rectangle."""
         if self.__text is None or self.__justify_text is None:
