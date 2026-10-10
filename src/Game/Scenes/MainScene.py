@@ -29,17 +29,17 @@ class MainScene(Scene):
         """ Init Method of the MainScreen Class """
         self.__display = display
         self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
-        self.__circle: Circle = Circle(80, 80, 0xFF00FFFF)
-        self.__line: Line = Line((220, 400), (930, 300), 0xFF00FF00)
+        self.__circle: Circle = Circle(160, 160, 1120, 160, 0xFF00FFFF)
+        self.__line: Line = Line((0, 100), (710, 0), 220, 300, 0xFF00FF00)
         self.__rect.add_text(TextBox("TEST", 0xFFFFFFFF), TEXT_CENTER)
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
 
         self.__display.clear(0xFFFF0000)
-        self.__circle.draw(self.__display, 1200, 240)
-        self.__circle.fill(self.__display, 1200, 240)
-        self.__line.draw(self.__display, 0, 0)
+        self.__circle.draw(self.__display)
+        self.__circle.fill(self.__display)
+        self.__line.draw(self.__display)
         self.__static_layer = self.__display.snapshot()
 
     def update(
@@ -87,4 +87,3 @@ class MainScene(Scene):
             self.__display.render()
             self.__rect.draw_text(self.__display)
             self.__dirty_region = None
-

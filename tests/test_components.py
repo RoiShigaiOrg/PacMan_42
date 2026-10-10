@@ -55,35 +55,35 @@ def test_rect_draws_centered_linked_text() -> None:
 
     rect.draw(display)
 
-    assert display.text == [(52, 37, 0xFFFFFFFF, "Hi")]
+    assert display.text == [(42, 17, 0xFFFFFFFF, "Hi")]
 
 
 def test_circle_draws_linked_text_at_its_center() -> None:
     display = RecordingDisplay()
-    circle = Circle(20, 10, 0xFF000000)
+    circle = Circle(20, 10, 40, 25, 0xFF000000)
     circle.add_text(TextBox("Hi", 0xFFFFFFFF))
 
-    circle.draw(display, 50, 40)
+    circle.draw(display)
 
-    assert display.text == [(42, 32, 0xFFFFFFFF, "Hi")]
+    assert display.text == [(42, 22, 0xFFFFFFFF, "Hi")]
 
 
 def test_line_draws_text_from_start_and_above_line() -> None:
     display = RecordingDisplay()
-    line = Line((0, 0), (100, 0), 0xFF000000)
+    line = Line((0, 0), (100, 0), 10, 20, 0xFF000000)
     line.add_text(TextBox("Hi", 0xFFFFFFFF), TEXT_START_HIGH)
 
-    line.draw(display, 10, 20)
+    line.draw(display)
 
     assert display.text == [(10, 15, 0xFFFFFFFF, "Hi")]
 
 
 def test_line_end_justification_uses_line_endpoint() -> None:
     display = RecordingDisplay()
-    line = Line((0, 0), (100, 0), 0xFF000000)
+    line = Line((0, 0), (100, 0), 10, 20, 0xFF000000)
     line.add_text(TextBox("Hi", 0xFFFFFFFF), TEXT_END)
 
-    line.draw(display, 10, 20)
+    line.draw(display)
 
     assert display.text == [(94, 20, 0xFFFFFFFF, "Hi")]
 
@@ -91,7 +91,7 @@ def test_line_end_justification_uses_line_endpoint() -> None:
 def test_rect_draws_all_pixels_at_position() -> None:
     display = RecordingDisplay()
 
-    Rect(3, 2, 0, 0, 0xFF112233).draw(display)
+    Rect(3, 2, 4, 5, 0xFF112233).draw(display)
 
     assert display.pixels == [
         Pixel(4, 5, 0xFF112233),
@@ -131,11 +131,14 @@ def test_rect_rejects_non_positive_dimensions(
         Rect(*dimensions, 0xFFFFFFFF)
 
 
-def test_circle_draws_a_circumference_using_position_as_center() -> None:
+def test_circle_draws_a_circumference_from_top_left_position() -> None:
     display = RecordingDisplay()
 
-    Circle(3, 2, 0xFF123456).draw(display, 10, 10)
+    circle = Circle(7, 5, 7, 8, 0xFF123456)
+    circle.draw(display)
 
+    assert circle.pos == (7, 8)
+    assert circle.size == (7, 5)
     assert len(display.pixels) == 500
     assert Pixel(13, 10, 0xFF123456) in display.pixels
     assert Pixel(10, 12, 0xFF123456) in display.pixels
@@ -145,7 +148,7 @@ def test_circle_draws_a_circumference_using_position_as_center() -> None:
 def test_circle_fill_draws_only_pixels_inside_ellipse() -> None:
     display = RecordingDisplay()
 
-    Circle(2, 1, 0xFFABCDEF).fill(display, 5, 5)
+    Circle(5, 3, 3, 4, 0xFFABCDEF).fill(display)
 
     assert Pixel(5, 5, 0xFFABCDEF) in display.pixels
     assert Pixel(3, 5, 0xFFABCDEF) in display.pixels
@@ -156,17 +159,17 @@ def test_circle_fill_draws_only_pixels_inside_ellipse() -> None:
 
 def test_circle_updates_size_and_color() -> None:
     display = RecordingDisplay()
-    circle = Circle(1, 1, 0xFF000000)
+    circle = Circle(1, 1, 0, 0, 0xFF000000)
 
-    circle.update_size((2, 2))
+    circle.update_size((5, 5))
     circle.update_color(0xFFFFFFFF)
-    circle.fill(display, 3, 3)
+    circle.fill(display)
 
     assert Pixel(3, 3, 0xFFFFFFFF) in display.pixels
 
 
 def test_circle_rejects_invalid_updates() -> None:
-    circle = Circle(1, 1, 0)
+    circle = Circle(1, 1, 0, 0, 0)
 
     with pytest.raises(ValueError):
         circle.update_size((0, 1))
@@ -177,20 +180,23 @@ def test_circle_rejects_invalid_updates() -> None:
 def test_line_draws_endpoints_and_applies_position() -> None:
     display = RecordingDisplay()
 
-    Line((1, 2), (4, 3), 0xFF00FF00).draw(display, 10, 20)
+    line = Line((1, 2), (4, 3), 10, 20, 0xFF00FF00)
+    line.draw(display)
 
-    assert display.pixels[0] == Pixel(11, 22, 0xFF00FF00)
-    assert display.pixels[-1] == Pixel(14, 23, 0xFF00FF00)
+    assert line.pos == (10, 20)
+    assert line.size == (3, 1)
+    assert display.pixels[0] == Pixel(10, 20, 0xFF00FF00)
+    assert display.pixels[-1] == Pixel(13, 21, 0xFF00FF00)
     assert len(display.pixels) == 4
 
 
 def test_line_handles_steep_reversed_endpoints() -> None:
     display = RecordingDisplay()
 
-    Line((7, 9), (3, 1), 0xFFFFFFFF).draw(display, 0, 0)
+    Line((7, 9), (3, 1), 0, 0, 0xFFFFFFFF).draw(display)
 
-    assert display.pixels[0] == Pixel(7, 9, 0xFFFFFFFF)
-    assert display.pixels[-1] == Pixel(3, 1, 0xFFFFFFFF)
+    assert display.pixels[0] == Pixel(4, 8, 0xFFFFFFFF)
+    assert display.pixels[-1] == Pixel(0, 0, 0xFFFFFFFF)
     assert len(display.pixels) == 9
 
 
@@ -198,8 +204,8 @@ def test_line_handles_steep_reversed_endpoints() -> None:
     "component",
     [
         lambda: Rect(1, 1, 0, 0, -1),
-        lambda: Circle(1, 1, 0x100000000),
-        lambda: Line((0, 0), (1, 1), -1),
+        lambda: Circle(1, 1, 0, 0, 0x100000000),
+        lambda: Line((0, 0), (1, 1), 0, 0, -1),
     ],
 )
 def test_components_reject_invalid_colors(component: object) -> None:

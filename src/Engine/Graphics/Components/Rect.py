@@ -116,7 +116,8 @@ class Rect(Components):
         """ Update the text displayed in the Rect Component """
         if not self.__text_flag:
             raise ValueError("Rect: no text link with this object")
-        self.__text.update_text(text)
+        if self.__text is not None:
+            self.__text.update_text(text)
 
     def update_pos(self, pos_x: int, pos_y: int) -> None:
         """ Update the Rect position """
