@@ -39,7 +39,10 @@ class Scene(ABC):
         """Update this screen using the current frame's input state."""
         ...
 
-    def movement_region(self, size: Tuple[int, int], pos: Tuple[int, int]) -> Region:
+    def movement_region(
+            self,
+            size: Tuple[int, int],
+            pos: Tuple[int, int]) -> Region:
         """Return the rectangle occupied by the moving object."""
         return (pos[0], pos[1], size[0], size[1])
 

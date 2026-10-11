@@ -129,7 +129,9 @@ class MlxDisplay:
             raise ValueError("'write text': No valid coordonates...")
         if not text:
             raise ValueError("'write text: Empty string'")
-        self.__session.mlx_string_put(self.__mlx_ptr, self.__window_ptr, pos_x, pos_y, color, text)
+        self.__session.mlx_string_put(
+                self.__mlx_ptr, self.__window_ptr, pos_x, pos_y, color, text
+                )
 
     def restore_region(
             self,

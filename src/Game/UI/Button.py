@@ -35,7 +35,8 @@ class Button:
         )
 
     def draw(self, display: Any) -> None:
-        color = self.__color[0] if self.hovered  else self.__color[1]
+        color = self.__color[0] if self.hovered else self.__color[1]
+        print(color)
         raise NotImplementedError("Need to implement Button Class First")
 
     def update(self, input_handler: InputHandler) -> bool:

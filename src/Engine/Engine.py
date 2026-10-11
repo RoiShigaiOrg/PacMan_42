@@ -71,6 +71,7 @@ class Engine:
                 created with the Engine API.
         """
         previous_time = time.perf_counter()
+
         def frame(_param: object) -> None:
             nonlocal previous_time
 

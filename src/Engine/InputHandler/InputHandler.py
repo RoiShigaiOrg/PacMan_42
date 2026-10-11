@@ -114,4 +114,7 @@ class InputHandler:
 
     def debug_inputs(self) -> None:
         """ Debug method to display the state of the Input Handler """
-        print(f"key_down: {self.__keys_down} - key_release: {self.__keys_released}")
+        print(
+                f"key_down: {self.__keys_down}"
+                f"- key_release: {self.__keys_released}"
+                )
