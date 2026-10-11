@@ -15,12 +15,13 @@ class Button:
             color_2: int,
             text: str | None = None) -> None:
         """ Init Method of the Button Widget """
-        raise NotImplementedError("Need to implement Button Class First")
         if width <= 0 or height <= 0:
             raise ValueError("button dimensions must be positive")
+        self.x: int = 0
+        self.y: int = 0
         self.width = width
         self.height = height
-        self.rect = Rect(width, height, color_1)
+        self.rect = Rect(width, height, self.x, self.y, color_1)
         if text:
             self.rect.add_text(TextBox(text, color_2))
         self.hovered = False
@@ -35,11 +36,13 @@ class Button:
         )
 
     def draw(self, display: Any) -> None:
-        color = self.__color[0] if self.hovered else self.__color[1]
-        print(color)
-        raise NotImplementedError("Need to implement Button Class First")
+        color = self.color[1] if self.hovered else self.color[0]
+        self.rect.update_color(color)
+        self.rect.draw(display)
 
     def update(self, input_handler: InputHandler) -> bool:
         """Update hover state and return whether the button was clicked."""
         self.hovered = self.contains(input_handler.mouse_position)
-        return self.hovered and input_handler.was_mouse_button_pressed(1)
+        return self.hovered and bool(
+            input_handler.was_mouse_button_pressed(1)
+        )
