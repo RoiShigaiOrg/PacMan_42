@@ -42,7 +42,7 @@ jobs:
 
       # Check type annotations
       - name: Run mypy
-        run: .venv/bin/mypy src
+        run: .venv/bin/mypy --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs src
 
       # Run unit tests
       - name: Run tests
