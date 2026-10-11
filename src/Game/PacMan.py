@@ -1,10 +1,11 @@
 from Engine.Engine import Engine
+from Engine.Application import Application
 from Engine.SceneManager import SceneManager
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
 
 
-class PacMan:
+class PacMan(Application):
     """
         Main Class of the Project.
 
@@ -27,6 +28,7 @@ class PacMan:
     def update(
             self, delta_time: float, input_handler: InputHandler
     ) -> None:
+        """ Update Method of the PacMan Class """
         self.scenes.update(delta_time, input_handler)
 
     def render(self) -> None:
