@@ -72,6 +72,17 @@ class Rect(Components):
             This method is not meant to be called by any deveper,
                 it is called inside the Display.draw(Rect Obj)
         """
+        for x in range(self.__pos[0], self.__pos[0] + self.__width):
+            display.draw_pixel(x, self.__pos[1], self.__color)
+            display.draw_pixel(x, self.__pos[1] + self.__height - 1, self.__color)
+        for y in range(self.__pos[1], self.__pos[1] + self.__height):
+            display.draw_pixel(self.__pos[0], y, self.__color)
+            display.draw_pixel(self.__pos[0] + self.__width - 1, y, self.__color)
+        if self.__text_flag:
+            self.__draw_text(display)
+
+    def fill(self, display: Any) -> None:
+        """ Draw a filled Rect """
         for y in range(self.__pos[1], self.__pos[1] + self.__height):
             for x in range(self.__pos[0], self.__pos[0] + self.__width):
                 display.draw_pixel(x, y, self.__color)
