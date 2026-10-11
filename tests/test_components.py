@@ -91,7 +91,7 @@ def test_line_end_justification_uses_line_endpoint() -> None:
 def test_rect_draws_all_pixels_at_position() -> None:
     display = RecordingDisplay()
 
-    Rect(3, 2, 4, 5, 0xFF112233).draw(display)
+    Rect(3, 2, 4, 5, 0xFF112233).fill(display)
 
     assert display.pixels == [
         Pixel(4, 5, 0xFF112233),
@@ -109,7 +109,7 @@ def test_rect_updates_size_and_color() -> None:
 
     rect.update_size(2, 1)
     rect.update_color(0xFFFFFFFF)
-    rect.draw(display)
+    rect.fill(display)
 
     assert display.pixels == [Pixel(0, 0, 0xFFFFFFFF), Pixel(1, 0, 0xFFFFFFFF)]
 
