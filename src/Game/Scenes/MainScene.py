@@ -1,12 +1,13 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_S, KEY_Z, KEY_ESC, KEY_Q, KEY_D
+from Engine.InputHandler.KeyCode import KEY_S, KEY_A, KEY_ESC, KEY_W, KEY_D
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
 from Engine.Graphics.Components.Line import Line
 from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
+from Engine.Physics import PhysicsEngine
 from typing import Tuple
 
 
@@ -29,6 +30,7 @@ class MainScene(Scene):
         """ Init Method of the MainScreen Class """
         self.__display = display
         self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
+        self.__rect2: Rect = Rect(120, 120, 340, 200, 0xFFFF00FF)
         self.__circle: Circle = Circle(160, 160, 1120, 160, 0xFF00FFFF)
         self.__line: Line = Line((0, 100), (710, 0), 220, 300, 0xFF00FF00)
         self.__rect.add_text(TextBox("TEST", 0xFFFFFFFF), TEXT_CENTER)
@@ -40,6 +42,7 @@ class MainScene(Scene):
         self.__circle.draw(self.__display)
         self.__circle.fill(self.__display)
         self.__line.draw(self.__display)
+        self.__rect2.fill(self.__display)
         self.__static_layer = self.__display.snapshot()
 
     def update(
@@ -54,11 +57,11 @@ class MainScene(Scene):
 
         if input_handler.is_key_down(KEY_S):
             self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
-        if input_handler.is_key_down(KEY_Z):
+        if input_handler.is_key_down(KEY_W):
             self.__rect.update_pos(old_pos[0], old_pos[1] - 5)
         if input_handler.is_key_down(KEY_D):
             self.__rect.update_pos(old_pos[0] + 5, old_pos[1])
-        if input_handler.is_key_down(KEY_Q):
+        if input_handler.is_key_down(KEY_A):
             self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
         if input_handler.is_key_down(KEY_ESC):
             self.__display.close()
@@ -69,6 +72,12 @@ class MainScene(Scene):
                 self.movement_region(self.__rect.size, old_pos),
                 self.movement_region(self.__rect.size, self.__rect.pos),
             )
+        if PhysicsEngine().handle_collision(self.__rect, [self.__rect2]):
+            print("Collision !")
+            self.__rect.update_color(0x0000FF00)
+        else:
+            print("Not Collision !")
+            self.__rect.update_color(0xFF0000FF)
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
