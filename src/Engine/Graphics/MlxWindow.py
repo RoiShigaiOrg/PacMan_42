@@ -1,4 +1,5 @@
-from typing import Any, Literal, overload
+from typing import Any, overload, Tuple
+from .MlxDisplay import MlxDisplay
 
 
 class MlxWindow:
@@ -65,29 +66,6 @@ class MlxWindow:
         if not self.__window_ptr:
             raise RuntimeError("failed to create MLX window")
 
-        self.__image_ptr = session.mlx_new_image(
-                mlx_ptr,
-                self.__width,
-                self.__height
-                )
-        if not self.__image_ptr:
-            session.mlx_destroy_window(mlx_ptr, self.__window_ptr)
-            raise RuntimeError("failed to create MLX screen buffer")
-
-        (
-            self.__data,
-            self.__bits_per_pixel,
-            self.__stride,
-            self.__format,
-        ) = session.mlx_get_data_addr(self.__image_ptr)
-        if self.__bits_per_pixel != 32:
-            session.mlx_destroy_image(mlx_ptr, self.__image_ptr)
-            session.mlx_destroy_window(mlx_ptr, self.__window_ptr)
-            self.__closed = True
-            raise RuntimeError("MLX screen buffer is not a 32-bit image")
-
-        self.clear()
-
     @property
     def width(self) -> int:
         """Return the screen width in pixels."""
@@ -103,36 +81,14 @@ class MlxWindow:
         """Return the screen title."""
         return self.__title
 
+    @property
+    def native_ptr(self) -> Any:
+        """Return the native MLX window pointer for engine services."""
+        return self.__window_ptr
+
     def size(self) -> tuple[int, int]:
         """Return ``(width, height)`` in pixels."""
         return self.__width, self.__height
-
-    def pixel(self, x: int, y: int, color: int) -> None:
-        """Write one ARGB pixel to the persistent screen buffer."""
-        if not 0 <= x < self.__width or not 0 <= y < self.__height:
-            raise ValueError("pixel coordinates are outside the screen")
-        if not 0 <= color <= 0xFFFFFFFF:
-            raise ValueError("color must be a 32-bit unsigned integer")
-
-        offset = y * self.__stride + x * (self.__bits_per_pixel // 8)
-        byte_order: Literal["little", "big"] = (
-            "little" if self.__format == 0 else "big"
-        )
-        self.__data[offset:offset + 4] = color.to_bytes(4, byte_order)
-
-    def clear(self, color: int = 0x00000000) -> None:
-        """Fill the entire persistent buffer with an ARGB color."""
-        if not 0 <= color <= 0xFFFFFFFF:
-            raise ValueError("color must be a 32-bit unsigned integer")
-
-        byte_order: Literal["little", "big"] = (
-            "little" if self.__format == 0 else "big"
-        )
-        pixel = color.to_bytes(4, byte_order)
-        for y in range(self.__height):
-            row_start = y * self.__stride
-            row_end = row_start + self.__width * 4
-            self.__data[row_start:row_end] = pixel * self.__width
 
     def draw(self, image: Any, x: int, y: int) -> None:
         """Draw an MLX image into the window at ``(x, y)``."""
@@ -144,21 +100,39 @@ class MlxWindow:
             y,
         )
 
-    def screen_update(self) -> None:
-        """Display the complete persistent buffer in the main window."""
-        self.__session.mlx_put_image_to_window(
-            self.__mlx_ptr,
-            self.__window_ptr,
-            self.__image_ptr,
-            0,
-            0,
-        )
-
     def close(self) -> None:
-        """Release the image buffer and window owned by this screen."""
+        """Release the native window owned by this object."""
         if self.__closed:
             return
 
-        self.__session.mlx_destroy_image(self.__mlx_ptr, self.__image_ptr)
         self.__session.mlx_destroy_window(self.__mlx_ptr, self.__window_ptr)
         self.__closed = True
+
+    def create_display(self, size: Tuple[int, int]) -> MlxDisplay:
+        """Create a subwindow where drawing can happen before presentation."""
+
+        if (
+            size[0] <= 0
+            or size[1] <= 0
+            or size[0] > self.__width
+            or size[1] > self.__height
+        ):
+            raise ValueError(
+                "display dimensions must be positive and fit window"
+            )
+
+        image_ptr = self.__session.mlx_new_image(
+                self.__mlx_ptr,
+                size[0],
+                size[1]
+                )
+        if not image_ptr:
+            raise RuntimeError("failed to create MLX display buffer")
+
+        return MlxDisplay(
+            self.__session,
+            image_ptr,
+            self.__mlx_ptr,
+            self.__window_ptr,
+            size,
+        )

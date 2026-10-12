@@ -1,5 +1,6 @@
 from .Loader import Loader
 from pathlib import Path
+from typing import Any, cast
 import json
 
 
@@ -11,11 +12,13 @@ class ConfigLoader(Loader):
             Project Initialization.
     """
 
-    def load(self, filename: Path = Path(".config.json")) -> dict:
+    def load(
+            self, filename: Path = Path(".config.json")
+    ) -> dict[str, Any]:
         """ Load the config from the JSON config file """
         with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data
+        return cast(dict[str, Any], data)
 
     def store(
             self,
