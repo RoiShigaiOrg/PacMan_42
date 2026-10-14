@@ -1,24 +1,21 @@
-from .map_generator import Map
 import math
 from Engine import Scene
 from Engine.Graphics.MlxDisplay import MlxDisplay
-from typing import Tuple
 from Engine.InputHandler import InputHandler
+from Engine.InputHandler.KeyCode import KEY_ESC
+from ..MapGeneration.MapGeneration import Map
 
 
-class GameScene(Scene):
+class MapScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
 
-    def __init__(
-            self, display: MlxDisplay, dimention: Tuple[int, int],
-            color: Tuple[int, int]) -> None:
+    def __init__(self, display: MlxDisplay) -> None:
         self.display = display
-        x, y = dimention
-        self.map = Map(x, y)
-        self.ZOOM = 1.4
+        self.map = Map()
+        self.ZOOM = 1.5
         self.SIZE = round(12 * self.ZOOM)
-        self.FOND, self.WALL = color
+        self.FOND, self.WALL = 0xFF0000FF, 0xFFFFFFFF
         self.MARGIN = round(3 * self.ZOOM)
         self.THICKNESS = round(1 * self.ZOOM)
         self.RADIUS = self.MARGIN
@@ -26,7 +23,7 @@ class GameScene(Scene):
     def is_wall(self, x: int, y: int) -> bool:
         """ Check the neighboring cells to see if it's a wall or a corridor."""
         if 0 <= y < len(self.map.grid) and 0 <= x < len(self.map.grid[0]):
-            return self.map.grid[y][x].state == "wall"
+            return not self.map.grid[y][x].walkable
         return True
 
     def arc(
@@ -116,7 +113,7 @@ class GameScene(Scene):
         self.display.clear(self.FOND)
         for line in self.map.grid:
             for cell in line:
-                if cell.state == "wall":
+                if not cell.walkable:
                     x, y = cell.coordinate
                     if self.is_isole(x, y):
                         self.fill_bloc(x, y)
@@ -126,35 +123,10 @@ class GameScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """unused func"""
+        if input_handler.is_key_down(KEY_ESC):
+            self.display.close()
         pass
 
     def render(self) -> None:
         """ display map"""
         self.display.render()
-
-
-# class Game:
-#     """Class to manage the map display"""
-#     def __init__(self, engine: Engine) -> None:
-#         self.BLACK = 0xFF000000
-#         self.BLUE = 0xFF2121DE
-#         self.GREY = 0xFF2A2F31
-#         self.YELLOW = 0xFFEDE31B
-#         display = engine.create_display(engine.get_window().size())
-#         self.scenes = SceneManager({"game": GameScene(
-#             display, (7, 15),
-#             (self.BLACK, self.BLUE))})
-#         self.scenes.change_screen("game")
-
-#     def update(self, delta_time: float, input_handler: InputHandler) -> None:
-#         """unused func"""
-#         pass
-
-#     def render(self) -> None:
-#         """display"""
-#         self.scenes.render()
-
-
-# if __name__ == "__main__":
-#     engine = Engine("Pac-Man")
-#     engine.run(Game(engine))

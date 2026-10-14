@@ -3,7 +3,7 @@ from Engine.Application import Application
 from Engine.SceneManager import SceneManager
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
-from .Scenes.draw_map import GameScene
+from .Scenes.MapScene import MapScene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
 
@@ -28,9 +28,9 @@ class PacMan(Application):
                 "main_scene": MainScene(
                     self.engine.create_display((1280, 720))
                 ),
-                "game_scene": GameScene(
-                    self.display,
-                    self.dimension, self.color)
+                "game_scene": MapScene(
+                    self.engine.create_display((1280, 720))
+                )
             }
         )
 
@@ -46,5 +46,6 @@ class PacMan(Application):
 
     def run(self) -> None:
         """ Main method that will contain the loop of the program """
-        self.scenes.change_screen("main_scene")
+        self.scenes.change_screen("game_scene")
+        print("scene has changed")
         self.engine.run(self)
