@@ -2,6 +2,11 @@ from mazegenerator import MazeGenerator
 from typing import Tuple
 import random
 
+TOP: int = 1
+RIGHT: int = 2
+DOWN: int = 4
+LEFT: int = 8
+
 
 class Cell():
     """Class composing the map: coordinates and state"""
@@ -15,38 +20,40 @@ class Map():
     """class builds the map from the mazegenerator modules"""
 
     def __init__(
-            self, largeur: int = 10, hauteur: int = 10,
+            self, width: int = 5, height: int = 5,
             seed: int = random.randint(0, 10)):
-        self.TOP = 1
-        self.RIGHT = 2
-        self.DOWN = 4
-        self.LEFT = 8
-        gen = MazeGenerator(size=(largeur, hauteur), perfect=False, seed=seed)
+        """ Init Method of Map Generation """
+
+        gen = MazeGenerator(size=(width, height), perfect=False, seed=seed)
         gen.generate(seed=seed)
-        self.grid: list[list[Cell]] = self._symmetrize(
-            self._convert(gen.maze))
-        self.hauteur: int = len(self.grid)
-        self.largeur: int = len(self.grid[0])
+        self.grid: list[list[Cell]] = self._symmetrize_vertical(
+                self._convert(gen.maze)
+            )
+        self.grid = self._symmetrize_horizontal(
+                self.grid
+            )
+        self.height: int = len(self.grid)
+        self.width: int = len(self.grid[0])
 
     def _convert(self, maze: list[list[int]]) -> list[list[Cell]]:
         """converts base-8 data into cells"""
-        hauteur, largeur = len(maze), len(maze[0])
-        grid = [[Cell((x, y), "wall") for x in range(largeur * 2 + 1)]
-                for y in range(hauteur * 2 + 1)]
-        for y in range(hauteur):
-            for x in range(largeur):
+        height, width = len(maze), len(maze[0])
+        grid = [[Cell((x, y), "wall") for x in range(width * 2 + 1)]
+                for y in range(height * 2 + 1)]
+        for y in range(height):
+            for x in range(width):
                 case = maze[y][x]
                 if case == 15:
                     continue
                 gx, gy = x * 2 + 1, y * 2 + 1
                 grid[gy][gx].state = "corridor"
-                if not case & self.RIGHT:
+                if not case & RIGHT:
                     grid[gy][gx + 1].state = "corridor"
-                if not case & self.DOWN:
+                if not case & DOWN:
                     grid[gy + 1][gx].state = "corridor"
         return grid
 
-    def _symmetrize(
+    def _symmetrize_horizontal(
             self, grid: list[list[Cell]],
             gap: int = 4) -> list[list[Cell]]:
         """Flip the map and place it next to the
@@ -62,5 +69,33 @@ class Map():
         for y in range(1, len(new) - 1, 2):
             if y % gap == 1 and new[y][center - 1].state == "corridor":
                 new[y][center].state = "corridor"
+
+        return new
+
+    def _symmetrize_vertical(
+            self, grid: list[list[Cell]],
+            gap: int = 4) -> list[list[Cell]]:
+        """Mirror the map from top to bottom."""
+
+        original_height = len(grid)
+        new = [
+            [Cell((x, y), cell.state) for x, cell in enumerate(row)]
+            for y, row in enumerate(grid)
+        ]
+
+        # Do not duplicate the center row.
+        for row in grid[-2::-1]:
+            y = len(new)
+            new.append([
+                Cell((x, y), cell.state)
+                for x, cell in enumerate(row)
+            ])
+
+        # Open selected passages through the horizontal center.
+        center = original_height - 1
+
+        for x in range(1, len(new[0]) - 1, 2):
+            if x % gap == 1 and new[center - 1][x].state == "corridor":
+                new[center][x].state = "corridor"
 
         return new

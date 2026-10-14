@@ -13,7 +13,7 @@ class MapScene(Scene):
     def __init__(self, display: MlxDisplay) -> None:
         self.display = display
         self.map = Map()
-        self.ZOOM = 2.5
+        self.ZOOM = 1.5
         self.SIZE = round(12 * self.ZOOM)
         self.FOND, self.WALL = 0xFF0000FF, 0xFFFFFFFF
         self.MARGIN = round(3 * self.ZOOM)
