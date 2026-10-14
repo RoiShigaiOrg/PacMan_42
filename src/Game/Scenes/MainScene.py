@@ -1,13 +1,15 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_S, KEY_A, KEY_ESC, KEY_W, KEY_D
+from Engine.InputHandler.KeyCode import (
+    KEY_S, KEY_ESC, KEY_D, KEY_Q, KEY_Z,
+)
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
 from Engine.Graphics.Components.Line import Line
 from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
-from Engine.Physics import PhysicsEngine
+from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
 from typing import Tuple
 
 
@@ -34,9 +36,13 @@ class MainScene(Scene):
         self.__circle: Circle = Circle(160, 160, 1120, 160, 0xFF00FFFF)
         self.__line: Line = Line((0, 100), (710, 0), 220, 300, 0xFF00FF00)
         self.__rect.add_text(TextBox("TEST", 0xFFFFFFFF), TEXT_CENTER)
+        self.__physics = PhysicsEngine()
+        self.__rect_collider = self.__make_rect_collider(self.__rect)
+        self.__rect2_collider = self.__make_rect_collider(self.__rect2)
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
+        self.__colliding: bool = False
 
         self.__display.clear(0xFFFF0000)
         self.__circle.draw(self.__display)
@@ -57,11 +63,11 @@ class MainScene(Scene):
 
         if input_handler.is_key_down(KEY_S):
             self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
-        if input_handler.is_key_down(KEY_W):
+        if input_handler.is_key_down(KEY_Z):
             self.__rect.update_pos(old_pos[0], old_pos[1] - 5)
         if input_handler.is_key_down(KEY_D):
             self.__rect.update_pos(old_pos[0] + 5, old_pos[1])
-        if input_handler.is_key_down(KEY_A):
+        if input_handler.is_key_down(KEY_Q):
             self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
         if input_handler.is_key_down(KEY_ESC):
             self.__display.close()
@@ -72,12 +78,35 @@ class MainScene(Scene):
                 self.movement_region(self.__rect.size, old_pos),
                 self.movement_region(self.__rect.size, self.__rect.pos),
             )
-        if PhysicsEngine().handle_collision(self.__rect, [self.__rect2]):
-            print("Collision !")
-            self.__rect.update_color(0x0000FF00)
-        else:
-            print("Not Collision !")
-            self.__rect.update_color(0xFF0000FF)
+        self.__rect_collider.position = self.__rect_center(self.__rect)
+        colliding = self.__physics.handle_collision(
+                self.__rect_collider, self.__rect2_collider
+            ) is not None
+        if colliding != self.__colliding:
+            self.__dirty_region = self.union_regions(
+                self.__dirty_region,
+                self.movement_region(self.__rect.size, self.__rect.pos)
+            )
+            self.__colliding = colliding
+            self.__rect.update_color(
+                    0xFF0000FF if colliding else 0xFF00FF00
+                )
+
+    @staticmethod
+    def __rect_center(rect: Rect) -> Vector2:
+        """Return the world-space center of a graphics rectangle."""
+        x, y = rect.pos
+        width, height = rect.size
+        return Vector2(x + width / 2, y + height / 2)
+
+    @classmethod
+    def __make_rect_collider(cls, rect: Rect) -> Collider:
+        """Create an AABB collider matching a graphics rectangle."""
+        width, height = rect.size
+        return Collider(
+            AABB(Vector2(width / 2, height / 2)),
+            cls.__rect_center(rect),
+        )
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
