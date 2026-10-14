@@ -1,9 +1,9 @@
-from src.Game.Scenes.map_generator import Map
+from Scenes.map_generator import Map
 import math
-from src.Engine import Scene
-from src.Engine.Graphics.MlxDisplay import MlxDisplay
+from Engine import Scene
+from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
-from src.Engine.InputHandler import InputHandler
+from Engine.InputHandler import InputHandler
 
 
 class GameScene(Scene):
