@@ -1,6 +1,6 @@
-from maze import Map
+from Game.Scenes.map_generator import Map
 import math
-from src.Engine import Engine, Scene, SceneManager
+from src.Engine import Scene
 from src.Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
 from src.Engine.InputHandler import InputHandler
@@ -10,16 +10,17 @@ class GameScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
     def __init__(
-            self, display: MlxDisplay, la_map: Map,
+            self, display: MlxDisplay, dimention: Tuple[int, int],
             color: Tuple[int, int]) -> None:
         self.display = display
-        self.map = la_map
+        x, y = dimention
+        self.map = Map(x, y)
         self.ZOOM = 1.4
-        self.TAILLE = round(12 * self.ZOOM)
+        self.SIZE = round(12 * self.ZOOM)
         self.FOND, self.WALL = color
-        self.MARGE = round(3 * self.ZOOM)
-        self.EPAISSEUR = round(1 * self.ZOOM)
-        self.RAYON = self.MARGE
+        self.MARGIN = round(3 * self.ZOOM)
+        self.THICKNESS = round(1 * self.ZOOM)
+        self.RADIUS = self.MARGIN
 
     def is_wall(self, x: int, y: int) -> bool:
         """ Check the neighboring cells to see if it's a wall or a corridor."""
@@ -40,42 +41,42 @@ class GameScene(Scene):
 
     def draw_wall(self, x: int, y: int) -> None:
         """ Draw the straight wall"""
-        T, M, E, R = self.TAILLE, self.MARGE, self.EPAISSEUR, self.RAYON
+        T, M, E, R = self.SIZE, self.MARGIN, self.THICKNESS, self.RADIUS
         px, py = x * T, y * T
-        haut, bas = self.is_wall(x, y - 1), self.is_wall(x, y + 1)
-        gauche, droite = self.is_wall(x - 1, y), self.is_wall(x + 1, y)
+        top, down = self.is_wall(x, y - 1), self.is_wall(x, y + 1)
+        left, right = self.is_wall(x - 1, y), self.is_wall(x + 1, y)
 
-        debut_x = px if gauche else px + M + R
-        fin_x = px + T if droite else px + T - M - R
-        debut_y = py if haut else py + M + R
-        fin_y = py + T if bas else py + T - M - R
-        if not haut:
+        start_x = px if left else px + M + R
+        end_x = px + T if right else px + T - M - R
+        start_y = py if top else py + M + R
+        end_y = py + T if down else py + T - M - R
+        if not top:
             self.display.fill_rect(
-                debut_x, py + M,
-                fin_x - debut_x, E, self.WALL)
-        if not bas:
+                start_x, py + M,
+                end_x - start_x, E, self.WALL)
+        if not down:
             self.display.fill_rect(
-                debut_x, py + T - M - E,
-                fin_x - debut_x, E, self.WALL)
-        if not gauche:
+                start_x, py + T - M - E,
+                end_x - start_x, E, self.WALL)
+        if not left:
             self.display.fill_rect(
-                px + M, debut_y,
-                E, fin_y - debut_y, self.WALL)
-        if not droite:
+                px + M, start_y,
+                E, end_y - start_y, self.WALL)
+        if not right:
             self.display.fill_rect(
-                px + T - M - E, debut_y,
-                E, fin_y - debut_y, self.WALL)
+                px + T - M - E, start_y,
+                E, end_y - start_y, self.WALL)
 
         for dx, dy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-            mur_x, mur_y = self.is_wall(x + dx, y), self.is_wall(x, y + dy)
-            bord_x = px + M if dx < 0 else px + T - M
-            bord_y = py + M if dy < 0 else py + T - M
+            wall_x, wall_y = self.is_wall(x + dx, y), self.is_wall(x, y + dy)
+            bold_x = px + M if dx < 0 else px + T - M
+            bold_y = py + M if dy < 0 else py + T - M
 
-            if not mur_x and not mur_y:
-                self.arc(bord_x - dx * R, bord_y - dy * R, dx, dy, R - E, R)
+            if not wall_x and not wall_y:
+                self.arc(bold_x - dx * R, bold_y - dy * R, dx, dy, R - E, R)
 
-            elif mur_x and mur_y and not self.is_wall(x + dx, y + dy):
-                self.arc(bord_x + dx * R, bord_y + dy * R, -dx, -dy, R, R + E)
+            elif wall_x and wall_y and not self.is_wall(x + dx, y + dy):
+                self.arc(bold_x + dx * R, bold_y + dy * R, -dx, -dy, R, R + E)
                 lx = px + M if dx < 0 else px + T - M - E
                 ly = py + M if dy < 0 else py + T - M - E
                 if dy < 0:
@@ -100,20 +101,20 @@ class GameScene(Scene):
 
     def fill_bloc(self, x: int, y: int) -> None:
         """fill the case 1/1"""
-        T, M = self.TAILLE, self.MARGE
+        T, M = self.SIZE, self.MARGIN
         cx = x * T + T / 2
         cy = y * T + T / 2
-        rayon = T / 2 - M
+        radius = T / 2 - M
         for py in range(y * T + M, y * T + T - M):
             for px in range(x * T + M, x * T + T - M):
-                if math.hypot(px + 0.5 - cx, py + 0.5 - cy) <= rayon:
+                if math.hypot(px + 0.5 - cx, py + 0.5 - cy) <= radius:
                     self.display.draw_pixel(px, py, self.WALL)
 
     def render_on_change(self) -> None:
         """manage the drawing of map"""
         self.display.clear(self.FOND)
-        for ligne in self.map.grid:
-            for cell in ligne:
+        for line in self.map.grid:
+            for cell in line:
                 if cell.state == "wall":
                     x, y = cell.coordinate
                     if self.is_isole(x, y):
@@ -131,29 +132,28 @@ class GameScene(Scene):
         self.display.render()
 
 
-class Game:
-    """Class to manage the map display"""
-    def __init__(self, engine: Engine) -> None:
-        self.NOIR = 0xFF000000
-        self.BLEU = 0xFF2121DE
-        self.GRIS = 0xFF2A2F31
-        self.YELLOW = 0xFFEDE31B
-        la_map = Map(7, 15)
-        display = engine.create_display(engine.get_window().size())
-        self.scenes = SceneManager({"game": GameScene(
-            display, la_map,
-            (self.NOIR, self.BLEU))})
-        self.scenes.change_screen("game")
+# class Game:
+#     """Class to manage the map display"""
+#     def __init__(self, engine: Engine) -> None:
+#         self.BLACK = 0xFF000000
+#         self.BLUE = 0xFF2121DE
+#         self.GREY = 0xFF2A2F31
+#         self.YELLOW = 0xFFEDE31B
+#         display = engine.create_display(engine.get_window().size())
+#         self.scenes = SceneManager({"game": GameScene(
+#             display, (7, 15),
+#             (self.BLACK, self.BLUE))})
+#         self.scenes.change_screen("game")
 
-    def update(self, delta_time: float, input_handler: InputHandler) -> None:
-        """unused func"""
-        pass
+#     def update(self, delta_time: float, input_handler: InputHandler) -> None:
+#         """unused func"""
+#         pass
 
-    def render(self) -> None:
-        """display"""
-        self.scenes.render()
+#     def render(self) -> None:
+#         """display"""
+#         self.scenes.render()
 
 
-if __name__ == "__main__":
-    engine = Engine("Pac-Man")
-    engine.run(Game(engine))
+# if __name__ == "__main__":
+#     engine = Engine("Pac-Man")
+#     engine.run(Game(engine))
