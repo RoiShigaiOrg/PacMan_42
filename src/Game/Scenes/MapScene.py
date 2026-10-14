@@ -23,7 +23,7 @@ class MapScene(Scene):
     def is_wall(self, x: int, y: int) -> bool:
         """ Check the neighboring cells to see if it's a wall or a corridor."""
         if 0 <= y < len(self.map.grid) and 0 <= x < len(self.map.grid[0]):
-            return self.map.grid[y][x].state == "wall"
+            return not self.map.grid[y][x].walkable
         return True
 
     def arc(
@@ -113,7 +113,7 @@ class MapScene(Scene):
         self.display.clear(self.FOND)
         for line in self.map.grid:
             for cell in line:
-                if cell.state == "wall":
+                if not cell.walkable:
                     x, y = cell.coordinate
                     if self.is_isole(x, y):
                         self.fill_bloc(x, y)

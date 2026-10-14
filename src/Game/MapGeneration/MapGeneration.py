@@ -11,9 +11,9 @@ LEFT: int = 8
 class Cell():
     """Class composing the map: coordinates and state"""
 
-    def __init__(self, coordinate: Tuple[int, int], state: str):
+    def __init__(self, coordinate: Tuple[int, int], walkable: bool):
         self.coordinate: Tuple[int, int] = coordinate
-        self.state: str = state
+        self.walkable: bool = walkable
 
 
 class Map():
@@ -38,7 +38,7 @@ class Map():
     def _convert(self, maze: list[list[int]]) -> list[list[Cell]]:
         """converts base-8 data into cells"""
         height, width = len(maze), len(maze[0])
-        grid = [[Cell((x, y), "wall") for x in range(width * 2 + 1)]
+        grid = [[Cell((x, y), False) for x in range(width * 2 + 1)]
                 for y in range(height * 2 + 1)]
         for y in range(height):
             for x in range(width):
@@ -46,11 +46,11 @@ class Map():
                 if case == 15:
                     continue
                 gx, gy = x * 2 + 1, y * 2 + 1
-                grid[gy][gx].state = "corridor"
+                grid[gy][gx].walkable = True
                 if not case & RIGHT:
-                    grid[gy][gx + 1].state = "corridor"
+                    grid[gy][gx + 1].walkable = True
                 if not case & DOWN:
-                    grid[gy + 1][gx].state = "corridor"
+                    grid[gy + 1][gx].walkable = True
         return grid
 
     def _symmetrize_horizontal(
@@ -62,13 +62,13 @@ class Map():
         new: list[list[Cell]] = []
 
         for y, ligne in enumerate(grid):
-            states = [cell.state for cell in ligne]
+            states = [cell.walkable for cell in ligne]
             states = states + states[-2::-1]
             new.append([Cell((x, y), state) for x, state in enumerate(states)])
 
         for y in range(1, len(new) - 1, 2):
-            if y % gap == 1 and new[y][center - 1].state == "corridor":
-                new[y][center].state = "corridor"
+            if y % gap == 1 and new[y][center - 1].walkable:
+                new[y][center].walkable = True
 
         return new
 
@@ -79,23 +79,20 @@ class Map():
 
         original_height = len(grid)
         new = [
-            [Cell((x, y), cell.state) for x, cell in enumerate(row)]
+            [Cell((x, y), cell.walkable) for x, cell in enumerate(row)]
             for y, row in enumerate(grid)
         ]
 
-        # Do not duplicate the center row.
         for row in grid[-2::-1]:
             y = len(new)
             new.append([
-                Cell((x, y), cell.state)
+                Cell((x, y), cell.walkable)
                 for x, cell in enumerate(row)
             ])
-
-        # Open selected passages through the horizontal center.
         center = original_height - 1
 
         for x in range(1, len(new[0]) - 1, 2):
-            if x % gap == 1 and new[center - 1][x].state == "corridor":
-                new[center][x].state = "corridor"
+            if x % gap == 1 and new[center - 1][x].walkable:
+                new[center][x].walkable = True
 
         return new
