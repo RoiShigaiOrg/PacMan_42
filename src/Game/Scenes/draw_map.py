@@ -9,6 +9,7 @@ from Engine.InputHandler import InputHandler
 class GameScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
+
     def __init__(
             self, display: MlxDisplay, dimention: Tuple[int, int],
             color: Tuple[int, int]) -> None:

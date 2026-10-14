@@ -37,7 +37,7 @@ wheels = [
 [[package]]
 name = "mazegenerator"
 version = "2.1.0"
-source = { path = "dependencies/ubuntu/mazegenerator-2.1.0-py3-none-any.whl" }
+source = { path = "dependencies/mazegenerator/mazegenerator-2.1.0-py3-none-any.whl" }
 wheels = [
     { filename = "mazegenerator-2.1.0-py3-none-any.whl", hash = "sha256:98e12f7e989cef03dd4411657d7bee12653804aee87a568eddfaf21436ffd4aa" },
 ]
@@ -103,7 +103,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "flake8", specifier = "==7.3.0" },
-    { name = "mazegenerator", path = "dependencies/ubuntu/mazegenerator-2.1.0-py3-none-any.whl" },
+    { name = "mazegenerator", path = "dependencies/mazegenerator/mazegenerator-2.1.0-py3-none-any.whl" },
     { name = "mlx", path = "dependencies/ubuntu/mlx-2.2-py3-none-any.whl" },
     { name = "mypy", specifier = "==1.18.2" },
     { name = "pytest", specifier = "==8.4.2" },

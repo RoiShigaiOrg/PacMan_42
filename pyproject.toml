@@ -16,9 +16,12 @@ dependencies = [
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
+[tool.mypy]
+ignore_missing_imports = true
+
 [tool.uv.sources]
 mlx = { path = "dependencies/ubuntu/mlx-2.2-py3-none-any.whl" }
-mazegenerator = { path = "dependencies/ubuntu/mazegenerator-2.1.0-py3-none-any.whl" }
+mazegenerator = { path = "dependencies/mazegenerator/mazegenerator-2.1.0-py3-none-any.whl" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
