@@ -42,7 +42,6 @@ class PacMan(Application):
 
     def render(self) -> None:
         """ Render the actual scene in the SceneManager """
-        print("application render")
         self.scenes.render()
 
     def run(self) -> None:

@@ -2,6 +2,7 @@ import math
 from Engine import Scene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
+from Engine.InputHandler.KeyCode import KEY_ESC
 from ..MapGeneration.MapGeneration import Map
 
 
@@ -11,9 +12,8 @@ class MapScene(Scene):
 
     def __init__(self, display: MlxDisplay) -> None:
         self.display = display
-        print("init map schen")
         self.map = Map()
-        self.ZOOM = 1.4
+        self.ZOOM = 2.5
         self.SIZE = round(12 * self.ZOOM)
         self.FOND, self.WALL = 0xFF0000FF, 0xFFFFFFFF
         self.MARGIN = round(3 * self.ZOOM)
@@ -123,35 +123,10 @@ class MapScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """unused func"""
+        if input_handler.is_key_down(KEY_ESC):
+            self.display.close()
         pass
 
     def render(self) -> None:
         """ display map"""
         self.display.render()
-
-
-# class Game:
-#     """Class to manage the map display"""
-#     def __init__(self, engine: Engine) -> None:
-#         self.BLACK = 0xFF000000
-#         self.BLUE = 0xFF2121DE
-#         self.GREY = 0xFF2A2F31
-#         self.YELLOW = 0xFFEDE31B
-#         display = engine.create_display(engine.get_window().size())
-#         self.scenes = SceneManager({"game": GameScene(
-#             display, (7, 15),
-#             (self.BLACK, self.BLUE))})
-#         self.scenes.change_screen("game")
-
-#     def update(self, delta_time: float, input_handler: InputHandler) -> None:
-#         """unused func"""
-#         pass
-
-#     def render(self) -> None:
-#         """display"""
-#         self.scenes.render()
-
-
-# if __name__ == "__main__":
-#     engine = Engine("Pac-Man")
-#     engine.run(Game(engine))
