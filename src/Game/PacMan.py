@@ -3,6 +3,9 @@ from Engine.Application import Application
 from Engine.SceneManager import SceneManager
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
+from .Scenes.draw_map import GameScene
+from Engine.Graphics.MlxDisplay import MlxDisplay
+from typing import Tuple
 
 
 class PacMan(Application):
@@ -17,11 +20,17 @@ class PacMan(Application):
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man")
         self.scenes: SceneManager = SceneManager()
+        self.color: str
+        self.dimension: Tuple[int, int]
+        self.display: MlxDisplay
         self.scenes.add_scene(
             {
                 "main_scene": MainScene(
                     self.engine.create_display((1280, 720))
-                )
+                ),
+                "game_scene": GameScene(
+                    self.display,
+                    self.dimension, self.color)
             }
         )
 

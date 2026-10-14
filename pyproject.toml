@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = "==3.11.15"
 dependencies = [
     "flake8==7.3.0",
+    "mazegenerator",
     "mlx",
     "mypy==1.18.2",
     "pytest==8.4.2",
@@ -15,8 +16,16 @@ dependencies = [
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
+[tool.mypy]
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_ignores = true
+disalow_untyped_defs = true
+check_untyped_defs = true
+
 [tool.uv.sources]
 mlx = { path = "dependencies/ubuntu/mlx-2.2-py3-none-any.whl" }
+mazegenerator = { path = "dependencies/mazegenerator/mazegenerator-2.1.0-py3-none-any.whl" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -30,3 +39,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["mazegenerator", "mazegenerator.*"]
+ignore_missing_imports = true
