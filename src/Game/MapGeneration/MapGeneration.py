@@ -5,6 +5,7 @@ import random
 
 class Cell():
     """Class composing the map: coordinates and state"""
+
     def __init__(self, coordinate: Tuple[int, int], state: str):
         self.coordinate: Tuple[int, int] = coordinate
         self.state: str = state
@@ -12,6 +13,7 @@ class Cell():
 
 class Map():
     """class builds the map from the mazegenerator modules"""
+
     def __init__(
             self, largeur: int = 20, hauteur: int = 20,
             seed: int = random.randint(0, 10)):
@@ -19,6 +21,7 @@ class Map():
         self.RIGHT = 2
         self.DOWN = 4
         self.LEFT = 8
+        print("generate map")
         gen = MazeGenerator(size=(largeur, hauteur), perfect=False, seed=seed)
         gen.generate(seed=seed)
         self.grid: list[list[Cell]] = self._symmetrize(

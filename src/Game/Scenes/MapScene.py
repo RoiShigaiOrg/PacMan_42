@@ -1,24 +1,21 @@
-from .map_generator import Map
 import math
 from Engine import Scene
 from Engine.Graphics.MlxDisplay import MlxDisplay
-from typing import Tuple
 from Engine.InputHandler import InputHandler
+from ..MapGeneration.MapGeneration import Map
 
 
-class GameScene(Scene):
+class MapScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
 
-    def __init__(
-            self, display: MlxDisplay, dimention: Tuple[int, int],
-            color: Tuple[int, int]) -> None:
+    def __init__(self, display: MlxDisplay) -> None:
         self.display = display
-        x, y = dimention
-        self.map = Map(x, y)
+        print("init map schen")
+        self.map = Map()
         self.ZOOM = 1.4
         self.SIZE = round(12 * self.ZOOM)
-        self.FOND, self.WALL = color
+        self.FOND, self.WALL = 0xFF0000FF, 0xFFFFFFFF
         self.MARGIN = round(3 * self.ZOOM)
         self.THICKNESS = round(1 * self.ZOOM)
         self.RADIUS = self.MARGIN
