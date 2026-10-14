@@ -70,8 +70,8 @@ class Engine:
                 the given Application object (Game or else)
                 created with the Engine API.
         """
-        print("engine run")
         previous_time = time.perf_counter()
+
         def frame(_param: object) -> None:
             nonlocal previous_time
 
