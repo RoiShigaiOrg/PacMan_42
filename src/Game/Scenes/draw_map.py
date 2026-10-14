@@ -1,4 +1,4 @@
-from Game.Scenes.map_generator import Map
+from src.Game.Scenes.map_generator import Map
 import math
 from src.Engine import Scene
 from src.Engine.Graphics.MlxDisplay import MlxDisplay
