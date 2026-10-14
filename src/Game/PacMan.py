@@ -4,7 +4,7 @@ from Engine.SceneManager import SceneManager
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
 from .Scenes.draw_map import GameScene
-from src.Engine.Graphics.MlxDisplay import MlxDisplay
+from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
 
 
