@@ -1,12 +1,10 @@
 from Engine.Engine import Engine
 from Engine.Application import Application
-from Engine.SceneManager import SceneManager
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
 from .Scenes.MapScene import MapScene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
-import time
 
 
 class PacMan(Application):

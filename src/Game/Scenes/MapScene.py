@@ -133,4 +133,3 @@ class MapScene(Scene):
                     else:
                         self.draw_wall(x, y)
         self.display.render()
-

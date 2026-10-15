@@ -1,6 +1,7 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_S, KEY_Z, KEY_ESC, KEY_Q, KEY_D, KEY_C
+from Engine.InputHandler.KeyCode import (KEY_S, KEY_Z, KEY_ESC,
+                                         KEY_Q, KEY_D, KEY_C)
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
@@ -9,7 +10,6 @@ from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 from Engine.Engine import Engine
 from typing import Tuple
-import time
 
 
 Region = tuple[int, int, int, int]
@@ -63,7 +63,6 @@ class MainScene(Scene):
         if input_handler.is_key_down(KEY_Q):
             self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
         if input_handler.was_key_pressed(KEY_C):
-            print("change scene")
             self.__engine.scene_manager.change_scene("game_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.__display.close()
