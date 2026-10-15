@@ -19,7 +19,6 @@ class SceneManager:
         """ Init Method of the ScreenManager Object """
         self.__screens: Dict[str, Scene] = dict(screen_dict or {})
         self.__actual_screen: Scene | None = None
-
         if self.__screens:
             self.__actual_screen = next(iter(self.__screens.values()))
 

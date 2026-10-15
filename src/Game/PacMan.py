@@ -6,6 +6,7 @@ from .Scenes.MainScene import MainScene
 from .Scenes.MapScene import MapScene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
+import time
 
 
 class PacMan(Application):

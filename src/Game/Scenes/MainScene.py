@@ -9,6 +9,7 @@ from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 from Engine.Engine import Engine
 from typing import Tuple
+import time
 
 
 Region = tuple[int, int, int, int]
@@ -53,7 +54,7 @@ class MainScene(Scene):
                 and Engine Calculation.
         """
         old_pos: Tuple[int, int] = self.__rect.pos
-
+        print(delta_time)
         if input_handler.is_key_down(KEY_S):
             self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
         if input_handler.is_key_down(KEY_Z):
@@ -62,10 +63,10 @@ class MainScene(Scene):
             self.__rect.update_pos(old_pos[0] + 5, old_pos[1])
         if input_handler.is_key_down(KEY_Q):
             self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
-        if input_handler.is_key_down(KEY_C):
+        if input_handler.was_key_pressed(KEY_C):
             print("change scene")
             self.__engine.scene_manager.change_scene("game_scene")
-        if input_handler.is_key_down(KEY_ESC):
+        if input_handler.was_key_pressed(KEY_ESC):
             self.__display.close()
 
         if old_pos != self.__rect.pos:

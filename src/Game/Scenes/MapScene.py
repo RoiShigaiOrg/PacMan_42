@@ -22,6 +22,18 @@ class MapScene(Scene):
         self.THICKNESS = round(1 * self.ZOOM)
         self.RADIUS = self.MARGIN
 
+    def update(self, delta_time: float, input_handler: InputHandler) -> None:
+        """unused func"""
+        print(delta_time)
+        if input_handler.was_key_pressed(KEY_C):
+            self.__engine.scene_manager.change_scene("main_scene")
+        if input_handler.was_key_pressed(KEY_ESC):
+            self.display.close()
+
+    def render(self) -> None:
+        """ display map"""
+        self.display.render()
+
     def is_wall(self, x: int, y: int) -> bool:
         """ Check the neighboring cells to see if it's a wall or a corridor."""
         if 0 <= y < len(self.map.grid) and 0 <= x < len(self.map.grid[0]):
@@ -123,15 +135,3 @@ class MapScene(Scene):
                         self.draw_wall(x, y)
         self.display.render()
 
-    def update(self, delta_time: float, input_handler: InputHandler) -> None:
-        """unused func"""
-        if input_handler.is_key_down(KEY_C):
-            print("change scene")
-            self.__engine.scene_manager.change_scene("main_scene")
-        if input_handler.is_key_down(KEY_ESC):
-            self.display.close()
-        pass
-
-    def render(self) -> None:
-        """ display map"""
-        self.display.render()
