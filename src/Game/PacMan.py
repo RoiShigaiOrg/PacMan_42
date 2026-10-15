@@ -19,16 +19,17 @@ class PacMan(Application):
     def __init__(self) -> None:
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man")
-        self.scenes: SceneManager = SceneManager()
         self.color: str
         self.dimension: Tuple[int, int]
         self.display: MlxDisplay
-        self.scenes.add_scene(
+        self.engine.scene_manager.add_scene(
             {
                 "main_scene": MainScene(
+                    self.engine,
                     self.engine.create_display((1280, 720))
                 ),
                 "game_scene": MapScene(
+                    self.engine,
                     self.engine.create_display((1280, 720))
                 )
             }
@@ -38,14 +39,13 @@ class PacMan(Application):
             self, delta_time: float, input_handler: InputHandler
     ) -> None:
         """ Update Method of the PacMan Class """
-        self.scenes.update(delta_time, input_handler)
+        self.engine.scene_manager.update(delta_time, input_handler)
 
     def render(self) -> None:
         """ Render the actual scene in the SceneManager """
-        self.scenes.render()
+        self.engine.scene_manager.render()
 
     def run(self) -> None:
         """ Main method that will contain the loop of the program """
-        self.scenes.change_screen("game_scene")
-        print("scene has changed")
+        self.engine.scene_manager.change_scene("main_scene")
         self.engine.run(self)

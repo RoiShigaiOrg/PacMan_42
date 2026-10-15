@@ -4,6 +4,7 @@ from typing import Any, Tuple
 from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application
 from .InputHandler import InputHandler
+from .SceneManager.SceneManager import SceneManager
 import mlx
 import time
 
@@ -35,6 +36,7 @@ class Engine:
                 tuple(self.get_config_key("dimension")),
                 program_name
                 )
+        self.scene_manager = SceneManager()
         self._input_handler = InputHandler(
             self._session,
             self._mlx_ptr,

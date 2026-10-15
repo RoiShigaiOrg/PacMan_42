@@ -2,15 +2,17 @@ import math
 from Engine import Scene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_ESC
+from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C
 from ..MapGeneration.MapGeneration import Map
+from Engine.Engine import Engine
 
 
 class MapScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
 
-    def __init__(self, display: MlxDisplay) -> None:
+    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
+        self.__engine = engine
         self.display = display
         self.map = Map()
         self.ZOOM = 1.5
@@ -123,6 +125,9 @@ class MapScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """unused func"""
+        if input_handler.is_key_down(KEY_C):
+            print("change scene")
+            self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.is_key_down(KEY_ESC):
             self.display.close()
         pass
