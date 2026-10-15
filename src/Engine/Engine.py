@@ -5,8 +5,8 @@ from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application
 from .InputHandler import InputHandler
 from .SceneManager.SceneManager import SceneManager
+from .Clock import Clock
 import mlx
-import time
 
 
 class Engine:
@@ -21,8 +21,17 @@ class Engine:
 
     """
 
-    def __init__(self, program_name: str) -> None:
-        """ Init method for the Engine """
+    def __init__(
+            self,
+            program_name: str,
+            target_fps: float | None = 60.0,
+    ) -> None:
+        """Initialize the engine.
+
+        Args:
+            program_name: Name displayed in the game window.
+            target_fps: Maximum game-loop rate. ``None`` disables limiting.
+        """
 
         self._session = mlx.Mlx()
         self._mlx_ptr: Any = self._session.mlx_init()
@@ -42,6 +51,7 @@ class Engine:
             self._mlx_ptr,
             self._window.native_ptr,
         )
+        self._clock = Clock(target_fps=target_fps)
 
     @property
     def input_handler(self) -> InputHandler:
@@ -67,20 +77,14 @@ class Engine:
                 )
 
     def run(self, application: Application) -> None:
+        """Run the application until the MLX loop exits.
+
+        Args:
+            application: Application object to update and render.
         """
-            Core method of the Engine that will run
-                the given Application object (Game or else)
-                created with the Engine API.
-        """
-        previous_time = time.perf_counter()
 
         def frame(_param: object) -> None:
-            nonlocal previous_time
-
-            current_time = time.perf_counter()
-            delta_time = current_time - previous_time
-            previous_time = current_time
-
+            delta_time = self._clock.tick()
             application.update(delta_time, self._input_handler)
             application.render()
             self._input_handler.end_frame()

@@ -24,7 +24,6 @@ class MapScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """unused func"""
-        print(delta_time)
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_ESC):

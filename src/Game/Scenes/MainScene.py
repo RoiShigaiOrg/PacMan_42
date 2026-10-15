@@ -54,7 +54,6 @@ class MainScene(Scene):
                 and Engine Calculation.
         """
         old_pos: Tuple[int, int] = self.__rect.pos
-        print(delta_time)
         if input_handler.is_key_down(KEY_S):
             self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
         if input_handler.is_key_down(KEY_Z):
