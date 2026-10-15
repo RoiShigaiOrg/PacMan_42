@@ -47,5 +47,4 @@ class PacMan(Application):
     def run(self) -> None:
         """ Main method that will contain the loop of the program """
         self.scenes.change_screen("game_scene")
-        print("scene has changed")
         self.engine.run(self)
