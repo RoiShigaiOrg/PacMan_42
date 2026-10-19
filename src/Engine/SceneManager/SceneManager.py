@@ -19,7 +19,6 @@ class SceneManager:
         """ Init Method of the ScreenManager Object """
         self.__screens: Dict[str, Scene] = dict(screen_dict or {})
         self.__actual_screen: Scene | None = None
-
         if self.__screens:
             self.__actual_screen = next(iter(self.__screens.values()))
 
@@ -28,13 +27,13 @@ class SceneManager:
         """Return the currently selected screen, if one is registered."""
         return self.__actual_screen
 
-    def change_screen(self, screen_id: str) -> None:
+    def change_scene(self, scene_id: str) -> None:
         """ Change to the given screen_id to render in the mlx window """
-        if screen_id in self.__screens:
-            self.__actual_screen = self.__screens[screen_id]
+        if scene_id in self.__screens:
+            self.__actual_screen = self.__screens[scene_id]
             self.__actual_screen.render_on_change()
         else:
-            raise ValueError(f"ScreenManager Error: {screen_id} do not exist")
+            raise ValueError(f"ScreenManager Error: {scene_id} do not exist")
 
     def add_scene(self, scene: Dict[str, Scene]) -> None:
         """Register a screen under ``screen_id``."""

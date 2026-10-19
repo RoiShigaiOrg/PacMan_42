@@ -2,6 +2,7 @@ from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (
     KEY_S, KEY_ESC, KEY_D, KEY_Q, KEY_Z,
+    KEY_C
 )
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
@@ -10,6 +11,7 @@ from Engine.Graphics.Components.Line import Line
 from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
+from Engine.Engine import Engine
 from typing import Tuple
 
 
@@ -28,8 +30,9 @@ class MainScene(Scene):
             - Quit: Exit the program normally
     """
 
-    def __init__(self, display: MlxDisplay) -> None:
+    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
         """ Init Method of the MainScreen Class """
+        self.__engine = engine
         self.__display = display
         self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
         self.__rect2: Rect = Rect(120, 120, 620, 300, 0xFFFF00FF)
@@ -103,7 +106,9 @@ class MainScene(Scene):
 
         if (x, y) != old_pos:
             self.__rect.update_pos(x, y)
-        if input_handler.is_key_down(KEY_ESC):
+        if input_handler.was_key_pressed(KEY_C):
+            self.__engine.scene_manager.change_scene("game_scene")
+        if input_handler.was_key_pressed(KEY_ESC):
             self.__display.close()
 
         if old_pos != self.__rect.pos:

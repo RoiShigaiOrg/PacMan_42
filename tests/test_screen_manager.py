@@ -41,7 +41,7 @@ def test_add_scene_registers_scenes_and_preserves_current_scene() -> None:
     manager.add_scene({"second": second})
 
     assert manager.actual_screen is first
-    manager.change_screen("second")
+    manager.change_scene("second")
     assert manager.actual_screen is second
 
 
@@ -60,7 +60,7 @@ def test_change_screen_selects_registered_scene() -> None:
     second = RecordingScene("second")
     manager = SceneManager({"first": first, "second": second})
 
-    manager.change_screen("second")
+    manager.change_scene("second")
     manager.render()
 
     assert manager.actual_screen is second
@@ -75,7 +75,7 @@ def test_render_without_a_scene_fails() -> None:
 
 def test_change_to_unknown_scene_fails() -> None:
     with pytest.raises(ValueError, match="missing"):
-        SceneManager().change_screen("missing")
+        SceneManager().change_scene("missing")
 
 
 def test_update_is_available_without_affecting_rendering() -> None:
