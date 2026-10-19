@@ -1,12 +1,14 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_S, KEY_Z, KEY_ESC, KEY_Q, KEY_D
+from Engine.InputHandler.KeyCode import (KEY_S, KEY_Z, KEY_ESC,
+                                         KEY_Q, KEY_D, KEY_C)
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
 from Engine.Graphics.Components.Circle import Circle
 from Engine.Graphics.Components.Line import Line
 from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
+from Engine.Engine import Engine
 from typing import Tuple
 
 
@@ -25,8 +27,9 @@ class MainScene(Scene):
             - Quit: Exit the program normally
     """
 
-    def __init__(self, display: MlxDisplay) -> None:
+    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
         """ Init Method of the MainScreen Class """
+        self.__engine = engine
         self.__display = display
         self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
         self.__circle: Circle = Circle(160, 160, 1120, 160, 0xFF00FFFF)
@@ -51,7 +54,6 @@ class MainScene(Scene):
                 and Engine Calculation.
         """
         old_pos: Tuple[int, int] = self.__rect.pos
-
         if input_handler.is_key_down(KEY_S):
             self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
         if input_handler.is_key_down(KEY_Z):
@@ -60,7 +62,9 @@ class MainScene(Scene):
             self.__rect.update_pos(old_pos[0] + 5, old_pos[1])
         if input_handler.is_key_down(KEY_Q):
             self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
-        if input_handler.is_key_down(KEY_ESC):
+        if input_handler.was_key_pressed(KEY_C):
+            self.__engine.scene_manager.change_scene("game_scene")
+        if input_handler.was_key_pressed(KEY_ESC):
             self.__display.close()
 
         if old_pos != self.__rect.pos:

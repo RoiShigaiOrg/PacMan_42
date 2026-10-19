@@ -2,15 +2,17 @@ import math
 from Engine import Scene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_ESC
+from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C
 from ..MapGeneration.MapGeneration import Map
+from Engine.Engine import Engine
 
 
 class MapScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
 
-    def __init__(self, display: MlxDisplay) -> None:
+    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
+        self.__engine = engine
         self.display = display
         self.map = Map()
         self.ZOOM = 1.5
@@ -19,6 +21,17 @@ class MapScene(Scene):
         self.MARGIN = round(3 * self.ZOOM)
         self.THICKNESS = round(1 * self.ZOOM)
         self.RADIUS = self.MARGIN
+
+    def update(self, delta_time: float, input_handler: InputHandler) -> None:
+        """unused func"""
+        if input_handler.was_key_pressed(KEY_C):
+            self.__engine.scene_manager.change_scene("main_scene")
+        if input_handler.was_key_pressed(KEY_ESC):
+            self.display.close()
+
+    def render(self) -> None:
+        """ display map"""
+        self.display.render()
 
     def is_wall(self, x: int, y: int) -> bool:
         """ Check the neighboring cells to see if it's a wall or a corridor."""
@@ -119,14 +132,4 @@ class MapScene(Scene):
                         self.fill_bloc(x, y)
                     else:
                         self.draw_wall(x, y)
-        self.display.render()
-
-    def update(self, delta_time: float, input_handler: InputHandler) -> None:
-        """unused func"""
-        if input_handler.is_key_down(KEY_ESC):
-            self.display.close()
-        pass
-
-    def render(self) -> None:
-        """ display map"""
         self.display.render()
