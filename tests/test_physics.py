@@ -96,3 +96,51 @@ def test_unsupported_shape_pair_is_reported() -> None:
             Collider(AABB(Vector2(1, 1)), Vector2(0, 0)),
             Collider("unsupported", Vector2(0, 0)),  # type: ignore[arg-type]
         )
+
+
+def test_can_move_allows_movement_away_from_a_collider() -> None:
+    """A movement that creates no overlap should be allowed."""
+    collider = box(0, 0, 10, 10)
+
+    assert PhysicsEngine().can_move(
+        collider, Vector2(-2.0, 0.0), box(10, 0, 10, 10)
+    ) is True
+
+
+def test_can_move_blocks_movement_into_a_collider() -> None:
+    """A movement that would overlap a collider should be refused."""
+    collider = box(0, 0, 10, 10)
+
+    assert PhysicsEngine().can_move(
+        collider, Vector2(2.0, 0.0), box(10, 0, 10, 10)
+    ) is False
+
+
+def test_can_move_restores_position_after_a_blocked_move() -> None:
+    """A refused movement must leave the collider position untouched."""
+    collider = box(0, 0, 10, 10)
+
+    PhysicsEngine().can_move(collider, Vector2(2.0, 0.0), box(10, 0, 10, 10))
+
+    assert collider.position == Vector2(5.0, 5.0)
+
+
+def test_can_move_allows_perpendicular_sliding() -> None:
+    """A collider blocked on one axis should still slide along the wall."""
+    collider = box(0, 0, 10, 10)
+
+    assert PhysicsEngine().can_move(
+        collider, Vector2(0.0, 5.0), box(10, 0, 10, 10)
+    ) is True
+
+
+def test_can_move_checks_every_other_collider() -> None:
+    """The movement must avoid all listed colliders, not just the first."""
+    collider = box(0, 0, 10, 10)
+
+    assert PhysicsEngine().can_move(
+        collider,
+        Vector2(2.0, 0.0),
+        box(30, 0, 10, 10),
+        box(10, 0, 10, 10),
+    ) is False

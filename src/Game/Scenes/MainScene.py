@@ -32,7 +32,7 @@ class MainScene(Scene):
         """ Init Method of the MainScreen Class """
         self.__display = display
         self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
-        self.__rect2: Rect = Rect(120, 120, 340, 200, 0xFFFF00FF)
+        self.__rect2: Rect = Rect(120, 120, 620, 300, 0xFFFF00FF)
         self.__circle: Circle = Circle(160, 160, 1120, 160, 0xFF00FFFF)
         self.__line: Line = Line((0, 100), (710, 0), 220, 300, 0xFF00FF00)
         self.__rect.add_text(TextBox("TEST", 0xFFFFFFFF), TEXT_CENTER)
@@ -60,15 +60,49 @@ class MainScene(Scene):
                 and Engine Calculation.
         """
         old_pos: Tuple[int, int] = self.__rect.pos
+        x: int = old_pos[0]
+        y: int = old_pos[1]
+        self.__rect_collider.position = self.__center_at(
+                x, y, self.__rect.size
+            )
 
-        if input_handler.is_key_down(KEY_S):
-            self.__rect.update_pos(old_pos[0], old_pos[1] + 5)
-        if input_handler.is_key_down(KEY_Z):
-            self.__rect.update_pos(old_pos[0], old_pos[1] - 5)
+        dx: int = 0
+        dy: int = 0
         if input_handler.is_key_down(KEY_D):
-            self.__rect.update_pos(old_pos[0] + 5, old_pos[1])
+            dx += 5
         if input_handler.is_key_down(KEY_Q):
-            self.__rect.update_pos(old_pos[0] - 5, old_pos[1])
+            dx -= 5
+        if input_handler.is_key_down(KEY_S):
+            dy += 5
+        if input_handler.is_key_down(KEY_Z):
+            dy -= 5
+
+        collided = False
+        if dx != 0:
+            if self.__physics.can_move(
+                    self.__rect_collider, Vector2(float(dx), 0.0),
+                    self.__rect2_collider,
+            ):
+                x += dx
+            else:
+                collided = True
+            self.__rect_collider.position = self.__center_at(
+                    x, y, self.__rect.size
+                )
+        if dy != 0:
+            if self.__physics.can_move(
+                    self.__rect_collider, Vector2(0.0, float(dy)),
+                    self.__rect2_collider,
+            ):
+                y += dy
+            else:
+                collided = True
+            self.__rect_collider.position = self.__center_at(
+                    x, y, self.__rect.size
+                )
+
+        if (x, y) != old_pos:
+            self.__rect.update_pos(x, y)
         if input_handler.is_key_down(KEY_ESC):
             self.__display.close()
 
@@ -78,34 +112,30 @@ class MainScene(Scene):
                 self.movement_region(self.__rect.size, old_pos),
                 self.movement_region(self.__rect.size, self.__rect.pos),
             )
-        self.__rect_collider.position = self.__rect_center(self.__rect)
-        colliding = self.__physics.handle_collision(
-                self.__rect_collider, self.__rect2_collider
-            ) is not None
-        if colliding != self.__colliding:
+        if collided != self.__colliding:
             self.__dirty_region = self.union_regions(
                 self.__dirty_region,
                 self.movement_region(self.__rect.size, self.__rect.pos)
             )
-            self.__colliding = colliding
+            self.__colliding = collided
             self.__rect.update_color(
-                    0xFF0000FF if colliding else 0xFF00FF00
+                    0xFF0000FF if collided else 0xFF00FF00
                 )
 
     @staticmethod
-    def __rect_center(rect: Rect) -> Vector2:
-        """Return the world-space center of a graphics rectangle."""
-        x, y = rect.pos
-        width, height = rect.size
+    def __center_at(x: int, y: int, size: Tuple[int, int]) -> Vector2:
+        """Return the world-space center of a rectangle at a position."""
+        width, height = size
         return Vector2(x + width / 2, y + height / 2)
 
     @classmethod
     def __make_rect_collider(cls, rect: Rect) -> Collider:
         """Create an AABB collider matching a graphics rectangle."""
         width, height = rect.size
+        x, y = rect.pos
         return Collider(
             AABB(Vector2(width / 2, height / 2)),
-            cls.__rect_center(rect),
+            cls.__center_at(x, y, rect.size),
         )
 
     def render_on_change(self) -> None:
