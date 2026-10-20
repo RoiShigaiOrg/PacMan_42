@@ -58,11 +58,15 @@ class MlxDisplay:
                 )
 
     def relative_width(self, x: float) -> int:
-        """ Utils method for converting relative position into raw pixel x coord """
+        """
+        Utils method for converting relative position into raw pixel x coord
+        """
         return int(self.__width * x)
 
     def relative_height(self, y: float) -> int:
-        """ Utils method for converting relative position into raw pixel y coord """
+        """
+        Utils method for converting relative position into raw pixel y coord
+        """
         return int(self.__height * y)
 
     def draw_pixel(self, x: int, y: int, color: int) -> None:
