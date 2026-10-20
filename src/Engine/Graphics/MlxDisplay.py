@@ -57,6 +57,14 @@ class MlxDisplay:
                 0, 0
                 )
 
+    def relative_width(self, x: float) -> int:
+        """ Utils method for converting relative position into raw pixel x coord """
+        return int(self.__width * x)
+
+    def relative_height(self, y: float) -> int:
+        """ Utils method for converting relative position into raw pixel y coord """
+        return int(self.__height * y)
+
     def draw_pixel(self, x: int, y: int, color: int) -> None:
         """Write one ARGB pixel to the persistent screen buffer."""
         if not 0 <= x < self.__width or not 0 <= y < self.__height:
