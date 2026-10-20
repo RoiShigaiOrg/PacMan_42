@@ -50,5 +50,5 @@ class PacMan(Application):
 
     def run(self) -> None:
         """ Main method that will contain the loop of the program """
-        self.engine.scene_manager.change_scene("test_scene")
+        self.engine.scene_manager.change_scene("main_scene")
         self.engine.run(self)
