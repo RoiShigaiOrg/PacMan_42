@@ -1,19 +1,12 @@
+from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
-from typing import Tuple
+from .Cell import Cell
 import random
 
 TOP: int = 1
 RIGHT: int = 2
 DOWN: int = 4
 LEFT: int = 8
-
-
-class Cell():
-    """Class composing the map: coordinates and state"""
-
-    def __init__(self, coordinate: Tuple[int, int], walkable: bool):
-        self.coordinate: Tuple[int, int] = coordinate
-        self.walkable: bool = walkable
 
 
 class Map():
@@ -96,3 +89,20 @@ class Map():
                 new[center][x].walkable = True
 
         return new
+
+    def draw(
+            self,
+            display: MlxDisplay,
+            pos_x: int, pos_y: int,
+            width: int, height: int) -> None:
+        """ Draw method of the Map Object """
+        cell_height: int = int(height / self.height)
+        cell_width: int = int(width / self.width)
+
+        for y in range(self.height):
+            for x in range(self.width):
+                self.grid[y][x].draw(
+                        display,
+                        pos_x + (cell_width * x), pos_y + (cell_height * y),
+                        cell_width, cell_height
+                    )
