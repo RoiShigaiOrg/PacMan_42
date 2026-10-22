@@ -95,6 +95,7 @@ class MainScene(Scene):
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
+        self.__display.clear(0xFFFF0000)
         self.__dirty_region = (
             0, 0, self.__display.width, self.__display.height
         )
@@ -108,9 +109,9 @@ class MainScene(Scene):
             )
             self.__rect.draw(self.__display)
             self.__display.render()
-            self.__rect.draw_text(self.__display)
             self.__rect2.draw(self.__display)
-            self.__rect2.draw_text(self.__display)
             self.__rect3.draw(self.__display)
+            self.__rect.draw_text(self.__display)
+            self.__rect2.draw_text(self.__display)
             self.__rect3.draw_text(self.__display)
             self.__dirty_region = None
