@@ -1,3 +1,4 @@
 dependencies/ubuntu/mlx-2.2-py3-none-any.whl
+dependencies/mazegenerator/mazegenerator-2.1.0-py3-none-any.whl
 flake8==7.3.0
 mypy==1.18.2
