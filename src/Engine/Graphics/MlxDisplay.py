@@ -57,6 +57,13 @@ class MlxDisplay:
                 0, 0
                 )
 
+    def clear_window(self) -> None:
+        """Clear the shared window backbuffer, not just this image buffer."""
+        self.__session.mlx_clear_window(
+                self.__mlx_ptr,
+                self.__window_ptr,
+                )
+
     def relative_width(self, x: float) -> int:
         """
         Utils method for converting relative position into raw pixel x coord

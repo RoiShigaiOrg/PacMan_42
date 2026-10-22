@@ -49,6 +49,7 @@ class MapScene(Scene):
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
+        self.display.clear_window()
         self.display.clear(0xFFFF0000)
         self.__dirty_region = (
             0, 0, self.display.width, self.display.height
