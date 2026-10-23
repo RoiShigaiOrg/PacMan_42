@@ -1,5 +1,6 @@
 from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
+from typing import Tuple
 from .Cell import Cell
 import random
 
@@ -27,6 +28,14 @@ class Map():
             )
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
+
+    def center(self) -> Tuple[int, int]:
+        """ Return the center coordonates of the map """
+        return (int(self.width / 2), int(self.height / 2))
+
+    def size(self) -> Tuple[int, int]:
+        """ Return the size of the Map object """
+        return (self.width, self.height)
 
     def _convert(self, maze: list[list[int]]) -> list[list[Cell]]:
         """converts base-8 data into cells"""
