@@ -54,6 +54,11 @@ class Engine:
         self._clock = Clock(target_fps=target_fps)
 
     @property
+    def file_manager(self) -> FileManager:
+        """Return the file service owned by this engine."""
+        return self.__file_manager
+
+    @property
     def input_handler(self) -> InputHandler:
         """Return the input service owned by this engine."""
         return self._input_handler

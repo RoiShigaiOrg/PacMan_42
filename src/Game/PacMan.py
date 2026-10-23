@@ -6,6 +6,7 @@ from .Scenes.MapScene import MapScene
 from .Scenes.TestScene import TestScene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
+from .Scenes.GameOverScene import GameOverScene
 
 
 class PacMan(Application):
@@ -34,7 +35,11 @@ class PacMan(Application):
                 ),
                 "test_scene": TestScene(
                     self.engine.create_display((1280, 720))
-                )
+                ),
+                "game_over_scene": GameOverScene(
+                    self.engine,
+                    self.engine.create_display((1280, 720))
+                ),
             }
         )
 

@@ -1,0 +1,28 @@
+/* XPM */
+static char *lettre[] = {
+"21 20 4 1",
+"  c None",
+"r c #FFC629",
+"w c #eb2a23",
+"b c #0000FF",
+" wwwwwwwwwwwwwwwwwwww",
+"bwwwwwwrrrrrrrrrrrrww",
+" bwwrrrrrrrrrrrrrrrw ",
+" bwwwrrrrrrrrrrrrrw  ",
+"  bwwrrrrrrrrrrrrww  ",
+"  bwwwrrrrrrrrrrrw   ",
+"   bwrrrrrrrrrrrww   ",
+"   bwrrrrrrrrrrrw    ",
+"    bwrrrrrrrrrw     ",
+"    bwrrrrrrrrrw     ",
+"     wrrrrrrrrrww    ",
+"    wwrrrrrrrrrrw    ",
+"    wrrrrrrrrrrrww   ",
+"   wwrrrrrrrrrrwww   ",
+"  wwrrrrrrrrrrrrwww  ",
+"  wrrrrrrrrrrrrrrww  ",
+" wwrrrrrrrrrrrrrrwww ",
+" wrrrrrrrrrrrrwwwwww ",
+"bwwwwwwwwwwwwwwwwwwww",
+"b                 b  "
+};

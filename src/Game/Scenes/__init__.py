@@ -6,4 +6,5 @@ __all__ = [
         "MainScene",
         "MapScene",
         "TestScene",
+        "GameOverScene"
         ]
