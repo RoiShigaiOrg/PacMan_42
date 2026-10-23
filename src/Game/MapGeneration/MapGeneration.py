@@ -109,6 +109,21 @@ class Map():
 
         return new
 
+    def set_colliders(
+            self,
+            pos_x: int, pos_y: int,
+            width: int, height: int) -> None:
+        """ The colliders for every cells in the map """
+        cell_height: int = int(height / self.height)
+        cell_width: int = int(width / self.width)
+
+        for y in range(self.height):
+            for x in range(self.width):
+                self.grid[y][x].set_collider(
+                        pos_x + (cell_width * x), pos_y + (cell_height * y),
+                        cell_width, cell_height
+                    )
+
     def draw(
             self,
             display: MlxDisplay,

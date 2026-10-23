@@ -25,6 +25,12 @@ class MapScene(Scene):
         self.display = display
         self.map = Map()
         self.display.clear(0xFFFF0000)
+        self.map.set_colliders(
+                self.display.relative_width(RELATIVE_MAP_POS_X),
+                self.display.relative_height(RELATIVE_MAP_POS_Y),
+                self.display.relative_width(RELATIVE_MAP_WIDTH),
+                self.display.relative_height(RELATIVE_MAP_HEIGHT),
+            )
         self.map.draw(
                 display,
                 self.display.relative_width(RELATIVE_MAP_POS_X),
