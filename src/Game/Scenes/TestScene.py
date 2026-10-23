@@ -2,6 +2,7 @@ from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (
     KEY_S, KEY_ESC, KEY_D, KEY_Q, KEY_Z,
+    KEY_C,
 )
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
@@ -10,6 +11,7 @@ from Engine.Graphics.Components.Line import Line
 from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
+from Engine.Engine import Engine
 from typing import Tuple
 
 
@@ -28,9 +30,10 @@ class TestScene(Scene):
             - Quit: Exit the program normally
     """
 
-    def __init__(self, display: MlxDisplay) -> None:
+    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
         """ Init Method of the MainScreen Class """
-        self.__display = display
+        self.__display: MlxDisplay = display
+        self.__engine: Engine = engine
         self.__rect: Rect = Rect(480, 312, 50, 50, 0xFF0000FF)
         self.__rect2: Rect = Rect(120, 120, 620, 300, 0xFFFF00FF)
         self.__circle: Circle = Circle(160, 160, 1120, 160, 0xFF00FFFF)
@@ -62,6 +65,10 @@ class TestScene(Scene):
         old_pos: Tuple[int, int] = self.__rect.pos
         x: int = old_pos[0]
         y: int = old_pos[1]
+        if input_handler.was_key_pressed(KEY_C):
+            self.__engine.scene_manager.change_scene("main_scene")
+        if input_handler.is_key_down(KEY_ESC):
+            self.__display.close()
         self.__rect_collider.position = self.__center_at(
                 x, y, self.__rect.size
             )
@@ -103,8 +110,6 @@ class TestScene(Scene):
 
         if (x, y) != old_pos:
             self.__rect.update_pos(x, y)
-        if input_handler.is_key_down(KEY_ESC):
-            self.__display.close()
 
         if old_pos != self.__rect.pos:
             self.__dirty_region = self.union_regions(
@@ -140,6 +145,8 @@ class TestScene(Scene):
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
+        self.__display.clear_window()
+        self.__display.clear(0xFFFF0000)
         self.__dirty_region = (
             0, 0, self.__display.width, self.__display.height
         )

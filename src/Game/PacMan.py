@@ -34,6 +34,7 @@ class PacMan(Application):
                     self.engine.create_display((1280, 720))
                 ),
                 "test_scene": TestScene(
+                    self.engine,
                     self.engine.create_display((1280, 720))
                 ),
                 "game_over_scene": GameOverScene(

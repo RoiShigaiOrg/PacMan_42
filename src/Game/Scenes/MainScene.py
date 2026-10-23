@@ -50,6 +50,12 @@ class MainScene(Scene):
                 self.__display.relative_height(0.8),
                 0xFF0000FF
             )
+        self.__display.clear(0xFFFF0000)
+        self.__rect.draw(self.__display)
+        self.__rect2.draw(self.__display)
+        self.__rect3.draw(self.__display)
+        self.__static_layer = self.__display.snapshot()
+
         self.__rect.add_text(
                 TextBox("Press C to MapScene", 0xFFFFFFFF),
                 TEXT_CENTER
@@ -62,21 +68,9 @@ class MainScene(Scene):
                 TextBox("Press ESC to TestScene", 0xFFFFFFFF),
                 TEXT_CENTER
             )
-        self.__display.clear(0xFFFF0000)
-        self.__rect.draw(self.__display)
-        self.__rect2.draw(self.__display)
-        self.__rect3.draw(self.__display)
-        self.__display.render()
-
-        self.__rect.draw_text(self.__display)
-        self.__rect2.draw_text(self.__display)
-        self.__rect3.draw_text(self.__display)
-        self.__display.render()
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
-
-        self.__static_layer = self.__display.snapshot()
 
     def update(
             self, delta_time: float, input_handler: InputHandler
@@ -97,6 +91,8 @@ class MainScene(Scene):
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
+        self.__display.clear_window()
+        self.__display.clear(0xFFFF0000)
         self.__dirty_region = (
             0, 0, self.__display.width, self.__display.height
         )
@@ -108,11 +104,8 @@ class MainScene(Scene):
             self.__display.restore_region(
                 self.__static_layer, x, y, width, height
             )
-            self.__rect.draw(self.__display)
             self.__display.render()
             self.__rect.draw_text(self.__display)
-            self.__rect2.draw(self.__display)
             self.__rect2.draw_text(self.__display)
-            self.__rect3.draw(self.__display)
             self.__rect3.draw_text(self.__display)
             self.__dirty_region = None

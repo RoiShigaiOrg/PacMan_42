@@ -6,12 +6,15 @@ from Engine.Graphics import MlxDisplay
 
 
 class FakeMlx:
-    def __init__(self, image_format: int = 0, bits_per_pixel: int = 32) -> None:
+    def __init__(
+        self, image_format: int = 0, bits_per_pixel: int = 32
+    ) -> None:
         self.data = memoryview(bytearray(32))
         self.image_format = image_format
         self.bits_per_pixel = bits_per_pixel
         self.presented: list[tuple[Any, Any, Any, int, int]] = []
         self.destroyed: list[tuple[Any, Any]] = []
+        self.cleared_windows: list[tuple[Any, Any]] = []
 
     def mlx_get_data_addr(
         self, image_ptr: Any
@@ -22,6 +25,9 @@ class FakeMlx:
         self, mlx_ptr: Any, window: Any, image: Any, x: int, y: int
     ) -> None:
         self.presented.append((mlx_ptr, window, image, x, y))
+
+    def mlx_clear_window(self, mlx_ptr: Any, window: Any) -> None:
+        self.cleared_windows.append((mlx_ptr, window))
 
     def mlx_destroy_image(self, mlx_ptr: Any, image: Any) -> None:
         self.destroyed.append((mlx_ptr, image))
@@ -139,6 +145,14 @@ def test_render_presents_the_display_image() -> None:
     display.render()
 
     assert session.presented == [("mlx", "window", "image", 0, 0)]
+
+
+def test_clear_window_clears_the_shared_window_backbuffer() -> None:
+    display, session = make_display()
+
+    display.clear_window()
+
+    assert session.cleared_windows == [("mlx", "window")]
 
 
 def test_non_32_bit_images_are_destroyed_and_rejected() -> None:
