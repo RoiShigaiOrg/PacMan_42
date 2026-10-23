@@ -129,10 +129,11 @@ class MlxWindow:
         if not image_ptr:
             raise RuntimeError("failed to create MLX display buffer")
 
-        return MlxDisplay(
+        display = MlxDisplay(
             self.__session,
             image_ptr,
             self.__mlx_ptr,
             self.__window_ptr,
             size,
         )
+        return display
