@@ -28,6 +28,7 @@ class Map():
             )
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
+        self._open_center()
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """
@@ -36,6 +37,15 @@ class Map():
     def size(self) -> Tuple[int, int]:
         """ Return the size of the Map object """
         return (self.width, self.height)
+
+    def _open_center(self) -> None:
+        """ Free the center of the map so the Player is not blocked """
+        center: Tuple[int, int] = self.center()
+        start: Tuple[int, int] = (center[0] - 1, center[1] - 1)
+
+        for y in range(start[1], start[1] + 3):
+            for x in range(start[0], start[0] + 3):
+                self.grid[x][y].walkable = True
 
     def _convert(self, maze: list[list[int]]) -> list[list[Cell]]:
         """converts base-8 data into cells"""
