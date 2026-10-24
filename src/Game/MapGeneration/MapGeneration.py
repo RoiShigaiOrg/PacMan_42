@@ -1,6 +1,7 @@
 from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
 from typing import Tuple
+from Engine.Physics.Collider import Collider
 from .Cell import Cell
 import random
 
@@ -37,6 +38,15 @@ class Map():
     def size(self) -> Tuple[int, int]:
         """ Return the size of the Map object """
         return (self.width, self.height)
+
+    def wall_colliders(self) -> tuple[Collider, ...]:
+        """Return the colliders for every non-walkable cell."""
+        return tuple(
+            collider
+            for row in self.grid
+            for cell in row
+            if (collider := cell.collider) is not None
+        )
 
     def _open_center(self) -> None:
         """ Free the center of the map so the Player is not blocked """

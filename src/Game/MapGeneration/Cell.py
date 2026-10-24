@@ -34,10 +34,16 @@ class Cell():
             width: int, height: int) -> None:
         """ Create a Collider for the cell if needed """
         if self.walkable:
+            self.__collider = None
             return
         self.__collider = Collider(
                 AABB(Vector2(
-                    width / 2, height / 2)),
+                    (width / 2) - 2, (height / 2) - 2)),
                 Vector2(
                     pos_x + width / 2, pos_y + height / 2)
             )
+
+    @property
+    def collider(self) -> Collider | None:
+        """Return the blocking collider, if this cell has one."""
+        return self.__collider

@@ -40,6 +40,7 @@ class MapScene(Scene):
                 )
         self.__player: Player = Player()
         self.__player.InitPlayer(display, self.map)
+        self.__physics = engine.physics
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
@@ -51,6 +52,19 @@ class MapScene(Scene):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.display.close()
+        old_position = self.__player.position
+        old_center = self.__player.collider.world_position
+        self.__player.update_direction(
+            input_handler, self.map, self.__physics, delta_time
+        )
+        if self.__player.collider.world_position != old_center:
+            self.__dirty_region = self.union_regions(
+                self.__dirty_region,
+                self.movement_region(self.__player.size, old_position),
+                self.movement_region(
+                    self.__player.size, self.__player.position
+                ),
+            )
 
     def render(self) -> None:
         """ Render Method for the MapScene Object"""
