@@ -3,6 +3,16 @@ import pytest
 from Engine.Physics import AABB, Circle, Collider, PhysicsEngine, Vector2
 
 
+class RecordingDisplay:
+    """Record drawn pixels for collider debug-drawing tests."""
+
+    def __init__(self) -> None:
+        self.pixels: list[tuple[int, int, int]] = []
+
+    def draw_pixel(self, x: int, y: int, color: int) -> None:
+        self.pixels.append((x, y, color))
+
+
 def box(x: float, y: float, width: float, height: float) -> Collider:
     """Create a centered AABB collider from top-left-style dimensions."""
     return Collider(
@@ -96,6 +106,37 @@ def test_unsupported_shape_pair_is_reported() -> None:
             Collider(AABB(Vector2(1, 1)), Vector2(0, 0)),
             Collider("unsupported", Vector2(0, 0)),  # type: ignore[arg-type]
         )
+
+
+def test_debug_draw_renders_aabb_outline_at_world_position() -> None:
+    display = RecordingDisplay()
+    collider = Collider(
+        AABB(Vector2(2, 1)), Vector2(5, 4), Vector2(1, 0)
+    )
+
+    collider.debug_draw(display, 0xFF00FF00)  # type: ignore[arg-type]
+
+    assert set(display.pixels) == {
+        (4, 3, 0xFF00FF00),
+        (5, 3, 0xFF00FF00),
+        (6, 3, 0xFF00FF00),
+        (7, 3, 0xFF00FF00),
+        (4, 4, 0xFF00FF00),
+        (5, 4, 0xFF00FF00),
+        (6, 4, 0xFF00FF00),
+        (7, 4, 0xFF00FF00),
+    }
+
+
+def test_debug_draw_renders_circle_outline_at_world_position() -> None:
+    display = RecordingDisplay()
+    collider = Collider(Circle(2), Vector2(5, 5))
+
+    collider.debug_draw(display, 0xFFFF0000)  # type: ignore[arg-type]
+
+    assert (7, 5, 0xFFFF0000) in display.pixels
+    assert (5, 7, 0xFFFF0000) in display.pixels
+    assert all(pixel[2] == 0xFFFF0000 for pixel in display.pixels)
 
 
 def test_can_move_allows_movement_away_from_a_collider() -> None:

@@ -1,9 +1,16 @@
 from Engine import Scene
+from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C
 from ..MapGeneration.MapGeneration import Map
-from Engine.Engine import Engine
+from ..MapGeneration import (
+        RELATIVE_MAP_POS_X,
+        RELATIVE_MAP_POS_Y,
+        RELATIVE_MAP_WIDTH,
+        RELATIVE_MAP_HEIGHT
+        )
+from ..Player.Player import Player
 
 
 Region = tuple[int, int, int, int]
@@ -18,13 +25,22 @@ class MapScene(Scene):
         self.display = display
         self.map = Map()
         self.display.clear(0xFFFF0000)
+        self.map.set_colliders(
+                self.display.relative_width(RELATIVE_MAP_POS_X),
+                self.display.relative_height(RELATIVE_MAP_POS_Y),
+                self.display.relative_width(RELATIVE_MAP_WIDTH),
+                self.display.relative_height(RELATIVE_MAP_HEIGHT),
+            )
         self.map.draw(
                 display,
-                self.display.relative_width(0.1),
-                self.display.relative_height(0.1),
-                self.display.relative_width(0.8),
-                self.display.relative_height(0.8),
+                self.display.relative_width(RELATIVE_MAP_POS_X),
+                self.display.relative_height(RELATIVE_MAP_POS_Y),
+                self.display.relative_width(RELATIVE_MAP_WIDTH),
+                self.display.relative_height(RELATIVE_MAP_HEIGHT),
                 )
+        self.__player: Player = Player()
+        self.__player.InitPlayer(display, self.map)
+        self.__physics = engine.physics
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
@@ -36,6 +52,19 @@ class MapScene(Scene):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.display.close()
+        old_position = self.__player.position
+        old_center = self.__player.collider.world_position
+        self.__player.update_direction(
+            input_handler, self.map, self.__physics, delta_time
+        )
+        if self.__player.collider.world_position != old_center:
+            self.__dirty_region = self.union_regions(
+                self.__dirty_region,
+                self.movement_region(self.__player.size, old_position),
+                self.movement_region(
+                    self.__player.size, self.__player.position
+                ),
+            )
 
     def render(self) -> None:
         """ Render Method for the MapScene Object"""
@@ -45,6 +74,7 @@ class MapScene(Scene):
                 self.__static_layer, x, y, width, height
             )
             self.__dirty_region = None
+        self.__player.draw(self.display)
         self.display.render()
 
     def render_on_change(self) -> None:
