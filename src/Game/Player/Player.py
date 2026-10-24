@@ -10,18 +10,14 @@ from Engine.Physics.Collider import Collider
 from Engine.Physics.Physics import PhysicsEngine
 from Engine.Physics.Shapes import AABB
 from Engine.Physics.Vector2 import Vector2
-from ..MapGeneration import (
-    RELATIVE_MAP_HEIGHT,
-    RELATIVE_MAP_POS_X,
-    RELATIVE_MAP_POS_Y,
-    RELATIVE_MAP_WIDTH,
-    Map,
-)
+from ..MapGeneration import Map
 
 
 MOVEMENT_SPEED: float = 180.0
 PLAYER_COLOR: int = 0xFFFFFF00
 COLLIDER_DEBUG_COLOR: int = 0xFFFF0000
+COLLIDER_SIZE_RATIO: float = 0.8
+GRID_CENTER_TOLERANCE: float = 1e-6
 
 _DIRECTION_KEYS: tuple[tuple[int, Vector2], ...] = (
     (KEY_Z, Vector2(0.0, -1.0)),
@@ -61,21 +57,13 @@ class Player:
         """
         map_center: Tuple[int, int] = actual_map.center()
         print(f"map_center: {map_center} map size: {actual_map.size()}")
-        self.__width: int = int(
-                display.relative_width(RELATIVE_MAP_WIDTH)
-                / actual_map.width
-            )
-        self.__height: int = int(
-                display.relative_height(RELATIVE_MAP_HEIGHT)
-                / actual_map.height
-            )
+        self.__width, self.__height = actual_map.cell_size
+        map_pos_x, map_pos_y = actual_map.grid_origin
         pos_x: int = int(
-                display.relative_width(RELATIVE_MAP_POS_X)
-                + map_center[0] * self.__width
+                map_pos_x + map_center[0] * self.__width
             )
         pos_y: int = int(
-                display.relative_height(RELATIVE_MAP_POS_Y)
-                + map_center[1] * self.__height
+                map_pos_y + map_center[1] * self.__height
             )
         print(
             f"width: {self.__width} height: {self.__height} "
@@ -90,7 +78,9 @@ class Player:
             )
         self.__collider: Collider = Collider(
                 AABB(Vector2(
-                    self.__width / 2, self.__height / 2)),
+                    self.__width * COLLIDER_SIZE_RATIO / 2,
+                    self.__height * COLLIDER_SIZE_RATIO / 2,
+                    )),
                 Vector2(
                     pos_x + self.__width / 2,
                     pos_y + self.__height / 2,
@@ -150,27 +140,76 @@ class Player:
         if delta_time <= 0:
             return
 
-        distance = self.__movement_speed * delta_time
+        remaining_distance = self.__movement_speed * delta_time
         max_step = min(self.__width, self.__height) / 2
-        step_count = max(1, math.ceil(distance / max_step))
-        step = distance / step_count
         wall_colliders = actual_map.wall_colliders()
+        grid_origin = actual_map.grid_origin
+        cell_size = actual_map.cell_size
 
-        for _ in range(step_count):
+        while remaining_distance > GRID_CENTER_TOLERANCE:
             requested = self.__requested_direction
-            if requested is not None and self.__can_move(
-                    requested * step, physics, wall_colliders):
-                self.__direction = requested
-                self.__requested_direction = None
-                self.__move(requested * step)
-                continue
+            center = self.__collider.world_position
+            at_cell_center = actual_map.is_cell_centered(
+                center, GRID_CENTER_TOLERANCE
+            )
+
+            if at_cell_center and requested is not None:
+                if actual_map.next_cell_is_walkable(center, requested):
+                    self.__direction = requested
+                    self.__requested_direction = None
 
             if self.__direction.length_squared() == 0:
                 break
+
+            if at_cell_center and not actual_map.next_cell_is_walkable(
+                    center, self.__direction):
+                self.__direction = Vector2(0.0, 0.0)
+                break
+
+            step = min(
+                remaining_distance,
+                max_step,
+                abs(self.__distance_to_next_grid_center(
+                    self.__direction, grid_origin, cell_size
+                )),
+            )
+            if step <= GRID_CENTER_TOLERANCE:
+                break
+
             current_delta = self.__direction * step
             if not self.__can_move(current_delta, physics, wall_colliders):
+                self.__direction = Vector2(0.0, 0.0)
                 break
             self.__move(current_delta)
+            remaining_distance -= step
+
+    def __distance_to_next_grid_center(
+            self,
+            direction: Vector2,
+            grid_origin: Tuple[int, int],
+            cell_size: Tuple[int, int],
+    ) -> float:
+        """Return signed distance to the next cell center along travel."""
+        center = self.__collider.world_position
+        if direction.x != 0:
+            coordinate = center.x
+            origin = grid_origin[0]
+            size = cell_size[0]
+            travel_sign = direction.x
+        else:
+            coordinate = center.y
+            origin = grid_origin[1]
+            size = cell_size[1]
+            travel_sign = direction.y
+
+        first_center = origin + size / 2
+        center_index = (coordinate - first_center) / size
+        if travel_sign > 0:
+            target_index = math.floor(center_index + 1e-9) + 1
+        else:
+            target_index = math.ceil(center_index - 1e-9) - 1
+        target: float = first_center + target_index * size
+        return float(target - coordinate)
 
     def __capture_requested_direction(self, inputs: InputHandler) -> None:
         """Remember the newest pressed or held direction until it can turn."""

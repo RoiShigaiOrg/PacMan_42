@@ -38,7 +38,7 @@ class Cell():
             return
         self.__collider = Collider(
                 AABB(Vector2(
-                    (width / 2) - 2, (height / 2) - 2)),
+                    (width / 2), (height / 2))),
                 Vector2(
                     pos_x + width / 2, pos_y + height / 2)
             )

@@ -2,8 +2,10 @@ from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
 from typing import Tuple
 from Engine.Physics.Collider import Collider
+from Engine.Physics.Vector2 import Vector2
 from .Cell import Cell
 import random
+import math
 
 TOP: int = 1
 RIGHT: int = 2
@@ -30,6 +32,8 @@ class Map():
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
         self._open_center()
+        self.__grid_origin: Tuple[int, int] | None = None
+        self.__cell_size: Tuple[int, int] | None = None
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """
@@ -46,6 +50,62 @@ class Map():
             for row in self.grid
             for cell in row
             if (collider := cell.collider) is not None
+        )
+
+    @property
+    def grid_origin(self) -> Tuple[int, int]:
+        """Return the pixel position of the map's top-left cell."""
+        if self.__grid_origin is None:
+            raise RuntimeError("Map colliders must be configured first")
+        return self.__grid_origin
+
+    @property
+    def cell_size(self) -> Tuple[int, int]:
+        """Return the pixel dimensions of each map cell."""
+        if self.__cell_size is None:
+            raise RuntimeError("Map colliders must be configured first")
+        return self.__cell_size
+
+    def cell_coordinates_at(self, position: Vector2) -> Tuple[int, int]:
+        """Return the column and row containing a world-space position."""
+        pos_x, pos_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return (
+            math.floor((position.x - pos_x) / cell_width),
+            math.floor((position.y - pos_y) / cell_height),
+        )
+
+    def is_walkable_cell(self, column: int, row: int) -> bool:
+        """Return whether a cell is in bounds and walkable."""
+        return (
+            0 <= column < self.width
+            and 0 <= row < self.height
+            and self.grid[row][column].walkable
+        )
+
+    def next_cell_is_walkable(
+            self, position: Vector2, direction: Vector2
+    ) -> bool:
+        """Return whether the adjacent cell in a direction can be entered."""
+        column, row = self.cell_coordinates_at(position)
+        return self.is_walkable_cell(
+            column + int(direction.x), row + int(direction.y)
+        )
+
+    def is_cell_centered(
+            self, position: Vector2, tolerance: float = 1e-6
+    ) -> bool:
+        """Return whether a world-space position is at a cell center."""
+        column, row = self.cell_coordinates_at(position)
+        if not self.is_walkable_cell(column, row):
+            return False
+        pos_x, pos_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        center_x = pos_x + (column + 0.5) * cell_width
+        center_y = pos_y + (row + 0.5) * cell_height
+        return bool(
+            abs(position.x - center_x) <= tolerance
+            and abs(position.y - center_y) <= tolerance
         )
 
     def _open_center(self) -> None:
@@ -126,6 +186,8 @@ class Map():
         """ The colliders for every cells in the map """
         cell_height: int = int(height / self.height)
         cell_width: int = int(width / self.width)
+        self.__grid_origin = (pos_x, pos_y)
+        self.__cell_size = (cell_width, cell_height)
 
         for y in range(self.height):
             for x in range(self.width):
