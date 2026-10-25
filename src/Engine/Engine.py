@@ -6,6 +6,7 @@ from .Application.Application import Application
 from .InputHandler import InputHandler
 from .SceneManager.SceneManager import SceneManager
 from .Clock import Clock
+from .Physics import PhysicsEngine
 import mlx
 
 
@@ -51,6 +52,7 @@ class Engine:
             self._mlx_ptr,
             self._window.native_ptr,
         )
+        self.__physics = PhysicsEngine()
         self._clock = Clock(target_fps=target_fps)
 
     @property
@@ -62,6 +64,11 @@ class Engine:
     def input_handler(self) -> InputHandler:
         """Return the input service owned by this engine."""
         return self._input_handler
+
+    @property
+    def physics(self) -> PhysicsEngine:
+        """Return the physics service owned by this engine."""
+        return self.__physics
 
     def get_config_key(self, key: str) -> Any:
         """ Return the value stored in the given key from the config """

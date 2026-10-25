@@ -49,9 +49,12 @@ class PhysicsEngine:
             the other colliders, ``False`` otherwise.
         """
         original = collider.position
-        collider.position = original + delta
-        blocked = any(
-            detect_collision(collider, other) is not None for other in others
-        )
-        collider.position = original
+        try:
+            collider.position = original + delta
+            blocked = any(
+                detect_collision(collider, other) is not None
+                for other in others
+            )
+        finally:
+            collider.position = original
         return not blocked

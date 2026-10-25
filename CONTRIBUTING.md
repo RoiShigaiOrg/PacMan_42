@@ -10,7 +10,7 @@ This repo use CI/CD pipelines and is construct with one 'main' branch where the 
 
 To start contributing first you have to clone the 'dev' branch of the repo
 ```bash
-git clone --single-branch --branch dev git@github.com:RoiShigaiOrg/PacMan_42.git
+git clone -b dev git@github.com:RoiShigaiOrg/PacMan_42.git
 ```
 
 Then open a new branch with the explicit name of your working feature contribution

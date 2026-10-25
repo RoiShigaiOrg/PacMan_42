@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..Graphics.MlxDisplay import MlxDisplay
 from .Shapes import Shape
 from .Vector2 import Vector2
 
@@ -32,3 +33,7 @@ class Collider:
             The collider position plus its local offset.
         """
         return self.position + self.offset
+
+    def debug_draw(self, display: MlxDisplay, color: int) -> None:
+        """Draw the collider outline for debugging."""
+        self.shape.display(display, self.world_position, color)
