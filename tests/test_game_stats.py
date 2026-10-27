@@ -36,7 +36,7 @@ def test_cheat_and_infinite_modes() -> None:
     stats.lose_life()
     assert stats.lives == 1 and stats.state == NORMAL
     stats.cheat_mod(False)
-    stats.game_mod(True)
+    stats.game_mode(True)
     stats.lose_life()
     assert stats.lives == 1 and stats.state == DEAD
 
