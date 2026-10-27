@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Tuple
 from ..Physics.Vector2 import Vector2
 from ..Physics.Physics import PhysicsEngine
@@ -14,6 +14,7 @@ class Entity(ABC):
             movable entity present in the project (Player, Ghost)
     """
 
+    @abstractmethod
     def draw(self, display: MlxDisplay) -> None:
         """ draw Method of the Entity Class """
         ...

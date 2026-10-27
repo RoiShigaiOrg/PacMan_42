@@ -23,7 +23,8 @@ class MapScene(Scene):
 
     def __init__(
             self, engine: Engine,
-            display: MlxDisplay, stats: GameState) -> None:
+            display: MlxDisplay,
+            stats: GameState) -> None:
         self.__engine = engine
         self.stats = stats
         self.display = display

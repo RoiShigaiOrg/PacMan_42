@@ -13,6 +13,11 @@ RIGHT: int = 2
 DOWN: int = 4
 LEFT: int = 8
 
+HIGH_LEFT: int = 1
+HIGH_RIGHT: int = 2
+LOW_LEFT: int = 3
+LOW_RIGHT: int = 4
+
 
 class Map():
     """class builds the map from the mazegenerator modules"""
@@ -54,6 +59,39 @@ class Map():
             if (collider := cell.collider) is not None
         )
 
+    def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
+        """ Return the coordonates of a Map corner """
+        start: Tuple[int, int] = (0, 0)
+        center: Tuple[int, int] = self.center()
+
+        if corner == HIGH_LEFT:
+            start = (self.width, self.height)
+            while start != center:
+                if self.grid[start[0]][start[1]].walkable:
+                    return start
+                start = (start[0] + 1, start[1] - 1)
+
+        if corner == HIGH_RIGHT:
+            start = (self.width, self.height)
+            while start != center:
+                if self.grid[start[0]][start[1]].walkable:
+                    return start
+                start = (start[0] - 1, start[1] - 1)
+
+        if corner == LOW_LEFT:
+            start = (self.width, self.height)
+            while start != center:
+                if self.grid[start[0]][start[1]].walkable:
+                    return start
+                start = (start[0] + 1, start[1] + 1)
+
+        if corner == LOW_RIGHT:
+            start = (self.width, self.height)
+            while start != center:
+                if self.grid[start[0]][start[1]].walkable:
+                    return start
+                start = (start[0] - 1, start[1] + 1)
+        return (0, 0)
     @property
     def grid_origin(self) -> Tuple[int, int]:
         """Return the pixel position of the map's top-left cell."""
