@@ -1,6 +1,6 @@
 from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
-from typing import Tuple
+from typing import Tuple, List
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
 from .Cell import Cell
@@ -107,6 +107,32 @@ class Map():
             abs(position.x - center_x) <= tolerance
             and abs(position.y - center_y) <= tolerance
         )
+
+    def build_graph(self) -> List[Tuple[int, ...]]:
+        """ Return a Graph representation of the map """
+        graph: List[Tuple[int, ...]] = [()] * (self.width * self.height)
+        direction: Tuple[Tuple[int, int]] = (
+                (0, -1),
+                (1, 0),
+                (0, 1),
+                (-1, 0)
+            )
+        for row in range(self.height):
+            for column in range(self.width):
+                if not self.grid[row][column].walkable:
+                    continue
+                cell_id = row * self.width + column
+                neighbor = []
+
+                for dx, dy in direction:
+                    next_column = column + dx
+                    next_row = row + dy
+                    if ( 0 <= next_column < self.width
+                        and 0 <= next_row < self.height
+                        and self.grid[next_row][next_column].walkable):
+                        neighbor.append(next_row * self.width + next_column)
+                graph[cell_id] = tuple(neighbor)
+        return graph
 
     def _open_center(self) -> None:
         """ Free the center of the map so the Player is not blocked """
