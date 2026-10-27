@@ -63,5 +63,3 @@ class PathFinding:
                          tentative_cost, neighbor)
                     )
         return []
-
-
