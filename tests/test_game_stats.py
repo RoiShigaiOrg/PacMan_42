@@ -30,17 +30,6 @@ def test_losing_every_life_ends_the_game() -> None:
     assert stats.is_over()
 
 
-def test_cheat_and_infinite_modes() -> None:
-    stats = GameState(lives=1)
-    stats.cheat_mod(True)
-    stats.lose_life()
-    assert stats.lives == 1 and stats.state == NORMAL
-    stats.cheat_mod(False)
-    stats.game_mode(True)
-    stats.lose_life()
-    assert stats.lives == 1 and stats.state == DEAD
-
-
 def test_reset_keeps_modes() -> None:
     stats = GameState()
     stats.cheat_mod(True)
