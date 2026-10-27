@@ -7,6 +7,7 @@ from .Scenes.TestScene import TestScene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
 from .Scenes.GameOverScene import GameOverScene
+from .GameState import GameState
 
 
 class PacMan(Application):
@@ -20,6 +21,7 @@ class PacMan(Application):
     def __init__(self) -> None:
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man")
+        self.stats: GameState = GameState()
         self.color: str
         self.dimension: Tuple[int, int]
         self.display: MlxDisplay
@@ -31,7 +33,8 @@ class PacMan(Application):
                 ),
                 "game_scene": MapScene(
                     self.engine,
-                    self.engine.create_display((1280, 720))
+                    self.engine.create_display((1280, 720)),
+                    self.stats
                 ),
                 "test_scene": TestScene(
                     self.engine,
@@ -39,7 +42,8 @@ class PacMan(Application):
                 ),
                 "game_over_scene": GameOverScene(
                     self.engine,
-                    self.engine.create_display((1280, 720))
+                    self.engine.create_display((1280, 720)),
+                    self.stats
                 ),
             }
         )

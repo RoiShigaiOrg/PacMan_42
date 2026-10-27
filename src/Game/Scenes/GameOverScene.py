@@ -5,6 +5,7 @@ from Engine.InputHandler import InputHandler
 from ..UI.XpmAlphabet import XpmAlphabet
 from Engine.InputHandler.KeyCode import KEY_ESC
 from ..UI.InputBar import InputBar
+from ..GameState import GameState
 
 FILE_ALPHABET_SMALL = "assets/alphabet_small"
 FILE_ALPHABET = "assets/alphabet"
@@ -23,11 +24,13 @@ class GameOverScene(Scene):
             player type a login to save it in the leaderboard.
     """
 
-    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
+    def __init__(
+            self, engine: Engine, display: MlxDisplay,
+            stats: GameState) -> None:
         """ Init Method of the GameOverScene Class """
         self.__engine = engine
         self.__display = display
-        self.score: int = 0
+        self.__stats = stats
         self.__title_font = XpmAlphabet(FILE_ALPHABET)
         width = display.relative_width(0.3)
         self.__bar = InputBar(
@@ -51,18 +54,23 @@ class GameOverScene(Scene):
 
     def update(
             self, delta_time: float, input_handler: InputHandler
-    ) -> None:
+            ) -> None:
         """ Save the score when the player validates a login """
         login = self.__bar.update(input_handler)
         if login is not None:
-            self.__engine.file_manager.store_score(login, self.score)
-            self.__engine.scene_manager.change_scene("main_scene")
+            self.__engine.file_manager.store_score(login, self.__stats.scores)
+            self.__leave()
         if input_handler.was_key_pressed(KEY_ESC):
-            self.__engine.scene_manager.change_scene("main_scene")
+            self.__leave()
+
+    def __leave(self) -> None:
+        """ Reset the statistics for the next game and go back to the menu """
+        self.__stats.reset_stats()
+        self.__engine.scene_manager.change_scene("main_scene")
 
     def render(self) -> None:
         """ Present the image, then write the texts over it """
         self.__bar.draw_text(self.__display, BLACK, WHITE)
         self.__display.render()
         self.__display.write_text(self.__bar.x, self.__bar.y - 20, WHITE,
-                                  f"Your score : {self.score}")
+                                  f"Your score : {self.__stats.scores}")
