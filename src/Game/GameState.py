@@ -40,7 +40,6 @@ class GameState:
         self.ghost_combo: int = 0
         self.extra_life_given: bool = False
         self.state: str = NORMAL
-        self.level_time: float = 0.0
 
     @property
     def game_mode(self) -> GameMode:
