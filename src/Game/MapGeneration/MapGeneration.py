@@ -1,9 +1,10 @@
 from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
-from typing import Tuple, List
+from typing import Tuple, Dict
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
 from .Cell import Cell
+from .MapNode import MapNode
 import random
 import math
 
@@ -108,30 +109,22 @@ class Map():
             and abs(position.y - center_y) <= tolerance
         )
 
-    def build_graph(self) -> List[Tuple[int, ...]]:
+    def build_graph(self) -> Dict[Tuple[int, int], MapNode]:
         """ Return a Graph representation of the map """
-        graph: List[Tuple[int, ...]] = [()] * (self.width * self.height)
-        direction: Tuple[Tuple[int, int]] = (
-                (0, -1),
-                (1, 0),
-                (0, 1),
-                (-1, 0)
-            )
-        for row in range(self.height):
-            for column in range(self.width):
-                if not self.grid[row][column].walkable:
-                    continue
-                cell_id = row * self.width + column
-                neighbor = []
-
-                for dx, dy in direction:
-                    next_column = column + dx
-                    next_row = row + dy
-                    if ( 0 <= next_column < self.width
-                        and 0 <= next_row < self.height
-                        and self.grid[next_row][next_column].walkable):
-                        neighbor.append(next_row * self.width + next_column)
-                graph[cell_id] = tuple(neighbor)
+        graph: Dict[Tuple[int, int], MapNode] = {
+                    cell.coordinate: MapNode(cell.coordinate)
+                    for row in self.grid
+                    for cell in row 
+                    if cell.walkable
+                }
+        for (column, row), node in graph.items():
+            for neighbor_coordinate in (
+                    (column + 1,
+                     row), (column, row + 1)):
+                neighbor = graph.get(neighbor_coordinate)
+                if neighbor is not None:
+                    node.connect(neighbor, 1.0)
+                    neighbor.connect(node, 1.0)
         return graph
 
     def _open_center(self) -> None:
