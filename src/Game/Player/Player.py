@@ -10,6 +10,7 @@ from Engine.Physics.Collider import Collider
 from Engine.Physics.Physics import PhysicsEngine
 from Engine.Physics.Shapes import AABB
 from Engine.Physics.Vector2 import Vector2
+from Engine.Entity.Entity import Entity
 from ..MapGeneration import Map
 
 
@@ -27,7 +28,7 @@ _DIRECTION_KEYS: tuple[tuple[int, Vector2], ...] = (
 )
 
 
-class Player:
+class Player(Entity):
     """
     Player Class Definition
 
@@ -43,9 +44,9 @@ class Player:
     def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
-        self.__movement_speed = movement_speed
-        self.__direction = Vector2(0.0, 0.0)
-        self.__requested_direction: Vector2 | None = None
+        self._movement_speed = movement_speed
+        self._direction = Vector2(0.0, 0.0)
+        self._requested_direction: Vector2 | None = None
 
     def InitPlayer(self, display: MlxDisplay, actual_map: Map) -> None:
         """
@@ -57,70 +58,51 @@ class Player:
         """
         map_center: Tuple[int, int] = actual_map.center()
         print(f"map_center: {map_center} map size: {actual_map.size()}")
-        self.__width, self.__height = actual_map.cell_size
+        self._width, self._height = actual_map.cell_size
         map_pos_x, map_pos_y = actual_map.grid_origin
         pos_x: int = int(
-                map_pos_x + map_center[0] * self.__width
+                map_pos_x + map_center[0] * self._width
             )
         pos_y: int = int(
-                map_pos_y + map_center[1] * self.__height
+                map_pos_y + map_center[1] * self._height
             )
         print(
-            f"width: {self.__width} height: {self.__height} "
+            f"width: {self._width} height: {self._height} "
             f"x: {pos_x} y: {pos_y}"
         )
-        self.__graphical_shape: Circle = Circle(
-                self.__width,
-                self.__height,
+        self._graphical_shape: Circle = Circle(
+                self._width,
+                self._height,
                 pos_x,
                 pos_y,
                 PLAYER_COLOR,
             )
-        self.__collider: Collider = Collider(
+        self._collider: Collider = Collider(
                 AABB(Vector2(
-                    self.__width * COLLIDER_SIZE_RATIO / 2,
-                    self.__height * COLLIDER_SIZE_RATIO / 2,
+                    self._width * COLLIDER_SIZE_RATIO / 2,
+                    self._height * COLLIDER_SIZE_RATIO / 2,
                     )),
                 Vector2(
-                    pos_x + self.__width / 2,
-                    pos_y + self.__height / 2,
+                    pos_x + self._width / 2,
+                    pos_y + self._height / 2,
                     )
                 )
-        self.__sync_graphics_position()
-
-    @property
-    def position(self) -> Tuple[int, int]:
-        """Return the graphical top-left position derived from the collider."""
-        center = self.__collider.world_position
-        return (
-            round(center.x - self.__width / 2),
-            round(center.y - self.__height / 2),
-        )
-
-    @position.setter
-    def position(self, value: Tuple[int, int]) -> None:
-        """Set the graphic position and move the authoritative collider."""
-        world_center = Vector2(
-            value[0] + self.__width / 2,
-            value[1] + self.__height / 2,
-        )
-        self.__collider.position = world_center - self.__collider.offset
-        self.__sync_graphics_position()
+        self._sync_graphics_position()
 
     @property
     def collider(self) -> Collider:
         """Return the collider that owns the Player's world-space position."""
-        return self.__collider
+        return self._collider
 
     @property
     def direction(self) -> Vector2:
         """Return the direction the Player is currently travelling."""
-        return self.__direction
+        return self._direction
 
     @property
     def size(self) -> Tuple[int, int]:
         """Return the graphical and collider dimensions of the Player."""
-        return self.__width, self.__height
+        return self._width, self._height
 
     def update_direction(
             self,
@@ -140,57 +122,57 @@ class Player:
         if delta_time <= 0:
             return
 
-        remaining_distance = self.__movement_speed * delta_time
-        max_step = min(self.__width, self.__height) / 2
+        remaining_distance = self._movement_speed * delta_time
+        max_step = min(self._width, self._height) / 2
         wall_colliders = actual_map.wall_colliders()
         grid_origin = actual_map.grid_origin
         cell_size = actual_map.cell_size
 
         while remaining_distance > GRID_CENTER_TOLERANCE:
-            requested = self.__requested_direction
-            center = self.__collider.world_position
+            requested = self._requested_direction
+            center = self._collider.world_position
             at_cell_center = actual_map.is_cell_centered(
                 center, GRID_CENTER_TOLERANCE
             )
 
             if at_cell_center and requested is not None:
                 if actual_map.next_cell_is_walkable(center, requested):
-                    self.__direction = requested
-                    self.__requested_direction = None
+                    self._direction = requested
+                    self._requested_direction = None
 
-            if self.__direction.length_squared() == 0:
+            if self._direction.length_squared() == 0:
                 break
 
             if at_cell_center and not actual_map.next_cell_is_walkable(
-                    center, self.__direction):
-                self.__direction = Vector2(0.0, 0.0)
+                    center, self._direction):
+                self._direction = Vector2(0.0, 0.0)
                 break
 
             step = min(
                 remaining_distance,
                 max_step,
-                abs(self.__distance_to_next_grid_center(
-                    self.__direction, grid_origin, cell_size
+                abs(self._distance_to_next_grid_center(
+                    self._direction, grid_origin, cell_size
                 )),
             )
             if step <= GRID_CENTER_TOLERANCE:
                 break
 
-            current_delta = self.__direction * step
-            if not self.__can_move(current_delta, physics, wall_colliders):
-                self.__direction = Vector2(0.0, 0.0)
+            current_delta = self._direction * step
+            if not self._can_move(current_delta, physics, wall_colliders):
+                self._direction = Vector2(0.0, 0.0)
                 break
-            self.__move(current_delta)
+            self._move(current_delta)
             remaining_distance -= step
 
-    def __distance_to_next_grid_center(
+    def _distance_to_next_grid_center(
             self,
             direction: Vector2,
             grid_origin: Tuple[int, int],
             cell_size: Tuple[int, int],
     ) -> float:
         """Return signed distance to the next cell center along travel."""
-        center = self.__collider.world_position
+        center = self._collider.world_position
         if direction.x != 0:
             coordinate = center.x
             origin = grid_origin[0]
@@ -219,7 +201,7 @@ class Player:
             None,
         )
         if pressed is not None:
-            self.__requested_direction = pressed
+            self._requested_direction = pressed
             return
 
         held = next(
@@ -228,33 +210,9 @@ class Player:
             None,
         )
         if held is not None:
-            self.__requested_direction = held
-
-    def __can_move(
-            self,
-            delta: Vector2,
-            physics: PhysicsEngine,
-            wall_colliders: tuple[Collider, ...],
-    ) -> bool:
-        can_move: bool = physics.can_move(
-            self.__collider, delta, *wall_colliders
-        )
-        return can_move
-
-    def __move(self, delta: Vector2) -> None:
-        """Apply an accepted displacement and keep the graphic in sync."""
-        self.__collider.position = self.__collider.position + delta
-        self.__sync_graphics_position()
-
-    def __sync_graphics_position(self) -> None:
-        """Place the integer-pixel graphic around the collider's center."""
-        center = self.__collider.world_position
-        self.__graphical_shape.update_pos(
-            round(center.x - self.__width / 2),
-            round(center.y - self.__height / 2),
-        )
+            self._requested_direction = held
 
     def draw(self, display: MlxDisplay) -> None:
         """ draw Method of the Player Class """
-        self.__graphical_shape.fill(display)
-        self.__collider.debug_draw(display, COLLIDER_DEBUG_COLOR)
+        self._graphical_shape.fill(display)
+        self._collider.debug_draw(display, COLLIDER_DEBUG_COLOR)
