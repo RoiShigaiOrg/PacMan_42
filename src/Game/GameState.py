@@ -43,7 +43,7 @@ class GameState:
         self.level_time: float = 0.0
 
     @property
-    def game_mode(self) -> None:
+    def game_mode(self) -> GameMode:
         """ return Infinite/Normal mode"""
         return self.__game_mode
 
