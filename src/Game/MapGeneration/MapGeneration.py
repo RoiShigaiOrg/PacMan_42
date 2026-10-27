@@ -35,6 +35,7 @@ class Map():
         self._open_center()
         self.__grid_origin: Tuple[int, int] | None = None
         self.__cell_size: Tuple[int, int] | None = None
+        self.graph: Dict[Tuple[int, int], MapNode] = self.build_graph()
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """
@@ -114,7 +115,7 @@ class Map():
         graph: Dict[Tuple[int, int], MapNode] = {
                     cell.coordinate: MapNode(cell.coordinate)
                     for row in self.grid
-                    for cell in row 
+                    for cell in row
                     if cell.walkable
                 }
         for (column, row), node in graph.items():

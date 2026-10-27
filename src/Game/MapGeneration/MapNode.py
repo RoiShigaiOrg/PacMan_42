@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from Engine.Engine.PathFinding.Node import Node
+from Engine.Entity.PathFinding.Node import Node
 from typing import Tuple, List
 
 

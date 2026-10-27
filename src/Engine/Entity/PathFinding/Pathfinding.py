@@ -7,7 +7,7 @@ from .Node import Node
 
 class PathFinding:
 
-    @classmethod
+    @staticmethod
     def a_star(
             start: Node,
             goal: Node,
@@ -30,9 +30,10 @@ class PathFinding:
         came_from: Dict[Node, Node] = {}
         g_score: Dict[Node, float] = {start: 0.0}
 
-        heappush(frontier,
-                 (heuristic(start, goal), next(sequence), 0.0, start)
-                )
+        heappush(
+            frontier,
+            (heuristic(start, goal), next(sequence), 0.0, start),
+        )
 
         while frontier:
             _, _, queued_cost, current = heappop(frontier)

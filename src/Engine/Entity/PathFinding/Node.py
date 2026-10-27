@@ -9,7 +9,8 @@ class Node(ABC):
     """
     Node Abstract Class Definition
 
-    This Node Class is meant to be use to construct a Graph for the Pathfinding algorithm or any else algorithm requiring a Graph.
+    This Node class can construct a graph for pathfinding or other graph
+    algorithms.
     """
 
     @abstractmethod
