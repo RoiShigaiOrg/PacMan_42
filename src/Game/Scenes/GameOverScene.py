@@ -5,7 +5,7 @@ from Engine.InputHandler import InputHandler
 from ..UI.XpmAlphabet import XpmAlphabet
 from Engine.InputHandler.KeyCode import KEY_ESC
 from ..UI.InputBar import InputBar
-from ..GameStats import GameStats
+from ..GameState import GameState
 
 FILE_ALPHABET_SMALL = "assets/alphabet_small"
 FILE_ALPHABET = "assets/alphabet"
@@ -26,7 +26,7 @@ class GameOverScene(Scene):
 
     def __init__(
             self, engine: Engine, display: MlxDisplay,
-            stats: GameStats) -> None:
+            stats: GameState) -> None:
         """ Init Method of the GameOverScene Class """
         self.__engine = engine
         self.__display = display

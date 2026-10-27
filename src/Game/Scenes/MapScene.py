@@ -2,7 +2,7 @@ from Engine import Scene
 from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
-from ..GameStats import GameStats
+from ..GameState import GameState
 from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
@@ -23,7 +23,7 @@ class MapScene(Scene):
 
     def __init__(
             self, engine: Engine,
-            display: MlxDisplay, stats: GameStats) -> None:
+            display: MlxDisplay, stats: GameState) -> None:
         self.__engine = engine
         self.stats = stats
         self.display = display
