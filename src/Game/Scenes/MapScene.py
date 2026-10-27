@@ -2,6 +2,7 @@ from Engine import Scene
 from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
+from ..GameState import GameState
 from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
@@ -20,8 +21,11 @@ class MapScene(Scene):
     """A class for drawing the map based on the Map object:
       handling the size of corridors, walls, corners, colors, etc."""
 
-    def __init__(self, engine: Engine, display: MlxDisplay) -> None:
+    def __init__(
+            self, engine: Engine,
+            display: MlxDisplay, stats: GameState) -> None:
         self.__engine = engine
+        self.stats = stats
         self.display = display
         self.map = Map()
         self.display.clear(0xFFFF0000)
@@ -48,6 +52,10 @@ class MapScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """ Update method for the MapScene Object """
+        self.stats.time_in_level(delta_time)
+        if self.stats.is_over():
+            self.__engine.scene_manager.change_scene("game_over_scene")
+            return
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_ESC):
