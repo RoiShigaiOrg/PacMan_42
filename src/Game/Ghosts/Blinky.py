@@ -27,11 +27,7 @@ class Blinky(Ghost):
 
     def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
         """ Init Method of Blinky """
-        if movement_speed <= 0:
-            raise ValueError("movement_speed must be positive")
-        self.__movement_speed = movement_speed
-        self.__direction = Vector2(0.0, 0.0)
-        self.__requested_direction: Vector2 | None = None
+        super().__init__(movement_speed)
         self.__behaviour: Behaviour = Behaviour.CHASE
 
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
@@ -63,6 +59,7 @@ class Blinky(Ghost):
                     )
                 )
         self._sync_graphics_position()
+        self.set_path(())
 
     def _chase(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Chase Behaviour abstract method for Ghost Class """

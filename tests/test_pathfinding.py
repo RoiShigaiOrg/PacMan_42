@@ -4,7 +4,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from Engine.Entity.PathFinding import Node, PathFinding
+from Engine.Entity.PathFinding import HeuristicType, Node, PathFinding
 
 
 class GraphNode(Node):
@@ -40,6 +40,51 @@ def test_a_star_returns_the_lowest_cost_path() -> None:
     path = PathFinding.a_star(start, goal, zero_heuristic)
 
     assert path == [start, detour, expensive, goal]
+
+
+def test_a_star_defaults_to_dijkstra_when_no_heuristic_is_given() -> None:
+    start = GraphNode("start")
+    detour = GraphNode("detour")
+    goal = GraphNode("goal")
+    start.connect(goal, 5.0)
+    start.connect(detour, 1.0)
+    detour.connect(goal, 1.0)
+
+    assert PathFinding.a_star(start, goal) == [start, detour, goal]
+
+
+def test_builtin_heuristics_support_coordinate_extractors() -> None:
+    first = GraphNode("first")
+    second = GraphNode("second")
+    coordinates = {
+        first: (1.0, 2.0),
+        second: (4.0, 6.0),
+    }
+    coordinate_getter = lambda node: coordinates[node]  # noqa: E731
+
+    manhattan = PathFinding.make_heuristic(
+        HeuristicType.MANHATTAN, coordinate_getter
+    )
+    euclidean = PathFinding.make_heuristic(
+        HeuristicType.EUCLIDEAN, coordinate_getter
+    )
+    dijkstra = PathFinding.make_heuristic(HeuristicType.DIJKSTRA)
+
+    assert manhattan(first, second) == 7.0
+    assert euclidean(first, second) == pytest.approx(5.0)
+    assert dijkstra(first, second) == 0.0
+
+
+def test_a_star_accepts_a_builtin_heuristic_type() -> None:
+    start = GraphNode("start")
+    goal = GraphNode("goal")
+    start.coordinate = (0, 0)
+    goal.coordinate = (2, 3)
+    start.connect(goal, 1.0)
+
+    assert PathFinding.a_star(
+        start, goal, HeuristicType.MANHATTAN
+    ) == [start, goal]
 
 
 def test_a_star_returns_empty_path_when_goal_is_unreachable() -> None:

@@ -12,6 +12,7 @@ from ..MapGeneration import (
         RELATIVE_MAP_HEIGHT
         )
 from ..Player.Player import Player
+from ..Ghosts.Blinky import Blinky
 
 
 Region = tuple[int, int, int, int]
@@ -45,6 +46,8 @@ class MapScene(Scene):
                 )
         self.__player: Player = Player()
         self.__player.InitPlayer(display, self.map)
+        self.__blinky = Blinky()
+        self.__blinky.init_ghost(display, self.map)
         self.__physics = engine.physics
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
@@ -74,6 +77,19 @@ class MapScene(Scene):
                     self.__player.size, self.__player.position
                 ),
             )
+        old_ghost_position = self.__blinky.position
+        old_ghost_center = self.__blinky.collider.world_position
+        self.__blinky.update_movement(
+            self.map, self.__physics, delta_time
+        )
+        if self.__blinky.collider.world_position != old_ghost_center:
+            self.__dirty_region = self.union_regions(
+                self.__dirty_region,
+                self.movement_region(self.__blinky.size, old_ghost_position),
+                self.movement_region(
+                    self.__blinky.size, self.__blinky.position
+                ),
+            )
 
     def render(self) -> None:
         """ Render Method for the MapScene Object"""
@@ -84,6 +100,7 @@ class MapScene(Scene):
             )
             self.__dirty_region = None
         self.__player.draw(self.display)
+        self.__blinky.draw(self.display)
         self.display.render()
 
     def render_on_change(self) -> None:

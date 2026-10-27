@@ -60,38 +60,37 @@ class Map():
         )
 
     def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
-        """ Return the coordonates of a Map corner """
-        start: Tuple[int, int] = (0, 0)
-        center: Tuple[int, int] = self.center()
+        """Return the nearest walkable cell to the requested map corner.
 
-        if corner == HIGH_LEFT:
-            start = (self.width, self.height)
-            while start != center:
-                if self.grid[start[0]][start[1]].walkable:
-                    return start
-                start = (start[0] + 1, start[1] - 1)
+        Cells are checked in increasing Manhattan-distance layers. Within a
+        layer, the scan proceeds along the corner's outer edge before moving
+        inward, giving ties a stable, corner-relative order.
+        """
+        corners: dict[int, tuple[Tuple[int, int], int, int]] = {
+            HIGH_LEFT: ((0, 0), 1, 1),
+            HIGH_RIGHT: ((self.width - 1, 0), -1, 1),
+            LOW_LEFT: ((0, self.height - 1), 1, -1),
+            LOW_RIGHT: ((self.width - 1, self.height - 1), -1, -1),
+        }
+        if corner not in corners:
+            raise ValueError(f"Unknown map corner: {corner}")
 
-        if corner == HIGH_RIGHT:
-            start = (self.width, self.height)
-            while start != center:
-                if self.grid[start[0]][start[1]].walkable:
-                    return start
-                start = (start[0] - 1, start[1] - 1)
+        (start_column, start_row), column_step, row_step = corners[corner]
+        max_distance = self.width + self.height - 2
+        for distance in range(max_distance + 1):
+            for row_distance in range(distance + 1):
+                column_distance = distance - row_distance
+                column = start_column + column_step * column_distance
+                row = start_row + row_step * row_distance
+                if (
+                    0 <= column < self.width
+                    and 0 <= row < self.height
+                    and self.grid[row][column].walkable
+                ):
+                    return column, row
 
-        if corner == LOW_LEFT:
-            start = (self.width, self.height)
-            while start != center:
-                if self.grid[start[0]][start[1]].walkable:
-                    return start
-                start = (start[0] + 1, start[1] + 1)
+        raise ValueError("Map has no walkable cells")
 
-        if corner == LOW_RIGHT:
-            start = (self.width, self.height)
-            while start != center:
-                if self.grid[start[0]][start[1]].walkable:
-                    return start
-                start = (start[0] - 1, start[1] + 1)
-        return (0, 0)
     @property
     def grid_origin(self) -> Tuple[int, int]:
         """Return the pixel position of the map's top-left cell."""
