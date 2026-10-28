@@ -59,6 +59,21 @@ class Map():
             if (collider := cell.collider) is not None
         )
 
+    def convert_grid_pos(
+            self,
+            pos: Tuple[int, int],
+            map_width: int, map_height: int) -> Tuple[int, int]:
+        """ Convert a raw pixel position into a grid position """
+        origin = self.__grid_origin
+        row_pos: int = int(
+                (pos[0] - origin[0]) / (map_width / self.width)
+            )
+        height_pos: int = int(
+                (pos[1] - origin[1]) / (map_height / self.height)
+            )
+
+        return (row_pos, height_pos)
+
     def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
         """Return the nearest walkable cell to the requested map corner.
 
