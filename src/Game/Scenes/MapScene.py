@@ -46,6 +46,9 @@ class MapScene(Scene):
                 )
         self.__player: Player = Player()
         self.__player.InitPlayer(display, self.map)
+        self.__last_player_cell = self.map.cell_coordinates_at(
+                self.__player.collider.world_position
+            )
         self.__blinky = Blinky()
         self.__blinky.init_ghost(display, self.map)
         self.__physics = engine.physics
@@ -53,14 +56,10 @@ class MapScene(Scene):
             0, 0, display.width, display.height
         )
         self.__blinky.compute_path(
-                self.map.convert_grid_pos(
-                    self.__blinky.position,
-                    self.display.relative_width(RELATIVE_MAP_WIDTH),
-                    self.display.relative_height(RELATIVE_MAP_HEIGHT)),
-                self.map.convert_grid_pos(
-                    self.__player.position,
-                    self.display.relative_width(RELATIVE_MAP_WIDTH),
-                    self.display.relative_height(RELATIVE_MAP_HEIGHT)),
+                self.map.cell_coordinates_at(
+                        self.__blinky.collider.world_position
+                    ),
+                    self.__last_player_cell,
                 self.map.graph
             )
         self.__static_layer = self.display.snapshot()
@@ -88,8 +87,24 @@ class MapScene(Scene):
                     self.__player.size, self.__player.position
                 ),
             )
+        player_cell = self.map.cell_coordinates_at(
+                self.__player.collider.world_position
+            )
+        if self.__last_player_cell != player_cell:
+            self.__blinky.compute_path(
+                    self.map.cell_coordinates_at(
+                            self.__blinky.collider.world_position
+                        ),
+                        player_cell,
+                    self.map.graph
+                )
+            self.__last_player_cell = player_cell
         old_ghost_position = self.__blinky.position
         old_ghost_center = self.__blinky.collider.world_position
+
+
+
+
         self.__blinky.update_movement(
             self.map, self.__physics, delta_time
         )

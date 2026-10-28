@@ -38,6 +38,7 @@ class Ghost(Entity):
         self._origin: Tuple[int, int] = (0, 0)
         self._path: list[MapNode] = []
         self._path_index = 0
+        self._target: Tuple[int, int] | None = None
 
     @property
     def origin(self) -> Tuple[int, int]:
@@ -154,22 +155,28 @@ class Ghost(Entity):
             self,
             position: Tuple[int, int],
             target: Tuple[int, int],
-            graph: Dict[Tuple[int, int], MapNode]) -> None:
-        """Build a route between supplied map cells, without choosing target.
-
-        Target selection and behavior remain the caller's responsibility.
-        """
-        start_node = graph.get(position)
+            graph: Dict[Tuple[int, int], MapNode],
+    ) -> None:
+        """Replan toward target while keeping the current movement leg."""
         target_node = graph.get(target)
-        print(f"pos: {position} target: {target}")
-        print(graph.values())
+
+        # Continue toward the current waypoint if a path is already active.
+        if self._path_index < len(self._path):
+            start_node = self._path[self._path_index]
+        else:
+            # No active path (or the previous one is complete): start from
+            # Blinky's current grid cell.
+            start_node = graph.get(position)
+
         if start_node is None or target_node is None:
             self.set_path(())
             return
+
         path = PathFinding.a_star(
-            start_node, target_node, HeuristicType.MANHATTAN
+            start_node,
+            target_node,
+            HeuristicType.MANHATTAN,
         )
-        print("Bite")
         self.set_path(cast(list[MapNode], path))
 
     @abstractmethod
