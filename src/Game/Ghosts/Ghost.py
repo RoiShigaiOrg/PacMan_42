@@ -161,12 +161,15 @@ class Ghost(Entity):
         """
         start_node = graph.get(position)
         target_node = graph.get(target)
+        print(f"pos: {position} target: {target}")
+        print(graph.values())
         if start_node is None or target_node is None:
             self.set_path(())
             return
         path = PathFinding.a_star(
             start_node, target_node, HeuristicType.MANHATTAN
         )
+        print("Bite")
         self.set_path(cast(list[MapNode], path))
 
     @abstractmethod

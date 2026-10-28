@@ -25,3 +25,6 @@ class MapNode(Node):
     def connect(self, neighbor: "MapNode", cost: float = 1.0) -> None:
         """ Add a neighbor Node to this MapNode """
         self._neighbors.append((neighbor, cost))
+
+    def __repr__(self):
+        return f"{self.coordinate}"

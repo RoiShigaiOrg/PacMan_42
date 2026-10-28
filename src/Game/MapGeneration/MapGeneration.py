@@ -72,7 +72,7 @@ class Map():
                 (pos[1] - origin[1]) / (map_height / self.height)
             )
 
-        return (row_pos, height_pos)
+        return (row_pos, height_pos + 1)
 
     def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
         """Return the nearest walkable cell to the requested map corner.

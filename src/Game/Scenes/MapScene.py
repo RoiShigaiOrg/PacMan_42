@@ -52,6 +52,17 @@ class MapScene(Scene):
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
+        self.__blinky.compute_path(
+                self.map.convert_grid_pos(
+                    self.__blinky.position,
+                    self.display.relative_width(RELATIVE_MAP_WIDTH),
+                    self.display.relative_height(RELATIVE_MAP_HEIGHT)),
+                self.map.convert_grid_pos(
+                    self.__player.position,
+                    self.display.relative_width(RELATIVE_MAP_WIDTH),
+                    self.display.relative_height(RELATIVE_MAP_HEIGHT)),
+                self.map.graph
+            )
         self.__static_layer = self.display.snapshot()
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
