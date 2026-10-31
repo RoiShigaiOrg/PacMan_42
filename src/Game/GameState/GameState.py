@@ -4,15 +4,17 @@ PELLET_POINTS: int = 10
 POWER_PELLET_POINTS: int = 50
 GHOST_POINTS: tuple[int, ...] = (200, 400, 800, 1600)
 EXTRA_LIFE_SCORE: int = 10000
-
-NORMAL = "normal"
-SUPER = "super"
-DEAD = "dead"
 LEVEL_TIME: float = 120.0
 MAX_LEVEL = 10
 SPEED_STEP_LEVELS: int = 3
 SPEED_INCREASE: float = 0.1
 MAX_SPEED = 3.0
+
+
+class PacManState(Enum):
+    NORMAL = 1
+    SUPER = 2
+    DEAD = 3
 
 
 class GameMode(Enum):
@@ -39,7 +41,7 @@ class GameState:
         self.level: int = 1
         self.ghost_combo: int = 0
         self.extra_life_given: bool = False
-        self.state: str = NORMAL
+        self.state: PacManState = PacManState.NORMAL
 
     @property
     def game_mode(self) -> GameMode:
@@ -88,7 +90,7 @@ class GameState:
     def eat_Fruit(self) -> None:
         """ add value point of power by pellet"""
         self.add_point(POWER_PELLET_POINTS)
-        self.state = SUPER
+        self.state = PacManState.SUPER
         self.ghost_combo = 0
 
     def eat_ghost(self) -> int:
@@ -101,7 +103,7 @@ class GameState:
 
     def end_power_mode(self) -> None:
         """ state of end power mode"""
-        self.state = NORMAL
+        self.state = PacManState.NORMAL
         self.ghost_combo = 0
 
     def lose_life(self) -> None:
@@ -110,7 +112,7 @@ class GameState:
             return
         self.lives = max(0, self.lives - 1)
         self.ghost_combo = 0
-        self.state = DEAD
+        self.state = PacManState.DEAD
 
     def has_won(self) -> bool:
         """In NORMAL mode, the player wins after the last level."""
@@ -123,7 +125,7 @@ class GameState:
         self.level += 1
         self.ghost_combo = 0
         self.level_time = 0.0
-        self.state = NORMAL
+        self.state = PacManState.NORMAL
 
     def is_over(self) -> bool:
         """ init the end of game"""

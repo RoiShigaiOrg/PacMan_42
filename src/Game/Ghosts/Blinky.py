@@ -5,9 +5,9 @@ from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
 from ..MapGeneration import Map
 from typing import Tuple
-from .Ghost import Ghost, Behaviour
+from .Ghost import Ghost
 
-MOVEMENT_SPEED: float = 175.0
+MOVEMENT_SPEED: float = 160.0
 BLINKY_COLOR: int = 0xFFFF0000
 COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
@@ -28,7 +28,6 @@ class Blinky(Ghost):
     def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
         """ Init Method of Blinky """
         super().__init__(movement_speed)
-        self.__behaviour: Behaviour = Behaviour.CHASE
 
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
         """ Init The Ghost position depending of the actual map """
@@ -67,7 +66,7 @@ class Blinky(Ghost):
 
     def _fleat(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Fleat Behaviour abstract method for Ghost Class """
-        return self.origin
+        return target
 
     def _dead(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Dead Behaviour abstract method for Ghost Class """

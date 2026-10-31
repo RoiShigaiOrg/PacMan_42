@@ -11,10 +11,11 @@ from abc import abstractmethod
 from typing import Dict, Tuple, cast
 from enum import Enum
 
-COLLIDER_DEBUG_COLOR: int = 0xFFFF0000
+COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
-DEFAULT_MOVEMENT_SPEED: float = 175.0
+DEFAULT_MOVEMENT_SPEED: float = 160.0
 GRID_CENTER_TOLERANCE: float = 1e-6
+FLEE_DISTANCE_THRESHOLD: int = 5
 
 
 class Behaviour(Enum):
@@ -39,6 +40,18 @@ class Ghost(Entity):
         self._path: list[MapNode] = []
         self._path_index = 0
         self._target: Tuple[int, int] | None = None
+        self._behaviour = Behaviour.CHASE
+
+    @property
+    def behaviour(self) -> Behaviour:
+        """ Return the actual Ghost behaviour """
+        return self._behaviour
+
+    def change_behaviour(self, behaviour: Behaviour) -> None:
+        """ Change the behaviour of the ghost to the given Behaviour Enum. """
+        if not isinstance(behaviour, Behaviour):
+            raise TypeError("behaviour must be a Behaviour")
+        self._behaviour = behaviour
 
     @property
     def origin(self) -> Tuple[int, int]:
@@ -160,18 +173,15 @@ class Ghost(Entity):
         """Replan toward target while keeping the current movement leg."""
         target_node = graph.get(target)
 
-        # Continue toward the current waypoint if a path is already active.
+        start_node: MapNode | None
         if self._path_index < len(self._path):
             start_node = self._path[self._path_index]
         else:
-            # No active path (or the previous one is complete): start from
-            # Blinky's current grid cell.
             start_node = graph.get(position)
 
         if start_node is None or target_node is None:
             self.set_path(())
             return
-
         path = PathFinding.a_star(
             start_node,
             target_node,
