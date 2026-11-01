@@ -8,7 +8,7 @@ from typing import Tuple
 from .Ghost import Ghost
 
 MOVEMENT_SPEED: float = 160.0
-INKY_COLOR: int = 0xFFFFAA00
+CLYDE_COLOR: int = 0xFFFFAA00
 COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
 HIGH_LEFT: int = 1
@@ -21,7 +21,7 @@ class Clyde(Ghost):
     """
     Clyde Ghost Class Definition
 
-    Clyde will be the Blue Ghost, he's behaviour is to chase PacMan
+    Clyde will be the Yellow Ghost, he's behaviour is to chase PacMan
         and try to be in front of him at each moment.
     """
 
@@ -45,7 +45,7 @@ class Clyde(Ghost):
                 self._height,
                 pos_x,
                 pos_y,
-                INKY_COLOR,
+                CLYDE_COLOR,
             )
         self._collider: Collider = Collider(
                 AABB(Vector2(
