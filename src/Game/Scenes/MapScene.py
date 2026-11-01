@@ -14,6 +14,9 @@ from ..MapGeneration import (
 from ..Player.Player import Player
 from ..Ghosts.Ghost import Behaviour, Ghost
 from ..Ghosts.Blinky import Blinky
+from ..Ghosts.Inky import Inky
+from ..Ghosts.Clyde import Clyde
+from ..Ghosts.Pinky import Pinky
 from typing import Tuple, List
 
 
@@ -51,7 +54,12 @@ class MapScene(Scene):
         initial_player_cell = self.map.cell_coordinates_at(
                 self.__player.collider.world_position
             )
-        self.__ghosts: List[Ghost] = [Blinky()]
+        self.__ghosts: List[Ghost] = [
+                Blinky(),
+                Inky(),
+                Clyde(),
+                Pinky()
+            ]
         self.__ghost_targets: dict[
             Ghost, tuple[Behaviour, Tuple[int, int]]
         ] = {}
