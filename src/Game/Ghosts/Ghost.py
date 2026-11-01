@@ -36,6 +36,7 @@ class Ghost(Entity):
     """
 
     def __init__(self, movement_speed: float = DEFAULT_MOVEMENT_SPEED) -> None:
+        """ Init Method for Ghost Class """
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
         self._movement_speed = movement_speed
