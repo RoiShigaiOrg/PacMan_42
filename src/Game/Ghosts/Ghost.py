@@ -190,7 +190,7 @@ class Ghost(Entity):
         )
         self.set_path(cast(list[MapNode], path))
 
-    def ghost_target(
+    def select_target(
             self,
             ghost_cell: Tuple[int, int],
             player_cell: Tuple[int, int],

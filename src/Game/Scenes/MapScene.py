@@ -58,7 +58,7 @@ class MapScene(Scene):
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
             )
-            target = ghost.ghost_target(
+            target = ghost.select_target(
                 ghost_cell, initial_player_cell, self.map, self.stats
             )
             self.__ghost_targets[ghost] = target
@@ -125,7 +125,7 @@ class MapScene(Scene):
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
             )
-            target = ghost.ghost_target(
+            target = ghost.select_target(
                 ghost_cell, player_cell, self.map, self.stats
             )
             if self.__ghost_targets.get(ghost) != target:
