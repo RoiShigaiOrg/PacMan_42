@@ -15,6 +15,8 @@ from enum import Enum
 COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
 DEFAULT_MOVEMENT_SPEED: float = 160.0
+DEATH_MOVEMENT_SPEED: float = 140.0
+RESPAWN_WAIT_DURATION: float = 3.0
 GRID_CENTER_TOLERANCE: float = 1e-6
 FLEE_DISTANCE_THRESHOLD: int = 5
 
@@ -42,6 +44,7 @@ class Ghost(Entity):
         self._path_index = 0
         self._target: Tuple[int, int] | None = None
         self._behaviour = Behaviour.CHASE
+        self._respawn_wait_remaining: float | None = None
 
     @property
     def behaviour(self) -> Behaviour:
@@ -52,7 +55,13 @@ class Ghost(Entity):
         """ Change the behaviour of the ghost to the given Behaviour Enum. """
         if not isinstance(behaviour, Behaviour):
             raise TypeError("behaviour must be a Behaviour")
+        if behaviour is self._behaviour:
+            return
         self._behaviour = behaviour
+        self._path = []
+        self._path_index = 0
+        self._target = None
+        self._respawn_wait_remaining = None
 
     @property
     def origin(self) -> Tuple[int, int]:
@@ -107,13 +116,22 @@ class Ghost(Entity):
             actual_map: Map,
             physics: PhysicsEngine,
             delta_time: float,
+            game_state: GameState | None = None,
     ) -> None:
-        """Move along the assigned path using grid centers and wall checks.
+        """Move according to the current behaviour.
 
-        Path selection and ghost behavior are deliberately external. This
-        method only consumes the route most recently passed to ``set_path``.
+        CHASE and FLEAT consume the assigned grid path and obey wall
+        collisions. DEAD ghosts return directly to their origin, ignore walls,
+        wait there, then respawn according to the current Pac-Man state.
         """
-        if delta_time <= 0 or self._path_index >= len(self._path):
+        if delta_time <= 0:
+            return
+
+        if self.behaviour is Behaviour.DEAD:
+            self._update_dead_movement(actual_map, delta_time, game_state)
+            return
+
+        if self._path_index >= len(self._path):
             return
 
         remaining_distance = self._movement_speed * delta_time
@@ -165,6 +183,44 @@ class Ghost(Entity):
             if step >= distance:
                 self._path_index += 1
 
+    def _update_dead_movement(
+            self,
+            actual_map: Map,
+            delta_time: float,
+            game_state: GameState | None,
+    ) -> None:
+        """Return directly to the origin, wait, then respawn."""
+        if self._respawn_wait_remaining is not None:
+            self._respawn_wait_remaining -= delta_time
+            if self._respawn_wait_remaining <= 0:
+                behaviour = (
+                    Behaviour.FLEAT
+                    if (
+                        game_state is not None
+                        and game_state.state is PacManState.SUPER
+                    )
+                    else Behaviour.CHASE
+                )
+                self.change_behaviour(behaviour)
+            return
+
+        cell_width, cell_height = actual_map.cell_size
+        grid_origin_x, grid_origin_y = actual_map.grid_origin
+        target = Vector2(
+            grid_origin_x + (self.origin[0] + 0.5) * cell_width,
+            grid_origin_y + (self.origin[1] + 0.5) * cell_height,
+        )
+        displacement = target - self._collider.world_position
+        distance = displacement.length()
+        if distance <= GRID_CENTER_TOLERANCE:
+            self._respawn_wait_remaining = RESPAWN_WAIT_DURATION
+            return
+
+        step = min(DEATH_MOVEMENT_SPEED * delta_time, distance)
+        self._move(displacement.normalized() * step)
+        if step >= distance:
+            self._respawn_wait_remaining = RESPAWN_WAIT_DURATION
+
     def compute_path(
             self,
             position: Tuple[int, int],
@@ -172,6 +228,10 @@ class Ghost(Entity):
             graph: Dict[Tuple[int, int], MapNode],
     ) -> None:
         """Replan toward target while keeping the current movement leg."""
+        if self.behaviour is Behaviour.DEAD:
+            self.set_path(())
+            return
+
         target_node = graph.get(target)
 
         start_node: MapNode | None
@@ -179,7 +239,6 @@ class Ghost(Entity):
             start_node = self._path[self._path_index]
         else:
             start_node = graph.get(position)
-
         if start_node is None or target_node is None:
             self.set_path(())
             return
@@ -198,18 +257,22 @@ class Ghost(Entity):
             game_state: GameState,
     ) -> Tuple[int, int]:
         """Select a pathfinding destination for a ghost's current mode."""
+        if self.behaviour is Behaviour.DEAD:
+            return self._dead(self.origin)
         if game_state.state != PacManState.SUPER:
-            self._behavior = Behaviour.CHASE
+            self.change_behaviour(Behaviour.CHASE)
             return self._chase(player_cell)
 
-        self._behaviour = Behaviour.FLEAT
+        self.change_behaviour(Behaviour.FLEAT)
         distance = (
             abs(ghost_cell[0] - player_cell[0])
             + abs(ghost_cell[1] - player_cell[1])
         )
         if distance > FLEE_DISTANCE_THRESHOLD:
             return self._fleat(self.origin)
-        return self._fleat(self.__flee_target(ghost_cell, player_cell, actual_map))
+        return self._fleat(
+            self.__flee_target(ghost_cell, player_cell, actual_map)
+        )
 
     def __flee_target(
             self,

@@ -3,7 +3,7 @@ from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from ..GameState import GameState, PacManState
-from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B
+from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
         RELATIVE_MAP_POS_X,
@@ -12,7 +12,7 @@ from ..MapGeneration import (
         RELATIVE_MAP_HEIGHT
         )
 from ..Player.Player import Player
-from ..Ghosts.Ghost import Ghost
+from ..Ghosts.Ghost import Behaviour, Ghost
 from ..Ghosts.Blinky import Blinky
 from typing import Tuple, List
 
@@ -52,7 +52,9 @@ class MapScene(Scene):
                 self.__player.collider.world_position
             )
         self.__ghosts: List[Ghost] = [Blinky()]
-        self.__ghost_targets: dict[Ghost, Tuple[int, int]] = {}
+        self.__ghost_targets: dict[
+            Ghost, tuple[Behaviour, Tuple[int, int]]
+        ] = {}
         for ghost in self.__ghosts:
             ghost.init_ghost(display, self.map)
             ghost_cell = self.map.cell_coordinates_at(
@@ -61,7 +63,7 @@ class MapScene(Scene):
             target = ghost.select_target(
                 ghost_cell, initial_player_cell, self.map, self.stats
             )
-            self.__ghost_targets[ghost] = target
+            self.__ghost_targets[ghost] = (ghost.behaviour, target)
             ghost.compute_path(
                 ghost_cell, target, self.map.graph
             )
@@ -79,6 +81,9 @@ class MapScene(Scene):
             return
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
+        if input_handler.was_key_pressed(KEY_X):
+            for ghost in self.__ghosts:
+                ghost.change_behaviour(Behaviour.DEAD)
         if input_handler.was_key_pressed(KEY_B):
             if self.stats.state == PacManState.NORMAL:
                 self.stats.state = PacManState.SUPER
@@ -128,15 +133,16 @@ class MapScene(Scene):
             target = ghost.select_target(
                 ghost_cell, player_cell, self.map, self.stats
             )
-            if self.__ghost_targets.get(ghost) != target:
+            behaviour_target = (ghost.behaviour, target)
+            if self.__ghost_targets.get(ghost) != behaviour_target:
                 ghost.compute_path(
                     ghost_cell, target, self.map.graph
                 )
-                self.__ghost_targets[ghost] = target
+                self.__ghost_targets[ghost] = behaviour_target
             old_ghost_position = ghost.position
             old_ghost_center = ghost.collider.world_position
             ghost.update_movement(
-                self.map, self.__physics, delta_time
+                self.map, self.__physics, delta_time, self.stats
             )
             if ghost.collider.world_position != old_ghost_center:
                 self.__dirty_region = self.union_regions(

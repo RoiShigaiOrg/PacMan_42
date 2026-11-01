@@ -4,7 +4,8 @@ import pytest
 
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
 from Engine.Graphics import MlxDisplay
-from Game.Ghosts.Ghost import Ghost
+from Game.GameState import GameState, PacManState
+from Game.Ghosts.Ghost import Behaviour, Ghost
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.MapGeneration.MapNode import MapNode
@@ -103,3 +104,51 @@ def test_ghost_path_must_use_cardinally_adjacent_cells() -> None:
 def test_ghost_rejects_non_positive_movement_speed() -> None:
     with pytest.raises(ValueError, match="movement_speed must be positive"):
         MovementGhost(0.0)
+
+
+def test_dead_ghost_returns_directly_through_walls_to_origin() -> None:
+    actual_map = make_map([
+        [True, False, False],
+        [False, False, False],
+        [False, False, True],
+    ])
+    ghost = MovementGhost()
+    ghost._origin = (2, 2)
+    ghost.change_behaviour(Behaviour.DEAD)
+
+    ghost.update_movement(actual_map, PhysicsEngine(), 1.0)
+
+    assert ghost.collider.world_position == Vector2(35.0, 45.0)
+
+
+def test_dead_ghost_waits_then_chases_after_three_seconds() -> None:
+    actual_map = make_map([[True, True]])
+    ghost = MovementGhost()
+    ghost._origin = (1, 0)
+    ghost.change_behaviour(Behaviour.DEAD)
+    game_state = GameState()
+
+    ghost.update_movement(actual_map, PhysicsEngine(), 0.1, game_state)
+    home_position = ghost.collider.world_position
+    ghost.update_movement(actual_map, PhysicsEngine(), 2.0, game_state)
+    assert ghost.behaviour is Behaviour.DEAD
+    assert ghost.collider.world_position == home_position
+
+    ghost.update_movement(actual_map, PhysicsEngine(), 1.0, game_state)
+
+    assert ghost.behaviour is Behaviour.CHASE
+    assert ghost.collider.world_position == home_position
+
+
+def test_dead_ghost_uses_current_super_state_when_respawning() -> None:
+    actual_map = make_map([[True, True]])
+    ghost = MovementGhost()
+    ghost._origin = (1, 0)
+    ghost.change_behaviour(Behaviour.DEAD)
+    game_state = GameState()
+
+    ghost.update_movement(actual_map, PhysicsEngine(), 0.1, game_state)
+    game_state.state = PacManState.SUPER
+    ghost.update_movement(actual_map, PhysicsEngine(), 3.0, game_state)
+
+    assert ghost.behaviour is Behaviour.FLEAT
