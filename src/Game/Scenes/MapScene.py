@@ -12,7 +12,7 @@ from ..MapGeneration import (
         RELATIVE_MAP_HEIGHT
         )
 from ..Player.Player import Player
-from ..Ghosts.Ghost import Behaviour, FLEE_DISTANCE_THRESHOLD, Ghost
+from ..Ghosts.Ghost import Ghost
 from ..Ghosts.Blinky import Blinky
 from typing import Tuple, List
 
@@ -58,8 +58,8 @@ class MapScene(Scene):
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
             )
-            target = self.__target_for_ghost(
-                ghost, ghost_cell, initial_player_cell
+            target = ghost.ghost_target(
+                ghost_cell, initial_player_cell, self.map, self.stats
             )
             self.__ghost_targets[ghost] = target
             ghost.compute_path(
@@ -125,8 +125,8 @@ class MapScene(Scene):
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
             )
-            target = self.__target_for_ghost(
-                ghost, ghost_cell, player_cell
+            target = ghost.ghost_target(
+                ghost_cell, player_cell, self.map, self.stats
             )
             if self.__ghost_targets.get(ghost) != target:
                 ghost.compute_path(
@@ -146,90 +146,6 @@ class MapScene(Scene):
                         ghost.size, ghost.position
                     ),
                 )
-
-    def __target_for_ghost(
-            self,
-            ghost: Ghost,
-            ghost_cell: Tuple[int, int],
-            player_cell: Tuple[int, int],
-    ) -> Tuple[int, int]:
-        """Select a pathfinding destination for a ghost's current mode."""
-        if self.stats.state != PacManState.SUPER:
-            ghost.change_behaviour(Behaviour.CHASE)
-            return ghost._chase(player_cell)
-
-        ghost.change_behaviour(Behaviour.FLEAT)
-        distance = (
-            abs(ghost_cell[0] - player_cell[0])
-            + abs(ghost_cell[1] - player_cell[1])
-        )
-        if distance > FLEE_DISTANCE_THRESHOLD:
-            return ghost._fleat(ghost.origin)
-        return ghost._fleat(self.__flee_target(ghost_cell, player_cell))
-
-    def __flee_target(
-            self,
-            ghost_cell: Tuple[int, int],
-            player_cell: Tuple[int, int],
-    ) -> Tuple[int, int]:
-        """Choose a reachable walkable cell away from Pac-Man."""
-        start = self.map.graph.get(ghost_cell)
-        if start is None:
-            return ghost_cell
-
-        reachable: list[Tuple[int, int]] = []
-        visited = {start}
-        pending = [start]
-        while pending:
-            node = pending.pop()
-            reachable.append(node.coordinate)
-            for neighbor, _cost in node.neighbors():
-                if neighbor not in visited:
-                    visited.add(neighbor)
-                    pending.append(neighbor)
-
-        direction_x = ghost_cell[0] - player_cell[0]
-        direction_y = ghost_cell[1] - player_cell[1]
-        if direction_x == 0 and direction_y == 0:
-            return max(
-                reachable,
-                key=lambda cell: (
-                    abs(cell[0] - player_cell[0])
-                    + abs(cell[1] - player_cell[1]),
-                    -cell[1],
-                    -cell[0],
-                ),
-            )
-
-        ideal_x = ghost_cell[0] + direction_x
-        ideal_y = ghost_cell[1] + direction_y
-        ideal_target = (ideal_x, ideal_y)
-        if ideal_target in reachable:
-            return ideal_target
-
-        def away_score(
-                cell: Tuple[int, int],
-        ) -> tuple[int, int, int, int, int, int]:
-            offset_x = cell[0] - player_cell[0]
-            offset_y = cell[1] - player_cell[1]
-            projection = offset_x * direction_x + offset_y * direction_y
-            cross_product = abs(
-                offset_x * direction_y - offset_y * direction_x
-            )
-            player_distance = abs(offset_x) + abs(offset_y)
-            ideal_distance = (
-                abs(cell[0] - ideal_x) + abs(cell[1] - ideal_y)
-            )
-            return (
-                projection,
-                -cross_product,
-                player_distance,
-                -ideal_distance,
-                -cell[1],
-                -cell[0],
-            )
-
-        return max(reachable, key=away_score)
 
     def render(self) -> None:
         """ Render Method for the MapScene Object"""

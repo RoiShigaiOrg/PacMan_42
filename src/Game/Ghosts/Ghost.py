@@ -5,6 +5,7 @@ from Engine.Entity.PathFinding import HeuristicType, PathFinding
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Physics import PhysicsEngine
 from Engine.Physics.Vector2 import Vector2
+from ..GameState import GameState, PacManState
 from ..MapGeneration.MapNode import MapNode
 from ..MapGeneration import Map
 from abc import abstractmethod
@@ -188,6 +189,92 @@ class Ghost(Entity):
             HeuristicType.MANHATTAN,
         )
         self.set_path(cast(list[MapNode], path))
+
+    def ghost_target(
+            self,
+            ghost_cell: Tuple[int, int],
+            player_cell: Tuple[int, int],
+            actual_map: Map,
+            game_state: GameState,
+    ) -> Tuple[int, int]:
+        """Select a pathfinding destination for a ghost's current mode."""
+        if game_state.state != PacManState.SUPER:
+            self._behavior = Behaviour.CHASE
+            return self._chase(player_cell)
+
+        self._behaviour = Behaviour.FLEAT
+        distance = (
+            abs(ghost_cell[0] - player_cell[0])
+            + abs(ghost_cell[1] - player_cell[1])
+        )
+        if distance > FLEE_DISTANCE_THRESHOLD:
+            return self._fleat(self.origin)
+        return self._fleat(self.__flee_target(ghost_cell, player_cell, actual_map))
+
+    def __flee_target(
+            self,
+            ghost_cell: Tuple[int, int],
+            player_cell: Tuple[int, int],
+            actual_map: Map
+    ) -> Tuple[int, int]:
+        """Choose a reachable walkable cell away from Pac-Man."""
+        start = actual_map.graph.get(ghost_cell)
+        if start is None:
+            return ghost_cell
+
+        reachable: list[Tuple[int, int]] = []
+        visited = {start}
+        pending = [start]
+        while pending:
+            node = pending.pop()
+            reachable.append(node.coordinate)
+            for neighbor, _cost in node.neighbors():
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    pending.append(neighbor)
+
+        direction_x = ghost_cell[0] - player_cell[0]
+        direction_y = ghost_cell[1] - player_cell[1]
+        if direction_x == 0 and direction_y == 0:
+            return max(
+                reachable,
+                key=lambda cell: (
+                    abs(cell[0] - player_cell[0])
+                    + abs(cell[1] - player_cell[1]),
+                    -cell[1],
+                    -cell[0],
+                ),
+            )
+
+        ideal_x = ghost_cell[0] + direction_x
+        ideal_y = ghost_cell[1] + direction_y
+        ideal_target = (ideal_x, ideal_y)
+        if ideal_target in reachable:
+            return ideal_target
+
+        def away_score(
+                cell: Tuple[int, int],
+        ) -> tuple[int, int, int, int, int, int]:
+            offset_x = cell[0] - player_cell[0]
+            offset_y = cell[1] - player_cell[1]
+            projection = offset_x * direction_x + offset_y * direction_y
+            cross_product = abs(
+                offset_x * direction_y - offset_y * direction_x
+            )
+            player_distance = abs(offset_x) + abs(offset_y)
+            ideal_distance = (
+                abs(cell[0] - ideal_x) + abs(cell[1] - ideal_y)
+            )
+            return (
+                projection,
+                -cross_product,
+                player_distance,
+                -ideal_distance,
+                -cell[1],
+                -cell[0],
+            )
+
+        return max(reachable, key=away_score)
 
     @abstractmethod
     def _chase(self, target: Tuple[int, int]) -> Tuple[int, int]:
