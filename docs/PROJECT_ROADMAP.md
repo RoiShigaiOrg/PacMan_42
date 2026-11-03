@@ -26,109 +26,54 @@ Use the **Assigned to**, **Priority**, and **Target date** columns to
 coordinate the work. These are left as `TBD` until the team agrees on
 owners and deadlines.
 
-  ------------------------------------------------------------------------------
-  Area           Component /     Status      Assigned to Priority    Target date
-                 task                                                
-  -------------- --------------- ----------- ----------- ----------- -----------
-  Engine /       Graphics        🟢 Done     ---         ---         ---
-  Graphics                                                           
+### Engine
 
-  Engine /       Animation       🔴 Not      melschmi         HIGH         TBD
-  Animation                      started                             
+| Area | Component / task | Status | Assigned to | Priority | Target date |
+| --- | --- | --- | --- | --- | --- |
+| Engine / Graphics | Graphics | 🟢 Done | --- | --- | --- |
+| Engine / Animation | Animation | 🔴 Not started | melschmi | HIGH | TBD |
+| Engine / Sprite | Sprite | 🔴 Not started | melschmi | HIGH | TBD |
+| Engine / File | ScoreFile | 🟢 Done | leybessa | --- | --- |
+| Engine / File | ConfigFile | 🔴 Not started | melschmi | HIGH | TBD |
+| Engine / File | SpriteLoader | 🔴 Not started | melschmi | HIGH | TBD |
+| Engine / Application | Application | 🟢 Done | melschmi | --- | --- |
+| Engine / Clock | Clock | 🟡 In progress | melschmi | MEDIUM | TBD |
+| Engine / InputHandler | InputHandler | 🟢 Done | melschmi | --- | --- |
+| Engine / Physics | Physics | 🟢 Done | melschmi | --- | --- |
+| Engine / Entity | Entity | 🟢 Done | melschmi | --- | --- |
+| Engine / Entity | Pathfinding | 🟢 Done | melschmi | --- | --- |
+| Engine / SceneManager | SceneManager | 🟢 Done | melschmi | --- | --- |
+| Engine / SceneManager | Scene | 🟢 Done | melschmi | --- | --- |
+| Engine | Engine | 🟢 Done | melschmi | --- | --- |
+| Engine | ConfigHandler | 🔴 Not started | melschmi | HIGH | TBD |
 
-  Engine /       Sprite          🔴 Not      melschmi         HIGH         TBD
-  Sprite                         started                             
+### Game
 
-  Engine / File  ScoreFile       🟢 Done     leybessa         ---         ---
+| Area | Component / task | Status | Assigned to | Priority | Target date |
+| --- | --- | --- | --- | --- | --- |
+| Game | GameState | 🟡 In progress | leybessa | MEDIUM | TBD |
+| Game / Ghost | Ghost behaviour | 🟡 In progress | melschmi | HIGH | TBD |
+| Game / Map | Map generation | 🟢 Done | leybessa | --- | --- |
+| Game / Player | Player | 🟡 In progress | melschmi | HIGH | TBD |
+| Game / UI | UI | 🟡 In progress | leybessa | HIGH | TBD |
+| Game / UI | Score | 🔴 Not started | leybessa | HIGH | TBD |
+| Game / UI | Lives | 🔴 Not started | leybessa | HIGH | TBD |
+| Game / UI | DebugWindow | 🔴 Not started | leybessa | MEDIUM | TBD |
+| Game / UI | ScoreInput | 🟢 Done | leybessa | --- | --- |
+| Game / Scene | Scene system | 🔴 Not started | leybessa | HIGH | TBD |
+| Game / Scene | MainScene | 🟡 In progress | leybessa | HIGH | TBD |
+| Game / Scene | MapScene | 🟡 In progress | melschmi | HIGH | TBD |
+| Game / Scene | OptionScene | 🔴 Not started | leybessa | MEDIUM | TBD |
+| Game / Scene | CheatScene | 🔴 Not started | leybessa | MEDIUM | TBD |
+| Game / Scene | SelectMode | 🔴 Not started | leybessa | MEDIUM | TBD |
+| Game / Scene | Leaderboard | 🔴 Not started | leybessa | HIGH | TBD |
+| Game / Scene | GameOverScene | 🟡 In progress | leybessa | HIGH | TBD |
 
-  Engine / File  ConfigFile      🔴 Not      melschmi         HIGH         TBD
-                                 started                             
+### Project
 
-  Engine / File  SpriteLoader    🔴 Not      melschmi         HIGH         TBD
-                                 started                             
-
-  Engine /       Application     🟢 Done     melschmi         ---         ---
-  Application                                                        
-
-  Engine / Clock Clock           🟡 In       melschmi         MEDIUM         TBD
-                                 progress                            
-
-  Engine /       InputHandler    🟢 Done     melschmi         ---         ---
-  InputHandler                                                       
-
-  Engine /       Physics         🟢 Done     melschmi         ---         ---
-  Physics                                                            
-
-  Engine /       Entity          🟢 Done     melschmi         ---         ---
-  Entity                                                             
-
-  Engine /       Pathfinding     🟢 Done     melschmi         ---         ---
-  Entity                                                             
-
-  Engine /       SceneManager    🟢 Done     melschmi         ---         ---
-  SceneManager                                                       
-
-  Engine /       Scene           🟢 Done     melschmi         ---         ---
-  SceneManager                                                       
-
-  Engine         Engine          🟢 Done     melschmi         ---         ---
-
-  Engine         ConfigHandler   🔴 Not      melschmi         HIGH         TBD
-                                 started                             
-
-  Game           GameState       🟡 In       leybessa         MEDIUM         TBD
-                                 progress                            
-
-  Game / Ghost   Ghost behaviour 🟡 In       melschmi         HIGH         TBD
-                                 progress                            
-
-  Game / Map     Map generation  🟢 Done     leybessa         ---         ---
-
-  Game / Player  Player          🟡 In       melschmi         HIGH         TBD
-                                 progress                            
-
-  Game / UI      UI              🟡 In       leybessa         HIGH         TBD
-                                 progress                            
-
-  Game / UI      Score           🔴 Not      leybessa         HIGH         TBD
-                                 started                             
-
-  Game / UI      Lives           🔴 Not      leybessa         HIGH         TBD
-                                 started                             
-
-  Game / UI      DebugWindow     🔴 Not      leybessa         MEDIUM         TBD
-                                 started                             
-
-  Game / UI      ScoreInput      🟢 Done     leybessa         ---         ---
-
-  Game / Scene   Scene system    🔴 Not      leybessa         HIGH         TBD
-                                 started                             
-
-  Game / Scene   MainScene       🟡 In       leybessa         HIGH         TBD
-                                 progress                            
-
-  Game / Scene   MapScene        🟡 In       melschmi         HIGH         TBD
-                                 progress                            
-
-  Game / Scene   OptionScene     🔴 Not      leybessa         MEDIUM         TBD
-                                 started                             
-
-  Game / Scene   CheatScene      🔴 Not      leybessa         MEDIUM         TBD
-                                 started                             
-
-  Game / Scene   SelectMode      🔴 Not      leybessa         MEDIUM         TBD
-                                 started                             
-
-  Game / Scene   Leaderboard     🔴 Not      leybessa         HIGH         TBD
-                                 started                             
-
-  Game / Scene   GameOverScene   🟡 In       leybessa         HIGH         TBD
-                                 progress                            
-
-  Project        Tests           🔴 Not      TBD         TBD         TBD
-                                 started                             
-
-  ------------------------------------------------------------------------------
+| Area | Component / task | Status | Assigned to | Priority | Target date |
+| --- | --- | --- | --- | --- | --- |
+| Project | Tests | 🔴 Not started | TBD | TBD | TBD |
 
 ## Team notes
 
