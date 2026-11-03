@@ -16,6 +16,7 @@ HIGH_LEFT: int = 1
 HIGH_RIGHT: int = 2
 LOW_LEFT: int = 3
 LOW_RIGHT: int = 4
+CHASE_THRESHOLD: int = 8
 
 
 class Clyde(Ghost):
@@ -67,9 +68,20 @@ class Clyde(Ghost):
             actual_map: Map,
             ghost_cell: Tuple[int, int]) -> Tuple[int, int]:
         """ Chase Behaviour abstract method for Ghost Class """
-        return actual_map.cell_coordinates_at(
-                player.collider.world_position
-            )
+        ghost_cell = actual_map.cell_coordinates_at(
+            self.collider.world_position
+        )
+        player_cell = actual_map.cell_coordinates_at(
+            player.collider.world_position
+        )
+        distance = (
+            abs(ghost_cell[0] - player_cell[0])
+            + abs(ghost_cell[1] - player_cell[1])
+        )
+        if distance > CHASE_THRESHOLD:
+            return self.origin
+
+        return player_cell
 
     def _fleat(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Fleat Behaviour abstract method for Ghost Class """

@@ -68,6 +68,7 @@ class Pinky(Ghost):
             ghost_cell: Tuple[int, int]) -> Tuple[int, int]:
         """ Chase Behaviour abstract method for Ghost Class """
         player_direction: Vector2 = player.direction * 4.0
+        map_graph = actual_map.graph
         player_position = actual_map.cell_coordinates_at(
                         player.collider.world_position
                     )
@@ -75,7 +76,6 @@ class Pinky(Ghost):
                 player_position[0] + int(player_direction.x),
                 player_position[1] + int(player_direction.y)
             )
-        map_graph = actual_map.graph
 
         if target not in map_graph:
             return player.position
