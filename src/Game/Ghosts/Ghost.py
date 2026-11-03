@@ -351,12 +351,10 @@ class Ghost(Entity):
         """ Chase Behaviour abstract method for Ghost Class """
         ...
 
-    @abstractmethod
     def _fleat(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Fleat Behaviour abstract method for Ghost Class """
-        ...
+        return target
 
-    @abstractmethod
     def _dead(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Dead Behaviour abstract method for Ghost Class """
-        ...
+        return self.origin

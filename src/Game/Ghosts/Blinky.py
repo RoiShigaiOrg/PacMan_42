@@ -70,11 +70,3 @@ class Blinky(Ghost):
         return actual_map.cell_coordinates_at(
                 player.collider.world_position
             )
-
-    def _fleat(self, target: Tuple[int, int]) -> Tuple[int, int]:
-        """ Fleat Behaviour abstract method for Ghost Class """
-        return target
-
-    def _dead(self, target: Tuple[int, int]) -> Tuple[int, int]:
-        """ Dead Behaviour abstract method for Ghost Class """
-        return self.origin
