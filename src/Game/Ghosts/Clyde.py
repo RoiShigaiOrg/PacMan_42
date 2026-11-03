@@ -4,6 +4,7 @@ from Engine.Graphics.Components.Circle import Circle
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
 from ..MapGeneration import Map
+from ..Player.Player import Player
 from typing import Tuple
 from .Ghost import Ghost
 
@@ -60,9 +61,15 @@ class Clyde(Ghost):
         self._sync_graphics_position()
         self.set_path(())
 
-    def _chase(self, target: Tuple[int, int]) -> Tuple[int, int]:
+    def _chase(
+            self,
+            player: Player,
+            actual_map: Map,
+            ghost_cell: Tuple[int, int]) -> Tuple[int, int]:
         """ Chase Behaviour abstract method for Ghost Class """
-        return target
+        return actual_map.cell_coordinates_at(
+                player.collider.world_position
+            )
 
     def _fleat(self, target: Tuple[int, int]) -> Tuple[int, int]:
         """ Fleat Behaviour abstract method for Ghost Class """

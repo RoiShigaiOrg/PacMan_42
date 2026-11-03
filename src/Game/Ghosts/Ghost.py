@@ -8,6 +8,7 @@ from Engine.Physics.Vector2 import Vector2
 from ..GameState import GameState, PacManState
 from ..MapGeneration.MapNode import MapNode
 from ..MapGeneration import Map
+from ..Player import Player
 from abc import abstractmethod
 from typing import Dict, Tuple, cast
 from enum import Enum
@@ -252,17 +253,22 @@ class Ghost(Entity):
 
     def select_target(
             self,
-            ghost_cell: Tuple[int, int],
-            player_cell: Tuple[int, int],
+            player: Player,
             actual_map: Map,
             game_state: GameState,
     ) -> Tuple[int, int]:
         """Select a pathfinding destination for a ghost's current mode."""
+        ghost_cell = actual_map.cell_coordinates_at(
+            self.collider.world_position
+        )
+        player_cell = actual_map.cell_coordinates_at(
+            player.collider.world_position
+        )
         if self.behaviour is Behaviour.DEAD:
             return self._dead(self.origin)
         if game_state.state != PacManState.SUPER:
             self.change_behaviour(Behaviour.CHASE)
-            return self._chase(player_cell)
+            return self._chase(player, actual_map, ghost_cell)
 
         self.change_behaviour(Behaviour.FLEAT)
         distance = (

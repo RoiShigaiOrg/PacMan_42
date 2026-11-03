@@ -51,9 +51,6 @@ class MapScene(Scene):
                 )
         self.__player: Player = Player()
         self.__player.InitPlayer(display, self.map)
-        initial_player_cell = self.map.cell_coordinates_at(
-                self.__player.collider.world_position
-            )
         self.__ghosts: List[Ghost] = [
                 Blinky(),
                 Inky(),
@@ -69,7 +66,7 @@ class MapScene(Scene):
                 ghost.collider.world_position
             )
             target = ghost.select_target(
-                ghost_cell, initial_player_cell, self.map, self.stats
+                self.__player, self.map, self.stats
             )
             self.__ghost_targets[ghost] = (ghost.behaviour, target)
             ghost.compute_path(
@@ -139,7 +136,7 @@ class MapScene(Scene):
                 ghost.collider.world_position
             )
             target = ghost.select_target(
-                ghost_cell, player_cell, self.map, self.stats
+                self.__player, self.map, self.stats
             )
             behaviour_target = (ghost.behaviour, target)
             if self.__ghost_targets.get(ghost) != behaviour_target:
