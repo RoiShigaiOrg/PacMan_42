@@ -17,7 +17,7 @@ from ..Ghosts.Blinky import Blinky
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Pinky import Pinky
-from typing import Tuple, List
+from typing import Tuple, Dict
 
 
 Region = Tuple[int, int, int, int]
@@ -51,16 +51,16 @@ class MapScene(Scene):
                 )
         self.__player: Player = Player()
         self.__player.InitPlayer(display, self.map)
-        self.__ghosts: List[Ghost] = [
-                Blinky(),
-                Inky(),
-                Clyde(),
-                Pinky()
-            ]
+        self.__ghosts: Dict[str, Ghost] = {
+                "blinky": Blinky(),
+                "inky": Inky(),
+                "clyde": Clyde(),
+                "pinky": Pinky()
+            }
         self.__ghost_targets: dict[
             Ghost, tuple[Behaviour, Tuple[int, int]]
         ] = {}
-        for ghost in self.__ghosts:
+        for ghost in self.__ghosts.values():
             ghost.init_ghost(display, self.map)
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
@@ -68,6 +68,17 @@ class MapScene(Scene):
             target = ghost.select_target(
                 self.__player, self.map, self.stats
             )
+            if (
+                isinstance(ghost, Inky)
+                and ghost.behaviour is Behaviour.CHASE
+            ):
+                target = ghost.retarget(
+                        target,
+                        self.map.cell_coordinates_at(
+                            self.__ghosts["blinky"].collider.world_position
+                            ),
+                        self.map,
+                        )
             self.__ghost_targets[ghost] = (ghost.behaviour, target)
             ghost.compute_path(
                 ghost_cell, target, self.map.graph
@@ -131,13 +142,24 @@ class MapScene(Scene):
         Updates the ghost within the scene depending on the player position
         and the GameState.
         """
-        for ghost in self.__ghosts:
+        for ghost in self.__ghosts.values():
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
             )
             target = ghost.select_target(
                 self.__player, self.map, self.stats
             )
+            if (
+                isinstance(ghost, Inky)
+                and ghost.behaviour is Behaviour.CHASE
+            ):
+                target = ghost.retarget(
+                    target,
+                    self.map.cell_coordinates_at(
+                        self.__ghosts["blinky"].collider.world_position
+                    ),
+                    self.map,
+                )
             behaviour_target = (ghost.behaviour, target)
             if self.__ghost_targets.get(ghost) != behaviour_target:
                 ghost.compute_path(
@@ -167,7 +189,7 @@ class MapScene(Scene):
             )
             self.__dirty_region = None
         self.__player.draw(self.display)
-        for ghost in self.__ghosts:
+        for ghost in self.__ghosts.values():
             ghost.draw(self.display)
         self.display.render()
 

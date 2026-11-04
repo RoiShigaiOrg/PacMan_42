@@ -61,12 +61,54 @@ class Inky(Ghost):
         self._sync_graphics_position()
         self.set_path(())
 
+    def retarget(
+            self,
+            target: Tuple[int, int],
+            blinky_pos: Tuple[int, int],
+            actual_map: Map,
+    ) -> Tuple[int, int]:
+        """
+        Reflect Blinky's position across Inky's phase-one target.
+
+        If the reflected cell is blocked or outside the map, use the closest
+        walkable cell by Euclidean distance. Ties are resolved by row, then
+        column, for a stable target.
+        """
+        reflected_target = (
+            2 * target[0] - blinky_pos[0],
+            2 * target[1] - blinky_pos[1],
+        )
+        if reflected_target in actual_map.graph:
+            return reflected_target
+
+        if not actual_map.graph:
+            raise ValueError("Map has no walkable cells")
+
+        return min(
+            actual_map.graph,
+            key=lambda cell: (
+                (cell[0] - reflected_target[0]) ** 2
+                + (cell[1] - reflected_target[1]) ** 2,
+                cell[1],
+                cell[0],
+            ),
+        )
+
     def _chase(
             self,
             player: Player,
             actual_map: Map,
             ghost_cell: Tuple[int, int]) -> Tuple[int, int]:
         """ Chase Behaviour abstract method for Ghost Class """
-        return actual_map.cell_coordinates_at(
-                player.collider.world_position
+        player_direction: Vector2 = player.direction * 4.0
+        map_graph = actual_map.graph
+        player_position = actual_map.cell_coordinates_at(
+                        player.collider.world_position
+                    )
+        target = (
+                player_position[0] + int(player_direction.x),
+                player_position[1] + int(player_direction.y)
             )
+        if target not in map_graph:
+            return player.position
+        return target
