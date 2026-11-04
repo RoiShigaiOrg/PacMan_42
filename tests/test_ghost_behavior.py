@@ -1,4 +1,4 @@
-from Game.GameState import GameState, SUPER
+from Game.GameState import GameState, PacManState
 from Game.Ghosts.Blinky import Blinky
 from Game.Ghosts.Ghost import Behaviour
 from Game.MapGeneration.Cell import Cell
@@ -45,7 +45,7 @@ def test_ghost_chases_player_outside_super_mode() -> None:
 
 
 def test_ghost_flees_in_super_mode_when_player_is_within_five_cells() -> None:
-    scene = make_scene([[True] * 7 for _ in range(3)], SUPER)
+    scene = make_scene([[True] * 7 for _ in range(3)], PacManState.SUPER)
     ghost = Blinky()
 
     target = scene._MapScene__target_for_ghost(

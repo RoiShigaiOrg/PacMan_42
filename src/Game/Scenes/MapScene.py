@@ -190,6 +190,8 @@ class MapScene(Scene):
         for ghost in self.__ghosts.values():
             if ghost.behaviour is Behaviour.DEAD:
                 continue
+            if self.stats.state is PacManState.DEAD:
+                continue
 
             collision = self.__physics.handle_collision(
                     self.__player.collider, ghost.collider
