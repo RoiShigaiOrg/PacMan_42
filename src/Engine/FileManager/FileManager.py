@@ -1,4 +1,5 @@
 from .Loader import ConfigLoader, ScoreLoader
+from .Loader.Loader import Loader
 from typing import Any
 
 
@@ -24,6 +25,20 @@ class FileManager:
         """ Init Method of the FileManager """
         self.__config_loader = ConfigLoader()
         self.__score_loader = ScoreLoader()
+
+    def load(self, loader: Loader) -> Any:
+        """
+        Load method of the FileManager
+        Take a Loader type of loader and call it's load method
+        """
+        return loader.load()
+
+    def store(self, loader: Loader) -> None:
+        """
+        Store method of the FileManager
+        Take a Loader type of loader and call it's store method
+        """
+        loader.store()
 
     def load_config(self) -> dict:
         """ Return the config of the application """

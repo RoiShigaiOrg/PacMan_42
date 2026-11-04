@@ -6,6 +6,7 @@ from .Scenes.MapScene import MapScene
 from .Scenes.TestScene import TestScene
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
+from pathlib import Path
 from .Scenes.GameOverScene import GameOverScene
 from .GameState import GameState
 
@@ -18,9 +19,9 @@ class PacMan(Application):
             from Engine to run the Game.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config_file: Path) -> None:
         """ Init Method of the PacMan """
-        self.engine: Engine = Engine("Pac-Man")
+        self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
         self.stats: GameState = GameState()
         self.color: str
         self.dimension: Tuple[int, int]
