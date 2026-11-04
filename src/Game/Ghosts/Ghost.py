@@ -266,7 +266,7 @@ class Ghost(Entity):
         )
         if self.behaviour is Behaviour.DEAD:
             return self._dead(self.origin)
-        if game_state.state != PacManState.SUPER:
+        if (game_state.state is PacManState.NORMAL):
             self.change_behaviour(Behaviour.CHASE)
             return self._chase(player, actual_map, ghost_cell)
 

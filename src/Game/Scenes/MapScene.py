@@ -98,7 +98,7 @@ class MapScene(Scene):
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_X):
-            for ghost in self.__ghosts:
+            for ghost in self.__ghosts.values():
                 ghost.change_behaviour(Behaviour.DEAD)
         if input_handler.was_key_pressed(KEY_B):
             if self.stats.state == PacManState.NORMAL:
@@ -112,6 +112,7 @@ class MapScene(Scene):
                 self.__player.collider.world_position
             )
         self.__update_ghosts(player_cell, delta_time)
+        self.__check_player_ghost_collision()
 
     def __update_player(
             self,
@@ -179,6 +180,28 @@ class MapScene(Scene):
                         ghost.size, ghost.position
                     ),
                 )
+
+    def __check_player_ghost_collision(self) -> None:
+        """
+        Check if the ghost and the player are overlapping and
+            change the PacManState or Ghost State in the GameState
+            accordingly of the rules.
+        """
+        for ghost in self.__ghosts.values():
+            if ghost.behaviour is Behaviour.DEAD:
+                continue
+
+            collision = self.__physics.handle_collision(
+                    self.__player.collider, ghost.collider
+                )
+            if collision is None:
+                continue
+            if ghost.behaviour is Behaviour.FLEAT:
+                self.stats.eat_ghost()
+                ghost.change_behaviour(Behaviour.DEAD)
+            elif ghost.behaviour is Behaviour.CHASE:
+                self.stats.lose_life()
+                break
 
     def render(self) -> None:
         """ Render Method for the MapScene Object"""
