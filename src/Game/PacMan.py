@@ -9,6 +9,7 @@ from typing import Tuple
 from pathlib import Path
 from .Scenes.GameOverScene import GameOverScene
 from .GameState import GameState
+from .Loader.GameConfig import GameConfigLoader
 
 
 class PacMan(Application):
@@ -21,7 +22,7 @@ class PacMan(Application):
 
     def __init__(self, config_file: Path) -> None:
         """ Init Method of the PacMan """
-        self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
+        self.engine: Engine = Engine("Pac-Man", config_file)
         self.stats: GameState = GameState()
         self.color: str
         self.dimension: Tuple[int, int]

@@ -1,12 +1,12 @@
 from .Loader import Loader
 from pathlib import Path
-from typing import Any, cast, List, Dict
+from typing import List, Dict
 from pydantic import BaseModel
 import json
 
 
 class EngineConfig(BaseModel):
-    dimension: List[int, int]
+    dimension: List[int]
     available_dimension: Dict[str, List[int]]
     key_config: Dict[str, int]
     debug: bool
@@ -20,18 +20,24 @@ class ConfigLoader(Loader):
             Project Initialization.
     """
 
-    def load(
-            self, filename: Path = Path(".config.json")
-    ) -> dict[str, Any]:
-        """ Load the config from the JSON config file """
-        with open(filename, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return cast(dict[str, Any], data)
+    def __init__(self, config_file: Path, data: EngineConfig | None = None) -> None:
+        """ Init Method of ConfigLoader """
+        if config_file is None:
+            raise ValueError("ConfigLoader: File is None")
+        self.__file: Path = config_file
+        self.__data: EngineConfig | None = data
 
-    def store(
-            self,
-            config: dict,
-            filename: Path = Path(".config.json")) -> None:
+    def load(self) -> EngineConfig:
+        """ Load the config from the JSON config file """
+        with open(self.__file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        print(f"data: {data}")
+        return EngineConfig.model_validate(data)
+
+    def store(self) -> None:
         """ Write the actual config into the JSON config file """
-        with open(filename, "w+", encoding="utf-8") as f:
-            json.dump(config, f, indent=4)
+        if self.__data is None:
+            raise ValueError("ConfigLoader: Data is None")
+        json_str: str = self.__data.model_dump_json()
+        with open(self.__file, "w+", encoding="utf-8") as f:
+            f.write(json_str)

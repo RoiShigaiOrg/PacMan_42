@@ -1,6 +1,6 @@
 {
 	"dimension": [1280, 720],
-	"available_dim": {
+	"available_dimension": {
 		"720": [1280, 720],
 		"1080": [1920, 1080],
 		"1440": [2560, 1440],
@@ -12,6 +12,7 @@
 		"Left": 113,
 		"Right": 100
 	},
+	"debug": false,
 	"pacgum_points": 10,
 	"super_points": 50,
 	"ghost_points": 200,
