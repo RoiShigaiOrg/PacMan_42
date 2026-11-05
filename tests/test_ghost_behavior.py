@@ -1,9 +1,11 @@
+from types import SimpleNamespace
+
+from Engine.Physics import AABB, Collider, Vector2
 from Game.GameState import GameState, PacManState
 from Game.Ghosts.Blinky import Blinky
 from Game.Ghosts.Ghost import Behaviour
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
-from Game.Scenes.MapScene import MapScene
 
 
 def make_map(walkability: list[list[bool]]) -> Map:
@@ -24,32 +26,52 @@ def make_map(walkability: list[list[bool]]) -> Map:
     return actual_map
 
 
-def make_scene(
-        walkability: list[list[bool]], state: str = "normal",
-) -> MapScene:
-    scene = MapScene.__new__(MapScene)
-    scene.map = make_map(walkability)
-    scene.stats = GameState()
-    scene.stats.state = state
-    return scene
+def make_collider(cell: tuple[int, int]) -> Collider:
+    return Collider(
+        AABB(Vector2(4.0, 4.0)),
+        Vector2(cell[0] * 10 + 5, cell[1] * 10 + 5),
+    )
+
+
+def make_player(cell: tuple[int, int]) -> SimpleNamespace:
+    return SimpleNamespace(collider=make_collider(cell))
+
+
+def make_ghost(
+        cell: tuple[int, int], origin: tuple[int, int] = (0, 0),
+) -> Blinky:
+    ghost = Blinky()
+    ghost._origin = origin
+    ghost._collider = make_collider(cell)
+    return ghost
+
+
+def make_game_state(
+        state: PacManState = PacManState.NORMAL,
+) -> GameState:
+    game_state = GameState()
+    game_state.state = state
+    return game_state
 
 
 def test_ghost_chases_player_outside_super_mode() -> None:
-    scene = make_scene([[True] * 7 for _ in range(3)])
-    ghost = Blinky()
+    actual_map = make_map([[True] * 7 for _ in range(3)])
+    ghost = make_ghost((1, 1))
 
-    target = scene._MapScene__target_for_ghost(ghost, (1, 1), (4, 1))
+    target = ghost.select_target(
+        make_player((4, 1)), actual_map, make_game_state()
+    )
 
     assert target == (4, 1)
     assert ghost.behaviour is Behaviour.CHASE
 
 
 def test_ghost_flees_in_super_mode_when_player_is_within_five_cells() -> None:
-    scene = make_scene([[True] * 7 for _ in range(3)], PacManState.SUPER)
-    ghost = Blinky()
+    actual_map = make_map([[True] * 7 for _ in range(3)])
+    ghost = make_ghost((4, 1))
 
-    target = scene._MapScene__target_for_ghost(
-        ghost, (4, 1), (3, 1)
+    target = ghost.select_target(
+        make_player((3, 1)), actual_map, make_game_state(PacManState.SUPER)
     )
 
     assert target == (5, 1)
@@ -57,30 +79,35 @@ def test_ghost_flees_in_super_mode_when_player_is_within_five_cells() -> None:
 
 
 def test_ghost_returns_to_origin_when_player_is_far_in_super_mode() -> None:
-    scene = make_scene([[True] * 8], SUPER)
-    ghost = Blinky()
-    ghost._origin = (7, 0)
+    actual_map = make_map([[True] * 8])
+    ghost = make_ghost((1, 0), origin=(7, 0))
 
-    target = scene._MapScene__target_for_ghost(ghost, (1, 0), (7, 0))
+    target = ghost.select_target(
+        make_player((7, 0)), actual_map, make_game_state(PacManState.SUPER)
+    )
 
     assert target == ghost.origin
     assert ghost.behaviour is Behaviour.FLEAT
 
 
 def test_ghost_flees_at_the_five_cell_threshold() -> None:
-    scene = make_scene([[True] * 8], SUPER)
-    ghost = Blinky()
-    ghost._origin = (7, 0)
+    actual_map = make_map([[True] * 8])
+    ghost = make_ghost((1, 0), origin=(7, 0))
 
-    target = scene._MapScene__target_for_ghost(ghost, (1, 0), (6, 0))
+    target = ghost.select_target(
+        make_player((6, 0)), actual_map, make_game_state(PacManState.SUPER)
+    )
 
     assert target == (0, 0)
     assert ghost.behaviour is Behaviour.FLEAT
 
 
 def test_flee_target_falls_back_if_reflected_cell_is_blocked() -> None:
-    scene = make_scene([[True, True, False, True, True]])
+    actual_map = make_map([[True, True, False, True, True]])
+    ghost = make_ghost((3, 0))
 
-    target = scene._MapScene__flee_target((3, 0), (4, 0))
+    target = ghost.select_target(
+        make_player((4, 0)), actual_map, make_game_state(PacManState.SUPER)
+    )
 
     assert target == (3, 0)
