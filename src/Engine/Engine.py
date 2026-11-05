@@ -1,5 +1,5 @@
 from .Graphics.MlxDisplay import MlxDisplay
-from .FileManager import FileManager, ConfigLoader, EngineConfig
+from .FileManager import FileManager, ConfigLoader
 from typing import Any, Tuple
 from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application

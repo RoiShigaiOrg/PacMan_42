@@ -9,7 +9,6 @@ from typing import Tuple
 from pathlib import Path
 from .Scenes.GameOverScene import GameOverScene
 from .GameState import GameState
-from .Loader.GameConfig import GameConfigLoader
 
 
 class PacMan(Application):

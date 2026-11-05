@@ -296,7 +296,7 @@ class Ghost(Entity):
             player.collider.world_position
         )
         if self.behaviour is Behaviour.DEAD:
-            return self._dead(self.origin)
+            return self._select_roam_target(self.origin)
         if (game_state.state is PacManState.NORMAL):
             self.change_behaviour(Behaviour.CHASE)
             return self._chase(player, actual_map, ghost_cell)
@@ -307,7 +307,7 @@ class Ghost(Entity):
             + abs(ghost_cell[1] - player_cell[1])
         )
         if distance > FLEE_DISTANCE_THRESHOLD:
-            return self._fleat(self._select_roam_target(ghost_cell))
+            return self._select_roam_target(ghost_cell)
         self._roam_target = None
         return self._fleat(
             self.__flee_target(ghost_cell, player_cell, actual_map)
