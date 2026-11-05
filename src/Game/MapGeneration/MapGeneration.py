@@ -1,6 +1,7 @@
+from collections import deque
 from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
-from typing import Tuple, Dict
+from typing import Dict, Mapping, Tuple
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
 from .Cell import Cell
@@ -164,6 +165,57 @@ class Map():
                     node.connect(neighbor, 1.0)
                     neighbor.connect(node, 1.0)
         return graph
+
+    def graph_territories(
+            self,
+            origins: Mapping[str, Tuple[int, int]],
+            max_distance: int,
+    ) -> Dict[str, set[Tuple[int, int]]]:
+        """Partition nearby graph cells between the supplied origins.
+
+        A multi-source breadth-first search gives each reachable cell to its
+        nearest origin, stopping expansion at ``max_distance`` graph edges.
+        Equal-distance ties are resolved by the order of ``origins``.
+        Cells outside every origin's radius, and disconnected components, are
+        left unassigned.
+        """
+        if max_distance < 0:
+            raise ValueError("max_distance must not be negative")
+
+        territories: Dict[str, set[Tuple[int, int]]] = {
+            name: set() for name in origins
+        }
+        distances: Dict[Tuple[int, int], int] = {}
+        owners: Dict[Tuple[int, int], str] = {}
+        pending: deque[Tuple[int, int]] = deque()
+
+        for name, origin in origins.items():
+            if origin not in self.graph:
+                raise ValueError(f"Territory origin is not walkable: {origin}")
+            if origin in owners:
+                raise ValueError("Territory origins must be distinct")
+            owners[origin] = name
+            distances[origin] = 0
+            territories[name].add(origin)
+            pending.append(origin)
+
+        while pending:
+            coordinate = pending.popleft()
+            distance = distances[coordinate]
+            if distance == max_distance:
+                continue
+
+            owner = owners[coordinate]
+            for neighbor, _cost in self.graph[coordinate].neighbors():
+                next_coordinate = neighbor.coordinate
+                if next_coordinate in owners:
+                    continue
+                owners[next_coordinate] = owner
+                distances[next_coordinate] = distance + 1
+                territories[owner].add(next_coordinate)
+                pending.append(next_coordinate)
+
+        return territories
 
     def _open_center(self) -> None:
         """ Free the center of the map so the Player is not blocked """

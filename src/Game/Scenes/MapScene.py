@@ -12,7 +12,7 @@ from ..MapGeneration import (
         RELATIVE_MAP_HEIGHT
         )
 from ..Player.Player import Player
-from ..Ghosts.Ghost import Behaviour, Ghost
+from ..Ghosts.Ghost import Behaviour, FLEA_ROAM_RADIUS, Ghost
 from ..Ghosts.Blinky import Blinky
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Clyde import Clyde
@@ -62,6 +62,18 @@ class MapScene(Scene):
         ] = {}
         for ghost in self.__ghosts.values():
             ghost.init_ghost(display, self.map)
+
+        territories = self.map.graph_territories(
+            {
+                name: ghost.origin
+                for name, ghost in self.__ghosts.items()
+            },
+            FLEA_ROAM_RADIUS,
+        )
+        for name, ghost in self.__ghosts.items():
+            ghost.set_roam_territory(territories[name])
+
+        for ghost in self.__ghosts.values():
             ghost_cell = self.map.cell_coordinates_at(
                 ghost.collider.world_position
             )
@@ -202,6 +214,7 @@ class MapScene(Scene):
                 self.stats.eat_ghost()
                 ghost.change_behaviour(Behaviour.DEAD)
             elif ghost.behaviour is Behaviour.CHASE:
+                print("Player lost a life")
                 self.stats.lose_life()
                 break
 

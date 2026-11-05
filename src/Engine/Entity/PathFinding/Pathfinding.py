@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from enum import Enum
 from math import hypot, inf
 from typing import Dict, List, Tuple
@@ -76,6 +76,7 @@ class PathFinding:
             heuristic: (
                 Callable[[Node, Node], float] | HeuristicType | None
             ) = None,
+            allowed_nodes: Collection[Node] | None = None,
     ) -> List[Node]:
         """
         A_star Algorithm use for the Pathfinding of Any kind of action
@@ -122,6 +123,11 @@ class PathFinding:
                 return path
 
             for neighbor, edge_cost in current.neighbors():
+                if (
+                    allowed_nodes is not None
+                    and neighbor not in allowed_nodes
+                ):
+                    continue
                 if edge_cost < 0:
                     raise ValueError("A* edge costs must be non-negative")
 

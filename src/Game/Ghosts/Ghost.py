@@ -1,4 +1,5 @@
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+import random
 from Engine.Graphics import MlxDisplay
 from Engine.Entity.Entity import Entity
 from Engine.Entity.PathFinding import HeuristicType, PathFinding
@@ -20,6 +21,7 @@ DEATH_MOVEMENT_SPEED: float = 140.0
 RESPAWN_WAIT_DURATION: float = 3.0
 GRID_CENTER_TOLERANCE: float = 1e-6
 FLEE_DISTANCE_THRESHOLD: int = 5
+FLEA_ROAM_RADIUS: int = 5
 
 
 class Behaviour(Enum):
@@ -45,6 +47,8 @@ class Ghost(Entity):
         self._path: list[MapNode] = []
         self._path_index = 0
         self._target: Tuple[int, int] | None = None
+        self._roam_territory: tuple[Tuple[int, int], ...] = ()
+        self._roam_target: Tuple[int, int] | None = None
         self._behaviour = Behaviour.CHASE
         self._respawn_wait_remaining: float | None = None
 
@@ -63,12 +67,27 @@ class Ghost(Entity):
         self._path = []
         self._path_index = 0
         self._target = None
+        self._roam_target = None
         self._respawn_wait_remaining = None
 
     @property
     def origin(self) -> Tuple[int, int]:
         """Return this ghost's home cell in map coordinates."""
         return self._origin
+
+    def set_roam_territory(
+            self, territory: Iterable[Tuple[int, int]]
+    ) -> None:
+        """Set the walkable cells this ghost may roam while fleeing."""
+        cells = tuple(sorted(set(territory)))
+        if not cells:
+            raise ValueError("A ghost's roam territory cannot be empty")
+        if self.origin not in cells:
+            raise ValueError(
+                "A ghost's roam territory must include its origin"
+            )
+        self._roam_territory = cells
+        self._roam_target = None
 
     @property
     def movement_speed(self) -> float:
@@ -244,10 +263,22 @@ class Ghost(Entity):
         if start_node is None or target_node is None:
             self.set_path(())
             return
+        allowed_nodes = None
+        if (
+            self.behaviour is Behaviour.FLEAT
+            and target == self._roam_target
+            and position in self._roam_territory
+        ):
+            allowed_nodes = {
+                graph[coordinate]
+                for coordinate in self._roam_territory
+                if coordinate in graph
+            }
         path = PathFinding.a_star(
             start_node,
             target_node,
             HeuristicType.MANHATTAN,
+            allowed_nodes=allowed_nodes,
         )
         self.set_path(cast(list[MapNode], path))
 
@@ -276,10 +307,35 @@ class Ghost(Entity):
             + abs(ghost_cell[1] - player_cell[1])
         )
         if distance > FLEE_DISTANCE_THRESHOLD:
-            return self._fleat(self.origin)
+            return self._fleat(self._select_roam_target(ghost_cell))
+        self._roam_target = None
         return self._fleat(
             self.__flee_target(ghost_cell, player_cell, actual_map)
         )
+
+    def _select_roam_target(
+            self, ghost_cell: Tuple[int, int]
+    ) -> Tuple[int, int]:
+        """Keep a territory destination until its path has been completed."""
+        if not self._roam_territory:
+            return self.origin
+
+        if ghost_cell not in self._roam_territory:
+            self._roam_target = self.origin
+            return self._roam_target
+
+        if (
+            self._roam_target is None
+            or self._path_index >= len(self._path)
+        ):
+            candidates = tuple(
+                cell for cell in self._roam_territory
+                if cell != ghost_cell
+            )
+            self._roam_target = random.choice(
+                candidates or self._roam_territory
+            )
+        return self._roam_target
 
     def __flee_target(
             self,
@@ -347,7 +403,12 @@ class Ghost(Entity):
         return max(reachable, key=away_score)
 
     @abstractmethod
-    def _chase(self, target: Tuple[int, int]) -> Tuple[int, int]:
+    def _chase(
+            self,
+            player: Player,
+            actual_map: Map,
+            ghost_cell: Tuple[int, int],
+    ) -> Tuple[int, int]:
         """ Chase Behaviour abstract method for Ghost Class """
         ...
 

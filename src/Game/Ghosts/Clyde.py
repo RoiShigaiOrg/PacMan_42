@@ -79,6 +79,6 @@ class Clyde(Ghost):
             + abs(ghost_cell[1] - player_cell[1])
         )
         if distance > CHASE_THRESHOLD:
-            return self.origin
+            return self._select_roam_target(ghost_cell)
 
         return player_cell
