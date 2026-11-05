@@ -26,5 +26,5 @@ class MapNode(Node):
         """ Add a neighbor Node to this MapNode """
         self._neighbors.append((neighbor, cost))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.coordinate}"

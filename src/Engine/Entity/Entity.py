@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Protocol, Tuple
 from ..Physics.Vector2 import Vector2
 from ..Physics.Physics import PhysicsEngine
 from ..Physics.Collider import Collider
 from ..Graphics.MlxDisplay import MlxDisplay
+
+
+class _PositionableShape(Protocol):
+    """Graphical shape interface needed to keep an entity in sync."""
+
+    def update_pos(self, pos_x: int, pos_y: int) -> None:
+        ...
 
 
 class Entity(ABC):
@@ -13,6 +20,11 @@ class Entity(ABC):
         The Entity Class serve as a boase to represent any
             movable entity present in the project (Player, Ghost)
     """
+
+    _collider: Collider
+    _width: int
+    _height: int
+    _graphical_shape: _PositionableShape
 
     @abstractmethod
     def draw(self, display: MlxDisplay) -> None:
@@ -32,7 +44,7 @@ class Entity(ABC):
     @property
     def name(self) -> str:
         """ Getter method for the Object Name """
-        return self._name
+        return type(self).__name__
 
     @property
     def position(self) -> Tuple[int, int]:

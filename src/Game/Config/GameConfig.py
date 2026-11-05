@@ -1,5 +1,6 @@
 from Engine.FileManager.Loader import EngineConfig, Loader
 from pathlib import Path
+from typing import cast
 import json
 
 
@@ -24,22 +25,23 @@ class GameConfigLoader(Loader):
         to load the specified GameConfig File at program initialization
     """
 
-    def __init__(self, file: Path) -> None:
+    def __init__(self, file: Path, config: GameConfig | None = None) -> None:
         """ Init Method for the GameConfigLoader """
         if file is None:
             raise ValueError("GameConfigLoader: File is None")
         self.__file = file
+        self.__config: GameConfig | None = config
 
     def load(self) -> GameConfig:
         """ load Method for the GameConfigLoader """
         with open(self.__file, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return GameConfig.model_validate_json(data)
+        return cast(GameConfig, GameConfig.model_validate(data))
 
-    def store(self, config: GameConfig) -> None:
+    def store(self) -> None:
         """ Store method for the GameConfigLoader """
-        if config is None:
+        if self.__config is None:
             raise ValueError("GameConfigLoader: config is None")
-        json_str: str = config.model_dump_json()
+        json_str: str = self.__config.model_dump_json()
         with open(self.__file, "w+", encoding="utf-8") as f:
             f.write(json_str)

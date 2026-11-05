@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
@@ -30,6 +31,11 @@ class ConfigHandler(Generic[ConfigT]):
         """ Set Method for the ConfigHandler """
         self._check_key(key)
         setattr(self._config, key, value)
+
+    def update(self, values: Mapping[str, Any]) -> None:
+        """Set several known configuration values."""
+        for key, value in values.items():
+            self.set(key, value)
 
     def _check_key(self, key: str) -> None:
         """ Private Method to check if the key exist or not """

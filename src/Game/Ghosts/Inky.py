@@ -110,5 +110,5 @@ class Inky(Ghost):
                 player_position[1] + int(player_direction.y)
             )
         if target not in map_graph:
-            return player.position
+            return player_position
         return target

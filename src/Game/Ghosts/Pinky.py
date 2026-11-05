@@ -78,5 +78,5 @@ class Pinky(Ghost):
             )
 
         if target not in map_graph:
-            return player.position
+            return player_position
         return target
