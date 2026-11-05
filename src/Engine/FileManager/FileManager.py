@@ -1,4 +1,4 @@
-from .Loader import ConfigLoader, ScoreLoader
+from .Loader import ScoreLoader
 from .Loader.Loader import Loader
 from typing import Any
 

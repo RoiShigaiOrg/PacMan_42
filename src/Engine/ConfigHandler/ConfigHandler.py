@@ -12,8 +12,8 @@ class ConfigHandler(Generic[ConfigT]):
 
     The ConfigHandler is the Engine Part that will
         manage the setting and getting of configuration value.
-        It is derived from the EngineConfig BaseModel and cand values can be read and
-        write using the attribute primitive method.
+        It is derived from the EngineConfig BaseModel and cand values can
+        be read and write using the attribute primitive method.
     """
 
     def __init__(self, config: ConfigT) -> None:

@@ -20,7 +20,10 @@ class ConfigLoader(Loader):
             Project Initialization.
     """
 
-    def __init__(self, config_file: Path, data: EngineConfig | None = None) -> None:
+    def __init__(
+            self,
+            config_file: Path,
+            data: EngineConfig | None = None) -> None:
         """ Init Method of ConfigLoader """
         if config_file is None:
             raise ValueError("ConfigLoader: File is None")
