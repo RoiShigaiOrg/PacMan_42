@@ -4,9 +4,9 @@ from Engine.Graphics.Components.Circle import Circle
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
 from ..MapGeneration import Map
-from ..Player import Player
 from typing import Tuple
 from .Ghost import Ghost
+from .Behaviours import PinkyChaseBehaviour
 
 MOVEMENT_SPEED: float = 160.0
 PINKY_COLOR: int = 0xFFFF00FF
@@ -28,7 +28,7 @@ class Pinky(Ghost):
 
     def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
         """ Init Method of Pinky """
-        super().__init__(movement_speed)
+        super().__init__(movement_speed, PinkyChaseBehaviour())
 
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
         """ Init The Ghost position depending of the actual map """
@@ -60,23 +60,3 @@ class Pinky(Ghost):
                 )
         self._sync_graphics_position()
         self.set_path(())
-
-    def _chase(
-            self,
-            player: Player,
-            actual_map: Map,
-            ghost_cell: Tuple[int, int]) -> Tuple[int, int]:
-        """ Chase Behaviour abstract method for Ghost Class """
-        player_direction: Vector2 = player.direction * 4.0
-        map_graph = actual_map.graph
-        player_position = actual_map.cell_coordinates_at(
-                        player.collider.world_position
-                    )
-        target = (
-                player_position[0] + int(player_direction.x),
-                player_position[1] + int(player_direction.y)
-            )
-
-        if target not in map_graph:
-            return player_position
-        return target

@@ -30,9 +30,10 @@ def make_scene(
     scene = MapScene.__new__(MapScene)
     scene._MapScene__ghosts = ghosts
     scene._MapScene__player = type(
-        "PlayerStub", (), {"collider": Collider(
-            AABB(Vector2(5.0, 5.0)), player_position
-        )}
+        "PlayerStub", (), {
+            "collider": Collider(AABB(Vector2(5.0, 5.0)), player_position),
+            "set_to_origin": lambda _self: None,
+        }
     )()
     scene._MapScene__physics = PhysicsEngine()
     scene.stats = GameState()

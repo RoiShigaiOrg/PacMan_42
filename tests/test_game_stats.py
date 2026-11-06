@@ -30,6 +30,24 @@ def test_losing_every_life_ends_the_game() -> None:
     assert stats.is_over()
 
 
+def test_death_state_expires_after_shared_recovery_duration() -> None:
+    stats = GameState()
+    stats.lose_life()
+
+    assert stats.state is PacManState.DEAD
+    assert stats.death_recovery_remaining == 3.0
+
+    stats.update_death_recovery(2.5)
+
+    assert stats.state is PacManState.DEAD
+    assert stats.death_recovery_remaining == 0.5
+
+    stats.update_death_recovery(0.5)
+
+    assert stats.state is PacManState.NORMAL
+    assert stats.death_recovery_remaining == 0.0
+
+
 def test_reset_keeps_modes() -> None:
     stats = GameState()
     stats.cheat_mod(True)

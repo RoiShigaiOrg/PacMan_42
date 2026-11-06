@@ -3,7 +3,10 @@ from types import SimpleNamespace
 from Engine.Physics import AABB, Collider, Vector2
 from Game.GameState import GameState, PacManState
 from Game.Ghosts.Blinky import Blinky
+from Game.Ghosts.Clyde import Clyde
 from Game.Ghosts.Ghost import Behaviour
+from Game.Ghosts.Inky import Inky
+from Game.Ghosts.Pinky import Pinky
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 
@@ -33,8 +36,11 @@ def make_collider(cell: tuple[int, int]) -> Collider:
     )
 
 
-def make_player(cell: tuple[int, int]) -> SimpleNamespace:
-    return SimpleNamespace(collider=make_collider(cell))
+def make_player(
+        cell: tuple[int, int],
+        direction: Vector2 = Vector2(0.0, 0.0),
+) -> SimpleNamespace:
+    return SimpleNamespace(collider=make_collider(cell), direction=direction)
 
 
 def make_ghost(
@@ -63,6 +69,69 @@ def test_ghost_chases_player_outside_super_mode() -> None:
     )
 
     assert target == (4, 1)
+    assert ghost.behaviour is Behaviour.CHASE
+
+
+def test_each_ghost_uses_its_own_chase_strategy() -> None:
+    actual_map = make_map([[True] * 9 for _ in range(3)])
+    player = make_player((1, 1), Vector2(1.0, 0.0))
+    blinky = make_ghost((2, 1))
+
+    assert Blinky().select_target(
+        player, actual_map, make_game_state()
+    ) == (1, 1)
+    assert Pinky().select_target(
+        player, actual_map, make_game_state()
+    ) == (5, 1)
+    assert Inky().select_target(
+        player, actual_map, make_game_state(), {"blinky": blinky}
+    ) == (8, 1)
+
+    clyde_map = make_map([[True] * 12])
+    clyde = Clyde()
+    clyde._origin = (0, 0)
+    clyde._collider = make_collider((1, 0))
+    clyde.set_roam_territory(((0, 0), (1, 0), (2, 0)))
+    clyde_target = clyde.select_target(
+        make_player((11, 0)), clyde_map, make_game_state()
+    )
+
+    assert clyde.behaviour is Behaviour.CHASE
+    assert clyde_target in clyde.roam_territory
+
+
+def test_dead_pacman_sends_ghost_home_then_roaming_until_recovery_ends(
+) -> None:
+    actual_map = make_map([[True] * 7 for _ in range(3)])
+    ghost = make_ghost((1, 1), origin=(3, 1))
+    territory = ((3, 1), (4, 1))
+    ghost.set_roam_territory(territory)
+    game_state = make_game_state()
+    game_state.lose_life()
+    player = make_player((5, 1))
+
+    return_plan = ghost.compute_target(
+        ghost.behaviour_context(player, actual_map, game_state)
+    )
+
+    assert ghost.behaviour is Behaviour.RECOVERY
+    assert return_plan.target == ghost.origin
+    assert return_plan.allowed_cells is None
+
+    ghost.collider.position = Vector2(35.0, 15.0)
+    roam_plan = ghost.compute_target(
+        ghost.behaviour_context(player, actual_map, game_state)
+    )
+
+    assert roam_plan.target in territory
+    assert roam_plan.allowed_cells == frozenset(territory)
+
+    game_state.update_death_recovery(3.0)
+    ghost.compute_target(
+        ghost.behaviour_context(player, actual_map, game_state)
+    )
+
+    assert game_state.state is PacManState.NORMAL
     assert ghost.behaviour is Behaviour.CHASE
 
 

@@ -3,6 +3,12 @@ from .Inky import Inky
 from .Clyde import Clyde
 from .Pinky import Pinky
 from .Ghost import Ghost, Behaviour
+from .Behaviours import (
+    BlinkyChaseBehaviour,
+    ClydeChaseBehaviour,
+    InkyChaseBehaviour,
+    PinkyChaseBehaviour,
+)
 
 __all__ = [
         "Blinky",
@@ -11,4 +17,8 @@ __all__ = [
         "Clyde",
         "Ghost",
         "Behaviour",
+        "BlinkyChaseBehaviour",
+        "PinkyChaseBehaviour",
+        "InkyChaseBehaviour",
+        "ClydeChaseBehaviour",
     ]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random as ghost_random
 from typing import Tuple
 
 import pytest
@@ -7,7 +8,7 @@ import pytest
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Physics import AABB, Collider, Vector2
 from Game.GameState import GameState, PacManState
-from Game.Ghosts.Ghost import Behaviour, Ghost, random as ghost_random
+from Game.Ghosts.Ghost import Behaviour, Ghost
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Player import Player
@@ -109,9 +110,10 @@ def test_flea_roaming_path_stays_inside_territory() -> None:
     ghost._collider = Collider(AABB(Vector2(4.0, 4.0)), Vector2(5.0, 5.0))
     ghost.set_roam_territory(territory)
     ghost.change_behaviour(Behaviour.FLEAT)
-    ghost._roam_target = (2, 0)
 
-    ghost.compute_path((0, 0), (2, 0), actual_map.graph)
+    ghost.compute_path(
+        (0, 0), (2, 0), actual_map.graph, frozenset(territory)
+    )
 
     path = [node.coordinate for node in ghost._path]
     assert path == [(0, 0), (0, 1), (1, 1), (2, 1), (2, 0)]

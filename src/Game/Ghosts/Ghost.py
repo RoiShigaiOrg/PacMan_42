@@ -1,45 +1,47 @@
-from collections.abc import Iterable, Sequence
-import random
+from __future__ import annotations
+
+from abc import abstractmethod
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Dict, Tuple, cast
+
 from Engine.Graphics import MlxDisplay
 from Engine.Entity.Entity import Entity
 from Engine.Entity.PathFinding import HeuristicType, PathFinding
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Physics import PhysicsEngine
 from Engine.Physics.Vector2 import Vector2
-from ..GameState import GameState, PacManState
+from ..BehaviourHandler.BehaviourHandler import BehaviourHandler
+from ..GameState import GameState
 from ..MapGeneration.MapNode import MapNode
 from ..MapGeneration import Map
 from ..Player import Player
-from abc import abstractmethod
-from typing import Dict, Tuple, cast
-from enum import Enum
+from .Behaviours import (
+    Behaviour,
+    BehaviourContext,
+    EatenBehaviour,
+    FleatBehaviour,
+    GhostBehaviour,
+    MovementResult,
+    PlayerChaseBehaviour,
+    RecoveryBehaviour,
+    TargetPlan,
+)
 
 COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
 DEFAULT_MOVEMENT_SPEED: float = 160.0
-DEATH_MOVEMENT_SPEED: float = 140.0
-RESPAWN_WAIT_DURATION: float = 3.0
 GRID_CENTER_TOLERANCE: float = 1e-6
-FLEE_DISTANCE_THRESHOLD: int = 5
 FLEA_ROAM_RADIUS: int = 5
 
 
-class Behaviour(Enum):
-    """ Behaviour Enum Class to indicate the Behaviour State of each Ghost """
-    CHASE = 1
-    FLEAT = 2
-    DEAD = 3
-
-
 class Ghost(Entity):
-    """
-    Ghost Class Definition
+    """Shared movement and path mechanics for the game's ghosts."""
 
-    Abstract Class to create the different Ghost with unified method
-    """
-
-    def __init__(self, movement_speed: float = DEFAULT_MOVEMENT_SPEED) -> None:
-        """ Init Method for Ghost Class """
+    def __init__(
+            self,
+            movement_speed: float = DEFAULT_MOVEMENT_SPEED,
+            chase_behaviour: GhostBehaviour | None = None,
+    ) -> None:
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
         self._movement_speed = movement_speed
@@ -48,37 +50,83 @@ class Ghost(Entity):
         self._path_index = 0
         self._target: Tuple[int, int] | None = None
         self._roam_territory: tuple[Tuple[int, int], ...] = ()
-        self._roam_target: Tuple[int, int] | None = None
-        self._behaviour = Behaviour.CHASE
-        self._respawn_wait_remaining: float | None = None
+        strategies = {
+            Behaviour.CHASE: chase_behaviour or PlayerChaseBehaviour(),
+            Behaviour.FLEAT: FleatBehaviour(),
+            Behaviour.DEAD: EatenBehaviour(),
+            Behaviour.RECOVERY: RecoveryBehaviour(),
+        }
+        self._behaviour_handler = BehaviourHandler(strategies)
 
     @property
     def behaviour(self) -> Behaviour:
-        """ Return the actual Ghost behaviour """
-        return self._behaviour
+        """Return the current ghost behavior state."""
+        return self._behaviour_handler.behaviour
+
+    @property
+    def behaviour_handler(self) -> BehaviourHandler:
+        """Return this ghost's strategy dispatcher."""
+        return self._behaviour_handler
 
     def change_behaviour(self, behaviour: Behaviour) -> None:
-        """ Change the behaviour of the ghost to the given Behaviour Enum. """
-        if not isinstance(behaviour, Behaviour):
-            raise TypeError("behaviour must be a Behaviour")
-        if behaviour is self._behaviour:
-            return
-        self._behaviour = behaviour
-        self._path = []
-        self._path_index = 0
-        self._target = None
-        self._roam_target = None
-        self._respawn_wait_remaining = None
+        """Change behavior and discard a path planned for the previous mode."""
+        if self._behaviour_handler.change_behaviour(behaviour):
+            self._clear_path()
+
+    def synchronize_behaviour(self, context: BehaviourContext) -> None:
+        """Align a living ghost's mode with Pac-Man's game state."""
+        if self._behaviour_handler.synchronize(context):
+            self._clear_path()
+
+    def compute_target(self, context: BehaviourContext) -> TargetPlan:
+        """Ask the active behavior strategy for a target and path policy."""
+        self.synchronize_behaviour(context)
+        return self._behaviour_handler.compute_target(context)
+
+    def behaviour_context(
+            self,
+            player: Player | None,
+            actual_map: Map,
+            game_state: GameState | None = None,
+            ghosts: Mapping[str, Ghost] | None = None,
+    ) -> BehaviourContext:
+        """Build the typed world context consumed by behavior strategies."""
+        return BehaviourContext(
+            self, actual_map, player, game_state, ghosts
+        )
+
+    def select_target(
+            self,
+            player: Player,
+            actual_map: Map,
+            game_state: GameState,
+            ghosts: Mapping[str, Ghost] | None = None,
+    ) -> Tuple[int, int]:
+        """Convenience wrapper around strategy target selection."""
+        context = self.behaviour_context(
+            player, actual_map, game_state, ghosts
+        )
+        return self.compute_target(context).target
 
     @property
     def origin(self) -> Tuple[int, int]:
         """Return this ghost's home cell in map coordinates."""
         return self._origin
 
+    @property
+    def path_complete(self) -> bool:
+        """Whether the current route has no remaining waypoints."""
+        return self._path_index >= len(self._path)
+
+    @property
+    def roam_territory(self) -> tuple[Tuple[int, int], ...]:
+        """Return the walkable cells assigned to this ghost for roaming."""
+        return self._roam_territory
+
     def set_roam_territory(
             self, territory: Iterable[Tuple[int, int]]
     ) -> None:
-        """Set the walkable cells this ghost may roam while fleeing."""
+        """Set the cells this ghost may roam while fleeing or recovering."""
         cells = tuple(sorted(set(territory)))
         if not cells:
             raise ValueError("A ghost's roam territory cannot be empty")
@@ -87,7 +135,6 @@ class Ghost(Entity):
                 "A ghost's roam territory must include its origin"
             )
         self._roam_territory = cells
-        self._roam_target = None
 
     @property
     def movement_speed(self) -> float:
@@ -101,7 +148,7 @@ class Ghost(Entity):
 
     @property
     def size(self) -> Tuple[int, int]:
-        """Return the graphical dimensions used for dirty-region redraws."""
+        """Return graphical dimensions used for dirty-region redraws."""
         return self._width, self._height
 
     def draw(self, display: MlxDisplay) -> None:
@@ -111,14 +158,11 @@ class Ghost(Entity):
 
     @abstractmethod
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
+        """Initialize this ghost's map position, shape, and collider."""
         ...
 
     def set_path(self, path: Sequence[MapNode]) -> None:
-        """Set the cell-by-cell route consumed by :meth:`update_movement`.
-
-        Paths may include the ghost's current cell as their first node. Every
-        subsequent node must be a cardinally adjacent map cell.
-        """
+        """Set the cell-by-cell route consumed by :meth:`update_movement`."""
         nodes = list(path)
         for first, second in zip(nodes, nodes[1:]):
             column_distance = abs(
@@ -132,6 +176,11 @@ class Ghost(Entity):
         self._path = nodes
         self._path_index = 0
 
+    def _clear_path(self) -> None:
+        self._path = []
+        self._path_index = 0
+        self._target = None
+
     def update_movement(
             self,
             actual_map: Map,
@@ -139,20 +188,23 @@ class Ghost(Entity):
             delta_time: float,
             game_state: GameState | None = None,
     ) -> None:
-        """Move according to the current behaviour.
-
-        CHASE and FLEAT consume the assigned grid path and obey wall
-        collisions. DEAD ghosts return directly to their origin, ignore walls,
-        wait there, then respawn according to the current Pac-Man state.
-        """
+        """Update special behavior movement or follow the planned path."""
         if delta_time <= 0:
             return
 
-        if self.behaviour is Behaviour.DEAD:
-            self._update_dead_movement(actual_map, delta_time, game_state)
+        context = BehaviourContext(self, actual_map, game_state=game_state)
+        previous_behaviour = self.behaviour
+        if game_state is not None:
+            self.synchronize_behaviour(context)
+        movement: MovementResult = self._behaviour_handler.update_movement(
+            context, delta_time
+        )
+        if self.behaviour is not previous_behaviour:
+            self._clear_path()
+        if movement.handled:
             return
 
-        if self._path_index >= len(self._path):
+        if self.path_complete:
             return
 
         remaining_distance = self._movement_speed * delta_time
@@ -163,7 +215,7 @@ class Ghost(Entity):
 
         while (
             remaining_distance > GRID_CENTER_TOLERANCE
-            and self._path_index < len(self._path)
+            and not self.path_complete
         ):
             center = self._collider.world_position
             waypoint = self._path[self._path_index].coordinate
@@ -192,69 +244,33 @@ class Ghost(Entity):
 
             step = min(remaining_distance, max_step, distance)
             if abs(dx) > GRID_CENTER_TOLERANCE:
-                movement = Vector2(step if dx > 0 else -step, 0.0)
+                movement_vector = Vector2(step if dx > 0 else -step, 0.0)
             else:
-                movement = Vector2(0.0, step if dy > 0 else -step)
+                movement_vector = Vector2(0.0, step if dy > 0 else -step)
 
-            if not self._can_move(movement, physics, wall_colliders):
+            if not self._can_move(movement_vector, physics, wall_colliders):
                 return
 
-            self._move(movement)
+            self._move(movement_vector)
             remaining_distance -= step
             if step >= distance:
                 self._path_index += 1
-
-    def _update_dead_movement(
-            self,
-            actual_map: Map,
-            delta_time: float,
-            game_state: GameState | None,
-    ) -> None:
-        """Return directly to the origin, wait, then respawn."""
-        if self._respawn_wait_remaining is not None:
-            self._respawn_wait_remaining -= delta_time
-            if self._respawn_wait_remaining <= 0:
-                behaviour = (
-                    Behaviour.FLEAT
-                    if (
-                        game_state is not None
-                        and game_state.state is PacManState.SUPER
-                    )
-                    else Behaviour.CHASE
-                )
-                self.change_behaviour(behaviour)
-            return
-
-        cell_width, cell_height = actual_map.cell_size
-        grid_origin_x, grid_origin_y = actual_map.grid_origin
-        target = Vector2(
-            grid_origin_x + (self.origin[0] + 0.5) * cell_width,
-            grid_origin_y + (self.origin[1] + 0.5) * cell_height,
-        )
-        displacement = target - self._collider.world_position
-        distance = displacement.length()
-        if distance <= GRID_CENTER_TOLERANCE:
-            self._respawn_wait_remaining = RESPAWN_WAIT_DURATION
-            return
-
-        step = min(DEATH_MOVEMENT_SPEED * delta_time, distance)
-        self._move(displacement.normalized() * step)
-        if step >= distance:
-            self._respawn_wait_remaining = RESPAWN_WAIT_DURATION
 
     def compute_path(
             self,
             position: Tuple[int, int],
             target: Tuple[int, int],
             graph: Dict[Tuple[int, int], MapNode],
+            allowed_cells: frozenset[Tuple[int, int]] | None = None,
+            pathfinding: bool = True,
     ) -> None:
-        """Replan toward target while keeping the current movement leg."""
-        if self.behaviour is Behaviour.DEAD:
+        """Plan a route, optionally restricted by the active strategy."""
+        if not pathfinding:
             self.set_path(())
+            self._target = target
             return
 
         target_node = graph.get(target)
-
         start_node: MapNode | None
         if self._path_index < len(self._path):
             start_node = self._path[self._path_index]
@@ -262,16 +278,14 @@ class Ghost(Entity):
             start_node = graph.get(position)
         if start_node is None or target_node is None:
             self.set_path(())
+            self._target = target
             return
+
         allowed_nodes = None
-        if (
-            self.behaviour is Behaviour.FLEAT
-            and target == self._roam_target
-            and position in self._roam_territory
-        ):
+        if allowed_cells is not None:
             allowed_nodes = {
                 graph[coordinate]
-                for coordinate in self._roam_territory
+                for coordinate in allowed_cells
                 if coordinate in graph
             }
         path = PathFinding.a_star(
@@ -281,141 +295,4 @@ class Ghost(Entity):
             allowed_nodes=allowed_nodes,
         )
         self.set_path(cast(list[MapNode], path))
-
-    def select_target(
-            self,
-            player: Player,
-            actual_map: Map,
-            game_state: GameState,
-    ) -> Tuple[int, int]:
-        """Select a pathfinding destination for a ghost's current mode."""
-        ghost_cell = actual_map.cell_coordinates_at(
-            self.collider.world_position
-        )
-        player_cell = actual_map.cell_coordinates_at(
-            player.collider.world_position
-        )
-        if self.behaviour is Behaviour.DEAD:
-            return self._select_roam_target(self.origin)
-        if (game_state.state is PacManState.NORMAL):
-            self.change_behaviour(Behaviour.CHASE)
-            return self._chase(player, actual_map, ghost_cell)
-
-        self.change_behaviour(Behaviour.FLEAT)
-        distance = (
-            abs(ghost_cell[0] - player_cell[0])
-            + abs(ghost_cell[1] - player_cell[1])
-        )
-        if distance > FLEE_DISTANCE_THRESHOLD:
-            return self._select_roam_target(ghost_cell)
-        self._roam_target = None
-        return self._fleat(
-            self.__flee_target(ghost_cell, player_cell, actual_map)
-        )
-
-    def _select_roam_target(
-            self, ghost_cell: Tuple[int, int]
-    ) -> Tuple[int, int]:
-        """Keep a territory destination until its path has been completed."""
-        if not self._roam_territory:
-            return self.origin
-
-        if ghost_cell not in self._roam_territory:
-            self._roam_target = self.origin
-            return self._roam_target
-
-        if (
-            self._roam_target is None
-            or self._path_index >= len(self._path)
-        ):
-            candidates = tuple(
-                cell for cell in self._roam_territory
-                if cell != ghost_cell
-            )
-            self._roam_target = random.choice(
-                candidates or self._roam_territory
-            )
-        return self._roam_target
-
-    def __flee_target(
-            self,
-            ghost_cell: Tuple[int, int],
-            player_cell: Tuple[int, int],
-            actual_map: Map
-    ) -> Tuple[int, int]:
-        """Choose a reachable walkable cell away from Pac-Man."""
-        start = actual_map.graph.get(ghost_cell)
-        if start is None:
-            return ghost_cell
-
-        reachable: list[Tuple[int, int]] = []
-        visited = {start}
-        pending = [start]
-        while pending:
-            node = pending.pop()
-            reachable.append(node.coordinate)
-            for neighbor, _cost in node.neighbors():
-                if neighbor not in visited:
-                    visited.add(neighbor)
-                    pending.append(neighbor)
-
-        direction_x = ghost_cell[0] - player_cell[0]
-        direction_y = ghost_cell[1] - player_cell[1]
-        if direction_x == 0 and direction_y == 0:
-            return max(
-                reachable,
-                key=lambda cell: (
-                    abs(cell[0] - player_cell[0])
-                    + abs(cell[1] - player_cell[1]),
-                    -cell[1],
-                    -cell[0],
-                ),
-            )
-
-        ideal_x = ghost_cell[0] + direction_x
-        ideal_y = ghost_cell[1] + direction_y
-        ideal_target = (ideal_x, ideal_y)
-        if ideal_target in reachable:
-            return ideal_target
-
-        def away_score(
-                cell: Tuple[int, int],
-        ) -> tuple[int, int, int, int, int, int]:
-            offset_x = cell[0] - player_cell[0]
-            offset_y = cell[1] - player_cell[1]
-            projection = offset_x * direction_x + offset_y * direction_y
-            cross_product = abs(
-                offset_x * direction_y - offset_y * direction_x
-            )
-            player_distance = abs(offset_x) + abs(offset_y)
-            ideal_distance = (
-                abs(cell[0] - ideal_x) + abs(cell[1] - ideal_y)
-            )
-            return (
-                projection,
-                -cross_product,
-                player_distance,
-                -ideal_distance,
-                -cell[1],
-                -cell[0],
-            )
-
-        return max(reachable, key=away_score)
-
-    @abstractmethod
-    def _chase(
-            self,
-            player: Player,
-            actual_map: Map,
-            ghost_cell: Tuple[int, int],
-    ) -> Tuple[int, int]:
-        """ Chase Behaviour abstract method for Ghost Class """
-        ...
-
-    def _fleat(self, target: Tuple[int, int]) -> Tuple[int, int]:
-        """ Fleat Behaviour abstract method for Ghost Class """
-        return target
-
-    def _dead(self, target: Tuple[int, int]) -> Tuple[int, int]:
-        """ Dead Behaviour abstract method for Ghost Class """
-        return self.origin
+        self._target = target

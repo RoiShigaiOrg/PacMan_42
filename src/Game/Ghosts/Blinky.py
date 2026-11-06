@@ -4,9 +4,9 @@ from Engine.Graphics.Components.Circle import Circle
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
 from ..MapGeneration import Map
-from ..Player import Player
 from typing import Tuple
 from .Ghost import Ghost
+from .Behaviours import BlinkyChaseBehaviour
 
 MOVEMENT_SPEED: float = 160.0
 BLINKY_COLOR: int = 0xFFFF0000
@@ -28,7 +28,7 @@ class Blinky(Ghost):
 
     def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
         """ Init Method of Blinky """
-        super().__init__(movement_speed)
+        super().__init__(movement_speed, BlinkyChaseBehaviour())
 
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
         """ Init The Ghost position depending of the actual map """
@@ -60,13 +60,3 @@ class Blinky(Ghost):
                 )
         self._sync_graphics_position()
         self.set_path(())
-
-    def _chase(
-            self,
-            player: Player,
-            actual_map: Map,
-            ghost_cell: Tuple[int, int]) -> Tuple[int, int]:
-        """ Chase Behaviour abstract method for Ghost Class """
-        return actual_map.cell_coordinates_at(
-                player.collider.world_position
-            )

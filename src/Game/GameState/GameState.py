@@ -5,6 +5,7 @@ POWER_PELLET_POINTS: int = 50
 GHOST_POINTS: tuple[int, ...] = (200, 400, 800, 1600)
 EXTRA_LIFE_SCORE: int = 10000
 LEVEL_TIME: float = 120.0
+DEATH_RECOVERY_DURATION: float = 3.0
 MAX_LEVEL = 10
 SPEED_STEP_LEVELS: int = 3
 SPEED_INCREASE: float = 0.1
@@ -42,6 +43,7 @@ class GameState:
         self.ghost_combo: int = 0
         self.extra_life_given: bool = False
         self.state: PacManState = PacManState.NORMAL
+        self._death_recovery_remaining: float = 0.0
 
     @property
     def game_mode(self) -> GameMode:
@@ -90,7 +92,8 @@ class GameState:
     def eat_Fruit(self) -> None:
         """ add value point of power by pellet"""
         self.add_point(POWER_PELLET_POINTS)
-        self.state = PacManState.SUPER
+        if self.state is not PacManState.DEAD:
+            self.state = PacManState.SUPER
         self.ghost_combo = 0
 
     def eat_ghost(self) -> int:
@@ -103,7 +106,8 @@ class GameState:
 
     def end_power_mode(self) -> None:
         """ state of end power mode"""
-        self.state = PacManState.NORMAL
+        if self.state is PacManState.SUPER:
+            self.state = PacManState.NORMAL
         self.ghost_combo = 0
 
     def lose_life(self) -> None:
@@ -113,6 +117,26 @@ class GameState:
         self.lives = max(0, self.lives - 1)
         self.ghost_combo = 0
         self.state = PacManState.DEAD
+        self._death_recovery_remaining = DEATH_RECOVERY_DURATION
+
+    @property
+    def death_recovery_remaining(self) -> float:
+        """Return the remaining shared Pac-Man/ghost recovery duration."""
+        return self._death_recovery_remaining
+
+    def update_death_recovery(self, delta_time: float) -> None:
+        """Advance the shared post-death interval and restore normal mode."""
+        if (
+            self.state is not PacManState.DEAD
+            or self._death_recovery_remaining <= 0
+            or delta_time <= 0
+        ):
+            return
+        self._death_recovery_remaining = max(
+            0.0, self._death_recovery_remaining - delta_time
+        )
+        if self._death_recovery_remaining == 0:
+            self.state = PacManState.NORMAL
 
     def has_won(self) -> bool:
         """In NORMAL mode, the player wins after the last level."""
@@ -126,6 +150,7 @@ class GameState:
         self.ghost_combo = 0
         self.level_time = 0.0
         self.state = PacManState.NORMAL
+        self._death_recovery_remaining = 0.0
 
     def is_over(self) -> bool:
         """ init the end of game"""
