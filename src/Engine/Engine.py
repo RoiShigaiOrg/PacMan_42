@@ -1,5 +1,5 @@
 from .Graphics.MlxDisplay import MlxDisplay
-from .FileManager import FileManager
+from .FileManager import FileManager, ConfigLoader
 from typing import Any, Tuple
 from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application
@@ -7,6 +7,8 @@ from .InputHandler import InputHandler
 from .SceneManager.SceneManager import SceneManager
 from .Clock import Clock
 from .Physics import PhysicsEngine
+from .ConfigHandler.ConfigHandler import ConfigHandler
+from pathlib import Path
 import mlx
 
 
@@ -25,6 +27,7 @@ class Engine:
     def __init__(
             self,
             program_name: str,
+            config_file: Path,
             target_fps: float | None = 60.0,
     ) -> None:
         """Initialize the engine.
@@ -39,7 +42,12 @@ class Engine:
         if not self._mlx_ptr:
             raise RuntimeError("failed to initialize MLX")
         self.__file_manager: FileManager = FileManager()
-        self.__config = self.__file_manager.load_config()
+        self.__config: ConfigHandler = ConfigHandler(
+                self.__file_manager.load(
+                    ConfigLoader(config_file)
+                )
+            )
+        print(f"config: {self.__config}")
         self._window = MlxWindow(
                 self._session,
                 self._mlx_ptr,
@@ -73,6 +81,10 @@ class Engine:
     def get_config_key(self, key: str) -> Any:
         """ Return the value stored in the given key from the config """
         return self.__config[key]
+
+    def set_config_key(self, key: str, value: Any) -> Any:
+        """ Set the value of a Config key """
+        self.__config[key] = value
 
     def update_config(self, data: dict[str, Any]) -> None:
         """ Update the config with the new value """

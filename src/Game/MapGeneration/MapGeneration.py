@@ -1,9 +1,11 @@
+from collections import deque
 from Engine.Graphics import MlxDisplay
 from mazegenerator import MazeGenerator
-from typing import Tuple
+from typing import Dict, Mapping, Tuple
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
 from .Cell import Cell
+from .MapNode import MapNode
 import random
 import math
 
@@ -11,6 +13,11 @@ TOP: int = 1
 RIGHT: int = 2
 DOWN: int = 4
 LEFT: int = 8
+
+HIGH_LEFT: int = 1
+HIGH_RIGHT: int = 2
+LOW_LEFT: int = 3
+LOW_RIGHT: int = 4
 
 
 class Map():
@@ -34,6 +41,7 @@ class Map():
         self._open_center()
         self.__grid_origin: Tuple[int, int] | None = None
         self.__cell_size: Tuple[int, int] | None = None
+        self.graph: Dict[Tuple[int, int], MapNode] = self.build_graph()
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """
@@ -51,6 +59,38 @@ class Map():
             for cell in row
             if (collider := cell.collider) is not None
         )
+
+    def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
+        """Return the nearest walkable cell to the requested map corner.
+
+        Cells are checked in increasing Manhattan-distance layers. Within a
+        layer, the scan proceeds along the corner's outer edge before moving
+        inward, giving ties a stable, corner-relative order.
+        """
+        corners: dict[int, tuple[Tuple[int, int], int, int]] = {
+            HIGH_LEFT: ((0, 0), 1, 1),
+            HIGH_RIGHT: ((self.width - 1, 0), -1, 1),
+            LOW_LEFT: ((0, self.height - 1), 1, -1),
+            LOW_RIGHT: ((self.width - 1, self.height - 1), -1, -1),
+        }
+        if corner not in corners:
+            raise ValueError(f"Unknown map corner: {corner}")
+
+        (start_column, start_row), column_step, row_step = corners[corner]
+        max_distance = self.width + self.height - 2
+        for distance in range(max_distance + 1):
+            for row_distance in range(distance + 1):
+                column_distance = distance - row_distance
+                column = start_column + column_step * column_distance
+                row = start_row + row_step * row_distance
+                if (
+                    0 <= column < self.width
+                    and 0 <= row < self.height
+                    and self.grid[row][column].walkable
+                ):
+                    return column, row
+
+        raise ValueError("Map has no walkable cells")
 
     @property
     def grid_origin(self) -> Tuple[int, int]:
@@ -107,6 +147,75 @@ class Map():
             abs(position.x - center_x) <= tolerance
             and abs(position.y - center_y) <= tolerance
         )
+
+    def build_graph(self) -> Dict[Tuple[int, int], MapNode]:
+        """ Return a Graph representation of the map """
+        graph: Dict[Tuple[int, int], MapNode] = {
+                    cell.coordinate: MapNode(cell.coordinate)
+                    for row in self.grid
+                    for cell in row
+                    if cell.walkable
+                }
+        for (column, row), node in graph.items():
+            for neighbor_coordinate in (
+                    (column + 1,
+                     row), (column, row + 1)):
+                neighbor = graph.get(neighbor_coordinate)
+                if neighbor is not None:
+                    node.connect(neighbor, 1.0)
+                    neighbor.connect(node, 1.0)
+        return graph
+
+    def graph_territories(
+            self,
+            origins: Mapping[str, Tuple[int, int]],
+            max_distance: int,
+    ) -> Dict[str, set[Tuple[int, int]]]:
+        """Partition nearby graph cells between the supplied origins.
+
+        A multi-source breadth-first search gives each reachable cell to its
+        nearest origin, stopping expansion at ``max_distance`` graph edges.
+        Equal-distance ties are resolved by the order of ``origins``.
+        Cells outside every origin's radius, and disconnected components, are
+        left unassigned.
+        """
+        if max_distance < 0:
+            raise ValueError("max_distance must not be negative")
+
+        territories: Dict[str, set[Tuple[int, int]]] = {
+            name: set() for name in origins
+        }
+        distances: Dict[Tuple[int, int], int] = {}
+        owners: Dict[Tuple[int, int], str] = {}
+        pending: deque[Tuple[int, int]] = deque()
+
+        for name, origin in origins.items():
+            if origin not in self.graph:
+                raise ValueError(f"Territory origin is not walkable: {origin}")
+            if origin in owners:
+                raise ValueError("Territory origins must be distinct")
+            owners[origin] = name
+            distances[origin] = 0
+            territories[name].add(origin)
+            pending.append(origin)
+
+        while pending:
+            coordinate = pending.popleft()
+            distance = distances[coordinate]
+            if distance == max_distance:
+                continue
+
+            owner = owners[coordinate]
+            for neighbor, _cost in self.graph[coordinate].neighbors():
+                next_coordinate = neighbor.coordinate
+                if next_coordinate in owners:
+                    continue
+                owners[next_coordinate] = owner
+                distances[next_coordinate] = distance + 1
+                territories[owner].add(next_coordinate)
+                pending.append(next_coordinate)
+
+        return territories
 
     def _open_center(self) -> None:
         """ Free the center of the map so the Player is not blocked """
