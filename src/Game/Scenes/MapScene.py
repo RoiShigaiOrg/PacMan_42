@@ -216,6 +216,7 @@ class MapScene(Scene):
             elif ghost.behaviour is Behaviour.CHASE:
                 print("Player lost a life")
                 self.stats.lose_life()
+                self.__player.set_to_origin()
                 break
 
     def render(self) -> None:

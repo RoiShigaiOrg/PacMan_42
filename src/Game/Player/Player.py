@@ -66,6 +66,9 @@ class Player(Entity):
         pos_y: int = int(
                 map_pos_y + map_center[1] * self._height
             )
+        self.__origin: Tuple[int, int] = (
+                pos_x, pos_y
+            )
         print(
             f"width: {self._width} height: {self._height} "
             f"x: {pos_x} y: {pos_y}"
@@ -103,6 +106,10 @@ class Player(Entity):
     def size(self) -> Tuple[int, int]:
         """Return the graphical and collider dimensions of the Player."""
         return self._width, self._height
+
+    def set_to_origin(self) -> None:
+        """ Reset the Player position to the origin of the map """
+        self.position = self.__origin
 
     def update_direction(
             self,
