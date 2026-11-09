@@ -1,4 +1,5 @@
-from .Loader import ConfigLoader, ScoreLoader
+from .Loader import ScoreLoader
+from .Loader.Loader import Loader
 from typing import Any
 
 
@@ -22,16 +23,21 @@ class FileManager:
 
     def __init__(self) -> None:
         """ Init Method of the FileManager """
-        self.__config_loader = ConfigLoader()
         self.__score_loader = ScoreLoader()
 
-    def load_config(self) -> dict:
-        """ Return the config of the application """
-        return self.__config_loader.load()
+    def load(self, loader: Loader) -> Any:
+        """
+        Load method of the FileManager
+        Take a Loader type of loader and call it's load method
+        """
+        return loader.load()
 
-    def store_config(self, config: dict) -> None:
-        """ Store the actual config in the Config file """
-        self.__config_loader.store(config=config)
+    def store(self, loader: Loader) -> None:
+        """
+        Store method of the FileManager
+        Take a Loader type of loader and call it's store method
+        """
+        loader.store()
 
     def load_scores(self) -> list[dict[str, Any]]:
         """ Return every saved score of the leaderboard """

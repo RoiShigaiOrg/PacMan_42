@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
+from typing import Any
 
 
 class Loader(ABC):
@@ -12,6 +12,11 @@ class Loader(ABC):
     """
 
     @abstractmethod
-    def load(self, filename: Path = Path(".config.json")) -> dict:
+    def load(self) -> Any:
         """ Load Method of the Loader Class """
+        ...
+
+    @abstractmethod
+    def store(self) -> None:
+        """ Store Method of the Loader Class """
         ...
