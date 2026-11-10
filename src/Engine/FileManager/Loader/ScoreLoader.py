@@ -1,10 +1,9 @@
 from .Loader import Loader
-from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 import json
 
-SCORE_FILE: Path = Path("scores.json")
+SCORE_FILE: Path = Path("score/scores.json")
 
 
 class ScoreLoader(Loader):
@@ -15,29 +14,35 @@ class ScoreLoader(Loader):
             loading and storing the Player Score leader Board
             in a JSON file.
     """
+    def __init__(
+            self,
+            score_file: Path = SCORE_FILE,
+            score: dict[str, Any] | None = None) -> None:
+        """ Init Method of the ScoreLoader """
+        self.__file: Path = score_file
+        self.__score: dict[str, Any] | None = score
 
-    def load(self, filename: Path = Path(".")) -> dict:
+    def load(self, filename: Path = SCORE_FILE) -> dict:
         """ Load method for the ScoreLoader """
         try:
-            data = json.loads(filename.read_text(encoding="utf-8"))
-        except (FileNotFoundError, json.JSONDecodeError):
+            with open(self.__file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError):
             return {"scores": []}
         if isinstance(data, list):
             data = {"scores": data}
         return cast(dict[str, Any], data)
-        # raise NotImplementedError("ScoreLoader.load is not implemented")
 
     def store(
             self, filename: Path = SCORE_FILE,
             score: dict[str, Any] | None = None) -> None:
         """ Store the score into a JSON file """
-        data = self.load(filename)
-        entry: dict[str, Any] = {
-            "date": datetime.now().isoformat(timespec="seconds")
-        }
-        entry.update(score or {})
+        if self.__score is None:
+            raise ValueError("ScoreLoader: Score is None")
+        data = self.load()
+        entry: dict[str, Any] = {}
+        entry.update(self.__score)
         data["scores"].append(entry)
-        filename.write_text(
-            json.dumps(data, indent=4, ensure_ascii=False),
-            encoding="utf-8"
-        )
+        self.__file.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.__file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)

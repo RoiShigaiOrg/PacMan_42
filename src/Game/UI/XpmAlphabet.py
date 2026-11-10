@@ -3,6 +3,11 @@ import os
 import re
 
 Lines = tuple[int, int, int, int]
+ColorMap = dict[int, int]
+
+FILL: int = 0xFFFFC629
+OUTLINE: int = 0xFFEB2A23
+SHADOW: int = 0xFF0000FF
 
 
 class XpmImage:
@@ -36,13 +41,20 @@ class XpmImage:
                 x += n
 
     def draw(
-            self, display: MlxDisplay, x: int,
-            y: int, scale: int = 1) -> None:
-        """draw the letters xpm"""
-        for dx, dy, n, colore in self.lines:
+            self, display: MlxDisplay, x: int, y: int,
+            scale: int = 1, colors: ColorMap | None = None) -> None:
+        """
+                Draw the image, top-left corner at (x, y).
+
+            colors replaces some colors of the file by others:
+                {RED: 0xFFFFFF00} draws in yellow what is red in the file.
+            A color that is not in the dict keeps its original value.
+        """
+        replace = colors or {}
+        for dx, dy, n, color in self.lines:
             display.fill_rect(
                 x + dx * scale, y + dy * scale,
-                n * scale, scale, colore)
+                n * scale, scale, replace.get(color, color))
 
 
 class XpmAlphabet():
@@ -60,6 +72,20 @@ class XpmAlphabet():
                     self.letters[c] = XpmImage(os.path.join(file, name))
         self.height = max(i.height for i in self.letters.values())
         self.space = self.height // 3
+        self.__colors: ColorMap = {}
+
+    def set_colors(self, colors: ColorMap) -> None:
+        """
+            Change the default colors of this alphabet.
+
+            Example: set_colors({RED: 0xFFFFFF00, BLUE: 0xFF000000})
+            Colors that are not given keep their original value.
+        """
+        self.__colors = dict(colors)
+
+    def reset_colors(self) -> None:
+        """ Back to the original colors of the XPM files """
+        self.__colors = {}
 
     def _image(self, c: str) -> XpmImage | None:
         """The character image, regardless of file case."""
@@ -77,16 +103,18 @@ class XpmAlphabet():
 
     def write(
             self, display: MlxDisplay, x: int, y: int, text: str,
-            scale: int = 1, spacing: int = 0) -> None:
+            scale: int = 1, spacing: int = 0,
+            colors: ColorMap | None = None) -> None:
         """Writes the text, with the top-left corner at (x, y).
 
         Uppercase letters are displayed as lowercase. Negative spacing
         causes the letters to overlap, as in a logo.
         """
+        palette = self.__colors if colors is None else colors
         for c in text.lower():
             image = self._image(c)
             if image is None:
                 x += (self.space + spacing) * scale
                 continue
-            image.draw(display, x, y, scale)
+            image.draw(display, x, y, scale, palette)
             x += (image.height + spacing) * scale

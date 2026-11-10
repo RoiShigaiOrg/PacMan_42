@@ -6,6 +6,7 @@ from ..UI.XpmAlphabet import XpmAlphabet
 from Engine.InputHandler.KeyCode import KEY_ESC
 from ..UI.InputBar import InputBar
 from ..GameState import GameState
+from Engine.FileManager.Loader import ScoreLoader
 
 FILE_ALPHABET_SMALL = "assets/alphabet_small"
 FILE_ALPHABET = "assets/alphabet"
@@ -40,10 +41,12 @@ class GameOverScene(Scene):
             XpmAlphabet(FILE_ALPHABET_SMALL),
             LOGIN_MAX_LEN
         )
+        self.__file_manager = engine.file_manager
 
     def render_on_change(self) -> None:
         """ Draw the static part of the scene once """
         self.__bar.text = ""
+        self.__display.clear_window()
         self.__display.clear(BLACK)
         title = "game  over"
         width = self.__title_font.length_texte(title)
@@ -58,15 +61,19 @@ class GameOverScene(Scene):
         """ Save the score when the player validates a login """
         login = self.__bar.update(input_handler)
         if login is not None:
-            self.__engine.file_manager.store_score(login, self.__stats.scores)
-            self.__leave()
-        if input_handler.was_key_pressed(KEY_ESC):
-            self.__leave()
+            self.__file_manager.store(ScoreLoader(
+                score={"login": login,
+                       "score": self.__stats.scores,
+                       "time": self.__stats.play_time}
+            ))
+            self.__leave("score_scene")
+        elif input_handler.was_key_pressed(KEY_ESC):
+            self.__leave("main_scene")
 
-    def __leave(self) -> None:
+    def __leave(self, scene: str) -> None:
         """ Reset the statistics for the next game and go back to the menu """
         self.__stats.reset_stats()
-        self.__engine.scene_manager.change_scene("main_scene")
+        self.__engine.scene_manager.change_scene(scene)
 
     def render(self) -> None:
         """ Present the image, then write the texts over it """

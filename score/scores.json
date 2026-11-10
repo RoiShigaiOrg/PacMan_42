@@ -1,0 +1,29 @@
+{
+    "scores": [
+        {
+            "date": "2026-11-09T10:21:36",
+            "login": "leo",
+            "score": 1000
+        },
+        {
+            "date": "2026-11-09T10:44:27",
+            "login": "paul",
+            "score": 250
+        },
+        {
+            "date": "2026-11-09T10:44:35",
+            "login": "greg",
+            "score": 10
+        },
+        {
+            "date": "2026-11-09T10:44:38",
+            "login": "max",
+            "score": 0
+        },
+        {
+            "login": "tom",
+            "score": 0,
+            "time": 0.0
+        }
+    ]
+}

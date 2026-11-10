@@ -44,6 +44,7 @@ class GameState:
         self.extra_life_given: bool = False
         self.state: PacManState = PacManState.NORMAL
         self._death_recovery_remaining: float = 0.0
+        self.play_time: float = 0.0
 
     @property
     def game_mode(self) -> GameMode:
@@ -74,6 +75,7 @@ class GameState:
 
     def time_in_level(self, delta_time: float) -> None:
         """Call once per frame: the time left goes down to 0."""
+        self.play_time += delta_time
         if self.level_time <= 0:
             return
         self.level_time = max(0.0, self.level_time - delta_time)
