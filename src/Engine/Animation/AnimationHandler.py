@@ -1,4 +1,6 @@
 from .Graphics import MlxDisplay
+from .Animation import Animation
+from .Sprite import Sprite
 from typing import Dict, Tuple
 
 
@@ -23,6 +25,15 @@ class AnimationHandler:
         except (KeyError):
             raise RuntimeError(f"unkown animation key: {key}")
 
-    def draw(self, display: MlxDisplay, pos: Tuple[int, int], delta_time: int) -> None:
-        """ Draw the actual animation on the given display at the given position """
-        self.__actual_animation.draw(display, pos, delta_time)
+    def draw(
+            self,
+            display: MlxDisplay,
+            pos: Tuple[int, int],
+            delta_time: float) -> None:
+        """
+        Draw the actual animation on the given display
+            at the given position
+        """
+        self.__actual_animation.update(delta_time)
+        sprite: Sprite = self.__actual_animation.current_sprite
+        sprite.draw(display, pos)
