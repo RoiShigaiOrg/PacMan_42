@@ -69,8 +69,8 @@ class Sprite:
 
         x0 = round(offset_x + pos[0] * scale)
         y0 = round(offset_y + pos[1] * scale)
-        y1 = round(offset_x + (pos[0] + src_w) * scale)
-        x1 = round(offset_y + (pos[1] + src_h) * scale)
+        x1 = round(offset_x + (pos[0] + src_w) * scale)
+        y1 = round(offset_y + (pos[1] + src_h) * scale)
 
         dst_w, dst_h = x1 - x0, y1 - y0
 

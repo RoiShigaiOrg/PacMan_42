@@ -1,16 +1,23 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+import json
 
 import pytest
 
 from Engine.FileManager.Loader.SpriteLoader import SpriteLoader
-from Engine.Sprite import SpriteSheet
+from Engine.Animation import Animation, AnimationHandler
+from Engine.Sprite import (
+    AsepriteMetadata,
+    Sprite,
+    SpriteFrame,
+    SpriteSheet,
+)
 
 
 def make_pixel_buffer(
     pixel_rows: list[list[int]],
     stride: int,
-    byte_order: str,
+    byte_order: Literal["little", "big"],
 ) -> bytearray:
     width = len(pixel_rows[0])
     buffer = bytearray([0xAA] * (stride * len(pixel_rows)))
@@ -63,6 +70,47 @@ class FakeMlx:
         self.destroy_calls.append((mlx_ptr, image))
 
 
+def make_aseprite_metadata(
+    image: str = "sprites.png",
+    width: int = 4,
+    height: int = 2,
+) -> dict[str, Any]:
+    return {
+        "frames": [
+            {
+                "filename": "walk 0.png",
+                "frame": {"x": 0, "y": 0, "w": 2, "h": 2},
+                "rotated": False,
+                "trimmed": False,
+                "spriteSourceSize": {"x": 0, "y": 0, "w": 2, "h": 2},
+                "sourceSize": {"w": 2, "h": 2},
+                "duration": 100,
+            },
+            {
+                "filename": "walk 1.png",
+                "frame": {"x": 2, "y": 0, "w": 2, "h": 2},
+                "rotated": False,
+                "trimmed": False,
+                "spriteSourceSize": {"x": 0, "y": 0, "w": 2, "h": 2},
+                "sourceSize": {"w": 2, "h": 2},
+                "duration": 200,
+            },
+        ],
+        "meta": {
+            "image": image,
+            "size": {"w": width, "h": height},
+            "frameTags": [
+                {
+                    "name": "walk_right",
+                    "from": 0,
+                    "to": 1,
+                    "direction": "forward",
+                }
+            ],
+        },
+    }
+
+
 def test_sprite_sheet_extracts_exact_rectangle_including_edges() -> None:
     pixels = [
         [0xFF000001, 0xFF000002, 0xFF000003],
@@ -95,6 +143,192 @@ def test_sprite_sheet_owns_its_pixel_rows() -> None:
     pixels[0][0] = 0
 
     assert sheet.extract_sprite((0, 0), (1, 1)).pixels == ((0xFF123456,),)
+
+
+def test_sprite_sheet_extracts_tagged_frames_and_durations() -> None:
+    metadata = AsepriteMetadata.model_validate(make_aseprite_metadata())
+    pixels = [
+        [0xFF000001, 0xFF000002, 0xFF000003, 0xFF000004],
+        [0xFF000005, 0xFF000006, 0xFF000007, 0xFF000008],
+    ]
+    sheet = SpriteSheet(pixels, metadata)
+
+    frames = sheet.get_sprite("walk_right")
+
+    assert len(frames) == 2
+    assert frames[0].sprite.pixels == (
+        (0xFF000001, 0xFF000002),
+        (0xFF000005, 0xFF000006),
+    )
+    assert frames[1].sprite.pixels == (
+        (0xFF000003, 0xFF000004),
+        (0xFF000007, 0xFF000008),
+    )
+    assert tuple(frame.duration_ms for frame in frames) == (100, 200)
+
+
+def test_sprite_sheet_applies_reverse_tag_direction() -> None:
+    metadata_data = make_aseprite_metadata()
+    metadata_data["meta"]["frameTags"][0]["direction"] = "reverse"
+    sheet = SpriteSheet(
+        [[0xFFFFFFFF] * 4 for _ in range(2)],
+        AsepriteMetadata.model_validate(metadata_data),
+    )
+
+    frames = sheet.get_sprite("walk_right")
+
+    assert tuple(frame.duration_ms for frame in frames) == (200, 100)
+
+
+def test_sprite_sheet_requires_metadata_for_tag_lookup() -> None:
+    sheet = SpriteSheet([[0xFFFFFFFF]])
+
+    with pytest.raises(RuntimeError, match="without Aseprite metadata"):
+        sheet.get_sprite("walk_right")
+
+
+def test_sprite_sheet_rejects_missing_tags_and_dimension_mismatches() -> None:
+    metadata = AsepriteMetadata.model_validate(make_aseprite_metadata())
+    sheet = SpriteSheet([[0xFFFFFFFF] * 4 for _ in range(2)], metadata)
+
+    with pytest.raises(KeyError, match="unknown sprite tag"):
+        sheet.get_sprite("walk_left")
+    with pytest.raises(ValueError, match="dimensions do not match"):
+        SpriteSheet([[0xFFFFFFFF]], metadata)
+
+
+def test_aseprite_metadata_validates_tag_ranges_and_frame_bounds() -> None:
+    invalid_tag = make_aseprite_metadata()
+    invalid_tag["meta"]["frameTags"][0]["to"] = 2
+    with pytest.raises(ValueError, match="missing frame"):
+        AsepriteMetadata.model_validate(invalid_tag)
+
+    invalid_frame = make_aseprite_metadata()
+    invalid_frame["frames"][0]["frame"]["x"] = 3
+    with pytest.raises(ValueError, match="outside the spritesheet"):
+        AsepriteMetadata.model_validate(invalid_frame)
+
+
+def test_pacman_aseprite_file_builds_a_timed_animation() -> None:
+    metadata_path = (
+        Path(__file__).parents[1]
+        / "assets"
+        / "PacManSprite"
+        / "pacman-sprites.json"
+    )
+    metadata = AsepriteMetadata.model_validate_json(
+        metadata_path.read_text(encoding="utf-8")
+    )
+    width, height = metadata.meta.size.as_tuple()
+    sheet = SpriteSheet(
+        [[0xFFFFFFFF] * width for _ in range(height)], metadata
+    )
+
+    animation = Animation(sheet.get_sprite("walk_right"))
+
+    assert animation.framerate == 10
+    assert animation.current_sprite.size == (32, 32)
+    assert len(metadata.tag("walk_right").frame_indices()) == 3
+
+
+def test_animation_uses_per_frame_durations_and_loops() -> None:
+    frames = (
+        SpriteFrame(Sprite((1, 1), [[0xFF000001]]), 100),
+        SpriteFrame(Sprite((1, 1), [[0xFF000002]]), 200),
+    )
+    animation = Animation(frames)
+
+    assert animation.framerate is None
+    animation.update(0.1)
+    assert animation.current_index == 1
+    animation.update(0.19)
+    assert animation.current_index == 1
+    animation.update(0.01)
+    assert animation.current_index == 0
+
+
+def test_animation_supports_fixed_framerate_and_non_looping() -> None:
+    sprites = (
+        Sprite((1, 1), [[0xFF000001]]),
+        Sprite((1, 1), [[0xFF000002]]),
+    )
+    animation = Animation(sprites, framerate=10, loop=False)
+
+    assert animation.framerate == 10
+    animation.update(0.2)
+    assert animation.current_index == 1
+    assert animation.finished
+    animation.reset()
+    assert animation.current_index == 0
+    assert not animation.finished
+    with pytest.raises(ValueError, match="delta_time must be finite"):
+        animation.update(float("inf"))
+
+
+def test_animation_handler_updates_and_draws_active_animation() -> None:
+    sprite_a = Sprite((1, 1), [[0xFF000001]])
+    sprite_b = Sprite((1, 1), [[0xFF000002]])
+    handler = AnimationHandler(
+        {"walk": Animation((sprite_a, sprite_b), framerate=10)}
+    )
+
+    class RecordingDisplay:
+        width = 1593
+        height = 896
+
+        def __init__(self) -> None:
+            self.drawn: list[tuple[int, int, int]] = []
+
+        def draw_pixel(self, x: int, y: int, color: int) -> None:
+            self.drawn.append((x, y, color))
+
+    display = RecordingDisplay()
+    handler.update(0.1)
+    handler.draw(display, (10, 20))
+
+    assert display.drawn == [(10, 20, 0xFF000002)]
+
+
+def test_sprite_loader_reads_typed_json_metadata(tmp_path: Path) -> None:
+    pixels = [[0xFF000001, 0xFF000002], [0xFF000003, 0xFF000004]]
+    session = FakeMlx(
+        make_pixel_buffer(pixels, 8, "little"), 2, 2, 8
+    )
+    metadata_path = tmp_path / "sprites.json"
+    metadata_path.write_text(
+        json.dumps({
+            "frames": [{
+                "filename": "single.png",
+                "frame": {"x": 0, "y": 0, "w": 2, "h": 2},
+                "rotated": False,
+                "trimmed": False,
+                "spriteSourceSize": {"x": 0, "y": 0, "w": 2, "h": 2},
+                "sourceSize": {"w": 2, "h": 2},
+                "duration": 100,
+            }],
+            "meta": {
+                "image": "sprites.png",
+                "size": {"w": 2, "h": 2},
+                "frameTags": [{
+                    "name": "idle",
+                    "from": 0,
+                    "to": 0,
+                    "direction": "forward",
+                }],
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    sheet = SpriteLoader(
+        Path("sprites.png"), session, "mlx", metadata_path
+    ).load()
+
+    assert sheet.metadata is not None
+    assert sheet.metadata.meta.size.as_tuple() == (2, 2)
+    assert sheet.get_sprite("idle")[0].sprite.pixels == tuple(
+        tuple(row) for row in pixels
+    )
 
 
 def test_sprite_loader_copies_argb_pixels_and_respects_stride(

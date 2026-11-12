@@ -1,4 +1,6 @@
 from .Sprite import Sprite
+from .SpriteFrame import SpriteFrame
+from .SpriteMetadata import AsepriteMetadata
 
 
 class SpriteSheet:
@@ -11,7 +13,7 @@ class SpriteSheet:
     def __init__(
             self,
             pixels: list[list[int]],
-            metadata: dict | None = None) -> None:
+            metadata: AsepriteMetadata | dict | None = None) -> None:
         """Create a spritesheet from rows of packed ARGB pixel values."""
         if not pixels or not pixels[0]:
             raise ValueError("spritesheet pixels cannot be empty")
@@ -29,7 +31,22 @@ class SpriteSheet:
         self.__pixels = [row.copy() for row in pixels]
         self.__width = width
         self.__height = len(pixels)
-        self.__metadata: dict | None = metadata
+        validated_metadata: AsepriteMetadata | None
+        if isinstance(metadata, AsepriteMetadata):
+            validated_metadata = metadata
+        elif metadata is not None:
+            validated_metadata = AsepriteMetadata.model_validate(metadata)
+        else:
+            validated_metadata = None
+        if (
+            validated_metadata is not None
+            and validated_metadata.meta.size.as_tuple()
+            != (self.__width, self.__height)
+        ):
+            raise ValueError(
+                "spritesheet dimensions do not match metadata dimensions"
+            )
+        self.__metadata = validated_metadata
 
     @property
     def width(self) -> int:
@@ -45,6 +62,11 @@ class SpriteSheet:
     def size(self) -> tuple[int, int]:
         """Return the spritesheet dimensions as ``(width, height)``."""
         return self.__width, self.__height
+
+    @property
+    def metadata(self) -> AsepriteMetadata | None:
+        """Return validated Aseprite metadata, if the sheet has any."""
+        return self.__metadata
 
     def extract_sprite(
         self,
@@ -69,3 +91,35 @@ class SpriteSheet:
             for row in range(y, y + height)
         ]
         return Sprite(size, sprite_pixels)
+
+    def get_sprite(self, tag_name: str) -> tuple[SpriteFrame, ...]:
+        """Extract the ordered, duration-bearing frames of an Aseprite tag.
+
+        Tag ranges are inclusive. Frame durations are kept in milliseconds,
+        matching Aseprite's JSON representation.
+        """
+        if self.__metadata is None:
+            raise RuntimeError(
+                "cannot look up a sprite tag without Aseprite metadata"
+            )
+
+        try:
+            tag = self.__metadata.tag(tag_name)
+        except KeyError as error:
+            raise KeyError(f"unknown sprite tag: {tag_name}") from error
+
+        tagged_frames: list[SpriteFrame] = []
+        for frame_index in tag.frame_indices():
+            frame_metadata = self.__metadata.frames[frame_index]
+            if frame_metadata.rotated or frame_metadata.trimmed:
+                raise NotImplementedError(
+                    "rotated or trimmed Aseprite frames are not supported"
+                )
+            rect = frame_metadata.frame
+            sprite = self.extract_sprite(
+                (rect.x, rect.y), (rect.width, rect.height)
+            )
+            tagged_frames.append(
+                SpriteFrame(sprite, frame_metadata.duration_ms)
+            )
+        return tuple(tagged_frames)

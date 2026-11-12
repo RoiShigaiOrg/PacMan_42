@@ -1,7 +1,6 @@
-from .Graphics import MlxDisplay
+from ..Graphics import MlxDisplay
 from .Animation import Animation
-from .Sprite import Sprite
-from typing import Dict, Tuple
+from ..Sprite import Sprite
 
 
 class AnimationHandler:
@@ -14,26 +13,38 @@ class AnimationHandler:
         their own AnimationHandler instance.
     """
 
-    def __init__(self, animations: Dict[str, Animation]) -> None:
+    def __init__(self, animations: dict[str, Animation]) -> None:
         """ Init Method of AnimationHandler """
-        self.__animations: Dict[str, Animation] = animations
+        if not animations:
+            raise ValueError(
+                "an animation handler needs at least one animation"
+            )
+        self.__animations = dict(animations)
+        self.__actual_key = next(iter(self.__animations))
+        self.__actual_animation = self.__animations[self.__actual_key]
 
     def set_animation(self, key: str) -> None:
         """ Set the current animation of the Animation Handler """
         try:
-            self.__actual_animation = self.__animations[key]
-        except (KeyError):
-            raise RuntimeError(f"unkown animation key: {key}")
+            animation = self.__animations[key]
+        except KeyError as error:
+            raise KeyError(f"unknown animation key: {key}") from error
+        if key != self.__actual_key:
+            animation.reset()
+        self.__actual_key = key
+        self.__actual_animation = animation
+
+    def update(self, delta_time: float) -> None:
+        """Advance the active animation independently of drawing."""
+        self.__actual_animation.update(delta_time)
 
     def draw(
             self,
             display: MlxDisplay,
-            pos: Tuple[int, int],
-            delta_time: float) -> None:
+            pos: tuple[int, int]) -> None:
         """
         Draw the actual animation on the given display
             at the given position
         """
-        self.__actual_animation.update(delta_time)
         sprite: Sprite = self.__actual_animation.current_sprite
         sprite.draw(display, pos)

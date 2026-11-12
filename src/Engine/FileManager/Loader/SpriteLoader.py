@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
-from typing import Any, Literal, List
+from typing import Any, Literal, cast
+
+from ...Sprite.SpriteMetadata import AsepriteMetadata
 from ...Sprite.SpriteSheet import SpriteSheet
 from .Loader import Loader
-import json
 
 
 class SpriteLoader(Loader):
@@ -34,24 +36,31 @@ class SpriteLoader(Loader):
 
     def load(self) -> SpriteSheet:
         """Load the PNG and copy its pixels into a SpriteSheet Class."""
-        pixels: List[List[int]] = self.__extract_pixel()
-        metadata: dict | None = None
+        pixels = self.__extract_pixel()
+        metadata: AsepriteMetadata | None = None
 
-        if self.sprite_json is not None:
+        if self.__json is not None:
             metadata = self.__extract_metadata()
+            if Path(metadata.meta.image).name != self.__file.name:
+                raise ValueError(
+                    "spritesheet image path does not match metadata image: "
+                    f"{metadata.meta.image!r}"
+                )
 
         return SpriteSheet(pixels, metadata)
 
-    def __extract_metadata(self) -> dict:
+    def __extract_metadata(self) -> AsepriteMetadata:
         """
         Extract the metadata from the json file associated with
             this spritesheet.
         """
-        with open(self.__json, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data
+        if self.__json is None:
+            raise RuntimeError("No metadata JSON file was provided")
+        with self.__json.open("r", encoding="utf-8") as metadata_file:
+            data = json.load(metadata_file)
+        return cast(AsepriteMetadata, AsepriteMetadata.model_validate(data))
 
-    def __extract_pixel(self) -> List[List[int]]:
+    def __extract_pixel(self) -> list[list[int]]:
         """
         Extract the pixel from an Image and return a Matrix of
             the corresponding pixels value
@@ -104,7 +113,7 @@ class SpriteLoader(Loader):
                             byte_order,
                         )
                     )
-                    pixel_rows.append(row)
+                pixel_rows.append(row)
             return pixel_rows
         finally:
             self.__session.mlx_destroy_image(self.__mlx_ptr, image)
