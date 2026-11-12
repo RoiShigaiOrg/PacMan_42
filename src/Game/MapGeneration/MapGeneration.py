@@ -292,32 +292,40 @@ class Map():
             self,
             pos_x: int, pos_y: int,
             width: int, height: int) -> None:
-        """ The colliders for every cells in the map """
-        cell_height: int = int(height / self.height)
-        cell_width: int = int(width / self.width)
-        self.__grid_origin = (pos_x, pos_y)
-        self.__cell_size = (cell_width, cell_height)
+        """Fit a centered, square-cell grid inside the requested bounds."""
+        if width <= 0 or height <= 0:
+            raise ValueError("map bounds must have positive dimensions")
+
+        cell_size = min(width // self.width, height // self.height)
+        if cell_size <= 0:
+            raise ValueError("map bounds are too small for square cells")
+
+        grid_width = cell_size * self.width
+        grid_height = cell_size * self.height
+        grid_origin_x = pos_x + (width - grid_width) // 2
+        grid_origin_y = pos_y + (height - grid_height) // 2
+        self.__grid_origin = (grid_origin_x, grid_origin_y)
+        self.__cell_size = (cell_size, cell_size)
 
         for y in range(self.height):
             for x in range(self.width):
                 self.grid[y][x].set_collider(
-                        pos_x + (cell_width * x), pos_y + (cell_height * y),
-                        cell_width, cell_height
+                        grid_origin_x + cell_size * x,
+                        grid_origin_y + cell_size * y,
+                        cell_size,
+                        cell_size,
                     )
 
-    def draw(
-            self,
-            display: MlxDisplay,
-            pos_x: int, pos_y: int,
-            width: int, height: int) -> None:
-        """ Draw method of the Map Object """
-        cell_height: int = int(height / self.height)
-        cell_width: int = int(width / self.width)
+    def draw(self, display: MlxDisplay) -> None:
+        """Draw the previously configured grid using its collider layout."""
+        grid_origin_x, grid_origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
 
         for y in range(self.height):
             for x in range(self.width):
                 self.grid[y][x].draw(
                         display,
-                        pos_x + (cell_width * x), pos_y + (cell_height * y),
+                        grid_origin_x + cell_width * x,
+                        grid_origin_y + cell_height * y,
                         cell_width, cell_height
                     )

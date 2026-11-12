@@ -1,6 +1,6 @@
 from .Graphics.MlxDisplay import MlxDisplay
 from .FileManager import FileManager, ConfigLoader
-from typing import Any, Tuple
+from typing import Any, Tuple, cast
 from .Graphics.MlxWindow import MlxWindow
 from .Application.Application import Application
 from .InputHandler import InputHandler
@@ -8,6 +8,8 @@ from .SceneManager.SceneManager import SceneManager
 from .Clock import Clock
 from .Physics import PhysicsEngine
 from .ConfigHandler.ConfigHandler import ConfigHandler
+from .FileManager.Loader.SpriteLoader import SpriteLoader
+from .Sprite.SpriteSheet import SpriteSheet
 from pathlib import Path
 import mlx
 
@@ -99,6 +101,20 @@ class Engine:
         return self._window.create_display(
                     size
                 )
+
+    def load_sprite_sheet(
+            self,
+            image_path: Path,
+            metadata_path: Path | None = None,
+    ) -> SpriteSheet:
+        """Load a sprite sheet using this engine's active MLX session."""
+        loader = SpriteLoader(
+            image_path,
+            self._session,
+            self._mlx_ptr,
+            metadata_path,
+        )
+        return cast(SpriteSheet, self.__file_manager.load(loader))
 
     def run(self, application: Application) -> None:
         """Run the application until the MLX loop exits.

@@ -24,6 +24,9 @@ class Cell():
         if not self.__rect:
             color: int = 0xFF00FF00 if self.walkable else 0xFF0000FF
             self.__rect = Rect(width, height, pos_x, pos_y, color)
+        else:
+            self.__rect.update_size(width, height)
+            self.__rect.update_pos(pos_x, pos_y)
         self.__rect.fill(display)
         if self.__collider:
             self.__collider.debug_draw(display, 0xFFFFFFFF)

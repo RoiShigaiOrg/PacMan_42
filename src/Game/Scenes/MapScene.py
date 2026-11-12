@@ -1,4 +1,5 @@
 from Engine import Scene
+from Engine.Animation import Animation, AnimationHandler
 from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
@@ -19,9 +20,13 @@ from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Pinky import Pinky
 from typing import Tuple, Dict
+from pathlib import Path
 
 
 Region = Tuple[int, int, int, int]
+PACMAN_ASSET_DIR = (
+    Path(__file__).resolve().parents[3] / "assets" / "PacManSprite"
+)
 
 
 class MapScene(Scene):
@@ -35,22 +40,36 @@ class MapScene(Scene):
         self.__engine = engine
         self.stats = stats
         self.display = display
+        sprite_sheet = engine.load_sprite_sheet(
+            PACMAN_ASSET_DIR / "pacman-sprites-sheet.png",
+            PACMAN_ASSET_DIR / "pacman-sprites.json",
+        )
+        player_animations = {
+            direction: Animation(sprite_sheet.get_sprite(tag))
+            for direction, tag in (
+                ("right", "walk_right"),
+                ("left", "walk_left"),
+                ("up", "walk_up"),
+                ("down", "walk_down"),
+            )
+        }
+        player_animation_handler = AnimationHandler(player_animations)
         self.map = Map()
         self.display.clear(0xFFFF0000)
+        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
+        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
+        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
+        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
         self.map.set_colliders(
-                self.display.relative_width(RELATIVE_MAP_POS_X),
-                self.display.relative_height(RELATIVE_MAP_POS_Y),
-                self.display.relative_width(RELATIVE_MAP_WIDTH),
-                self.display.relative_height(RELATIVE_MAP_HEIGHT),
+                map_x,
+                map_y,
+                map_width,
+                map_height,
             )
-        self.map.draw(
-                display,
-                self.display.relative_width(RELATIVE_MAP_POS_X),
-                self.display.relative_height(RELATIVE_MAP_POS_Y),
-                self.display.relative_width(RELATIVE_MAP_WIDTH),
-                self.display.relative_height(RELATIVE_MAP_HEIGHT),
-                )
-        self.__player: Player = Player()
+        self.map.draw(display)
+        self.__player: Player = Player(
+            animation_handler=player_animation_handler
+        )
         self.__player.InitPlayer(display, self.map)
         self.__ghosts: Dict[str, Ghost] = {
                 "blinky": Blinky(),
@@ -132,16 +151,22 @@ class MapScene(Scene):
         """
         old_position = self.__player.position
         old_center = self.__player.collider.world_position
+        old_visual_state = self.__player.visual_state
         self.__player.update_direction(
             input_handler, self.map, self.__physics, delta_time
         )
-        if self.__player.collider.world_position != old_center:
+        new_position = self.__player.position
+        position_changed = self.__player.collider.world_position != old_center
+        visual_changed = self.__player.visual_state != old_visual_state
+        if position_changed or visual_changed:
+            regions = [self.movement_region(self.__player.size, new_position)]
+            if position_changed:
+                regions.append(
+                    self.movement_region(self.__player.size, old_position)
+                )
             self.__dirty_region = self.union_regions(
                 self.__dirty_region,
-                self.movement_region(self.__player.size, old_position),
-                self.movement_region(
-                    self.__player.size, self.__player.position
-                ),
+                *regions,
             )
 
     def __update_ghosts(

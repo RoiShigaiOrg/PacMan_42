@@ -38,13 +38,25 @@ class AnimationHandler:
         """Advance the active animation independently of drawing."""
         self.__actual_animation.update(delta_time)
 
+    @property
+    def current_key(self) -> str:
+        """Return the active animation's key."""
+        return self.__actual_key
+
+    @property
+    def current_frame_index(self) -> int:
+        """Return the active animation's current frame index."""
+        return self.__actual_animation.current_index
+
     def draw(
             self,
             display: MlxDisplay,
-            pos: tuple[int, int]) -> None:
+            pos: tuple[int, int],
+            size: tuple[int, int] | None = None,
+    ) -> None:
         """
         Draw the actual animation on the given display
             at the given position
         """
         sprite: Sprite = self.__actual_animation.current_sprite
-        sprite.draw(display, pos)
+        sprite.draw(display, pos, size)
