@@ -1,18 +1,25 @@
 from pathlib import Path
-from typing import Any, Literal
-
+from typing import Any, Literal, List
 from ...Sprite.SpriteSheet import SpriteSheet
 from .Loader import Loader
+import json
 
 
 class SpriteLoader(Loader):
-    """Load a PNG image into an MLX-independent SpriteSheet Class."""
+    """
+    Load a PNG image into an MLX-independent SpriteSheet Class.
+    The Sprite Loader take one sprite_file Path, which is a SpriteSheet
+        containing the differents sprite and a sprite_json Path,
+        containing the different coordonates, size and metadata of
+        the spritesheet.
+    """
 
     def __init__(
         self,
         sprite_file: Path,
         mlx_session: Any,
         mlx_ptr: Any,
+        sprite_json: Path | None = None,
     ) -> None:
         """Create a loader using the active MLX session and pointer."""
         if sprite_file is None:
@@ -20,12 +27,35 @@ class SpriteLoader(Loader):
         if mlx_session is None or mlx_ptr is None:
             raise ValueError("SpriteLoader requires an active MLX session")
 
-        self.__file = sprite_file
+        self.__file: Path = sprite_file
+        self.__json: Path | None = sprite_json
         self.__session = mlx_session
         self.__mlx_ptr = mlx_ptr
 
     def load(self) -> SpriteSheet:
         """Load the PNG and copy its pixels into a SpriteSheet Class."""
+        pixels: List[List[int]] = self.__extract_pixel()
+        metadata: dict | None = None
+
+        if self.sprite_json is not None:
+            metadata = self.__extract_metadata()
+
+        return SpriteSheet(pixels, metadata)
+
+    def __extract_metadata(self) -> dict:
+        """
+        Extract the metadata from the json file associated with
+            this spritesheet.
+        """
+        with open(self.__json, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data
+
+    def __extract_pixel(self) -> List[List[int]]:
+        """
+        Extract the pixel from an Image and return a Matrix of
+            the corresponding pixels value
+        """
         image, sheet_width, sheet_height = (
             self.__session.mlx_png_file_to_image(
                 self.__mlx_ptr,
@@ -74,9 +104,8 @@ class SpriteLoader(Loader):
                             byte_order,
                         )
                     )
-                pixel_rows.append(row)
-
-            return SpriteSheet(pixel_rows)
+                    pixel_rows.append(row)
+            return pixel_rows
         finally:
             self.__session.mlx_destroy_image(self.__mlx_ptr, image)
 

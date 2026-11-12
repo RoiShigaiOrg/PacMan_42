@@ -8,7 +8,10 @@ class SpriteSheet:
     its pixel data, so it does not depend on the lifetime of an MLX image.
     """
 
-    def __init__(self, pixels: list[list[int]]) -> None:
+    def __init__(
+            self,
+            pixels: list[list[int]],
+            metadata: dict | None = None) -> None:
         """Create a spritesheet from rows of packed ARGB pixel values."""
         if not pixels or not pixels[0]:
             raise ValueError("spritesheet pixels cannot be empty")
@@ -26,6 +29,7 @@ class SpriteSheet:
         self.__pixels = [row.copy() for row in pixels]
         self.__width = width
         self.__height = len(pixels)
+        self.__metadata: dict | None = metadata
 
     @property
     def width(self) -> int:
