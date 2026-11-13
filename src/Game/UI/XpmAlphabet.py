@@ -8,6 +8,7 @@ ColorMap = dict[int, int]
 FILL: int = 0xFFFFC629
 OUTLINE: int = 0xFFEB2A23
 SHADOW: int = 0xFF0000FF
+LETTER_SPACING: int = 6
 
 
 class XpmImage:
@@ -98,7 +99,7 @@ class XpmAlphabet():
         total = 0
         for c in text.lower():
             image = self._image(c)
-            total += (image.height if image else self.space) + spacing
+            total += (image.width if image else self.space) + spacing
         return max(0, total - spacing) * scale
 
     def write(
@@ -117,4 +118,4 @@ class XpmAlphabet():
                 x += (self.space + spacing) * scale
                 continue
             image.draw(display, x, y, scale, palette)
-            x += (image.height + spacing) * scale
+            x += (image.width + spacing) * scale

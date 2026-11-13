@@ -1,6 +1,5 @@
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler.InputHandler import InputHandler
-from .XpmAlphabet import XpmAlphabet
 from Engine.InputHandler.KeyCode import (
     KEY_BACKSPACE, KEY_DELETE, KEY_RETURN
 )
@@ -12,28 +11,24 @@ WHITE: int = 0xFFFFFFFF
 
 
 class InputBar:
-    """A one-line text field the player types into with the keyboard.
-    The text is drawn with an XPM alphabet, directly in the image."""
+    """A one-line text field the player types into with the keyboard."""
 
     def __init__(
             self, x: int, y: int, width: int,
-            alphabet: XpmAlphabet, max_len: int = 30) -> None:
+            max_len: int = 30) -> None:
         """ Init Method of the InputBar Widget """
         if width <= 0:
             raise ValueError("input bar width must be positive")
         self.x = x
         self.y = y
         self.width = width
-        self.height = alphabet.height + 2 * (PADDING + BORDER)
+        self.height = 28
         self.max_len = max_len
         self.text = ""
-        self.__alphabet = alphabet
-        self.__drawn: str | None = None
 
     def reset(self) -> None:
         """ Empty the bar and force the next draw_text to redraw it """
         self.text = ""
-        self.__drawn = None
 
     def update(self, input_handler: InputHandler) -> str | None:
         """
@@ -66,19 +61,11 @@ class InputBar:
         display.fill_rect(self.x + 2, self.y + 2,
                           self.width - 4, self.height - 4, background)
 
-    def draw_text(self, display: MlxDisplay,
-                  background: int,  cursor_color: int) -> None:
-        """ Write the text in the window (after render()) """
-        if self.text == self.__drawn:
-            return
-        inner = BORDER + PADDING
-        display.fill_rect(self.x + BORDER, self.y + BORDER,
-                          self.width - 2 * BORDER,
-                          self.height - 2 * BORDER, background)
-        self.__alphabet.write(display, self.x + inner, self.y + inner,
-                              self.text)
-        cursor_x = (self.x + inner + self.__alphabet.length_texte(self.text)
-                    + 2)
-        display.fill_rect(cursor_x, self.y + inner, CURSOR_WIDTH,
-                          self.__alphabet.height, cursor_color)
-        self.__drawn = self.text
+    def draw_text(self, display: MlxDisplay, color: int) -> None:
+        """
+            Write the text in the window (AFTER render()).
+
+            Call it at every frame: the MLX only stays correct when the
+                same short text is written again each frame.
+        """
+        display.write_text(self.x + 6, self.y + 4, color, self.text + "_")

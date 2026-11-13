@@ -49,7 +49,15 @@ class PacMan(Application):
                 ),
                 "score_scene": ScoreScene(
                     self.engine,
-                    self.engine.create_display((1280, 720))
+                    self.engine.create_display((1280, 720)),
+                    self.stats,
+                    False
+                ),
+                "leaderboard_scene": ScoreScene(
+                    self.engine,
+                    self.engine.create_display((1280, 720)),
+                    self.stats,
+                    True
                 ),
             }
         )
