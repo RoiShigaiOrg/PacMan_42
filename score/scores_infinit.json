@@ -1,0 +1,14 @@
+{
+    "scores": [
+        {
+            "login": "paul",
+            "score": 0,
+            "time": 0.0
+        },
+        {
+            "login": "tom",
+            "score": 0,
+            "time": 0.0
+        }
+    ]
+}

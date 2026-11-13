@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 
 PELLET_POINTS: int = 10
 POWER_PELLET_POINTS: int = 50
@@ -29,9 +30,13 @@ class GameState:
     def __init__(self, lives: int = 3) -> None:
         """init class variables"""
         self.__start_lives = lives
-        self.__game_mode: GameMode = GameMode.NORMAL
+        self.game_mode: GameMode = GameMode.NORMAL
         self.cheat: bool = False
         self.reset_stats()
+        self.SCORE_FILES: dict[GameMode, Path] = {
+            GameMode.NORMAL: Path("score/scores_normal.json"),
+            GameMode.INFINITE: Path("score/scores_infinit.json")
+            }
 
     def reset_stats(self) -> None:
         """ initialize variables for the start of a game/level"""
@@ -44,6 +49,7 @@ class GameState:
         self.extra_life_given: bool = False
         self.state: PacManState = PacManState.NORMAL
         self._death_recovery_remaining: float = 0.0
+        self.play_time: float = 0.0
 
     @property
     def game_mode(self) -> GameMode:
@@ -74,6 +80,7 @@ class GameState:
 
     def time_in_level(self, delta_time: float) -> None:
         """Call once per frame: the time left goes down to 0."""
+        self.play_time += delta_time
         if self.level_time <= 0:
             return
         self.level_time = max(0.0, self.level_time - delta_time)
