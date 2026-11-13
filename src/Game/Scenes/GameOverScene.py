@@ -60,8 +60,6 @@ class GameOverScene(Scene):
             ) -> None:
         """ Save the score when the player validates a login """
         login = self.__bar.update(input_handler)
-        if login == "None":
-            return "error name can´t be 'None'"
         if login is not None:
             self.__file_manager.store(ScoreLoader(
                     self.__stats.SCORE_FILES[self.__stats.game_mode],
