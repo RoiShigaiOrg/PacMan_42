@@ -1,7 +1,7 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (
-    KEY_V, KEY_ESC, KEY_C, KEY_N
+    KEY_V, KEY_ESC, KEY_C, KEY_N, KEY_L
 )
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
@@ -88,6 +88,8 @@ class MainScene(Scene):
             self.__engine.scene_manager.change_scene("game_over_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.__display.close()
+        if input_handler.was_key_pressed(KEY_L):
+            self.__engine.scene_manager.change_scene("leaderboard_scene")
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """

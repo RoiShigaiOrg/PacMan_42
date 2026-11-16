@@ -1,4 +1,3 @@
-from .Loader import ScoreLoader
 from .Loader.Loader import Loader
 from typing import Any
 
@@ -23,7 +22,7 @@ class FileManager:
 
     def __init__(self) -> None:
         """ Init Method of the FileManager """
-        self.__score_loader = ScoreLoader()
+        pass
 
     def load(self, loader: Loader) -> Any:
         """
@@ -38,12 +37,3 @@ class FileManager:
         Take a Loader type of loader and call it's store method
         """
         loader.store()
-
-    def load_scores(self) -> list[dict[str, Any]]:
-        """ Return every saved score of the leaderboard """
-        scores: list[dict[str, Any]] = self.__score_loader.load()["scores"]
-        return scores
-
-    def store_score(self, login: str, score: int) -> None:
-        """ Save the score of a player in the leaderboard file """
-        self.__score_loader.store(score={"login": login, "score": score})
