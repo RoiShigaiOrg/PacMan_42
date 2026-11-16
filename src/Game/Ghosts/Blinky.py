@@ -1,12 +1,15 @@
+from Engine.Engine import Engine
 from Engine.Physics.Vector2 import Vector2
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Circle import Circle
+from Engine.Animation import Animation, AnimationHandler
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
 from ..MapGeneration import Map
 from typing import Tuple
 from .Ghost import Ghost
 from .Behaviours import BlinkyChaseBehaviour
+from pathlib import Path
 
 MOVEMENT_SPEED: float = 160.0
 BLINKY_COLOR: int = 0xFFFF0000
@@ -26,9 +29,26 @@ class Blinky(Ghost):
         and try to be in front of him at each moment.
     """
 
-    def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
+    def __init__(self, engine: Engine, movement_speed: float = MOVEMENT_SPEED) -> None:
         """ Init Method of Blinky """
-        super().__init__(movement_speed, BlinkyChaseBehaviour())
+        super().__init__(engine, movement_speed, BlinkyChaseBehaviour())
+        sprite_sheet = engine.load_sprite_sheet(
+            Path("assets/BlinkySprite/blinkysheet.png"),
+            Path("assets/BlinkySprite/blinkysheet.json"),
+        )
+        player_animations = {
+            direction: Animation(sprite_sheet.get_sprite(tag))
+            for direction, tag in (
+                ("right", "walk_right"),
+                ("left", "walk_left"),
+                ("up", "walk_up"),
+                ("down", "walk_down"),
+            )
+        }
+        animation_handler = AnimationHandler(player_animations)
+        self.__animation_handler = animation_handler
+        if self.__animation_handler is not None:
+            self.__animation_handler.set_animation("left")
 
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
         """ Init The Ghost position depending of the actual map """

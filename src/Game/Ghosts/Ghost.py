@@ -4,6 +4,7 @@ from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Dict, Tuple, cast
 
+from Engine.Engine import Engine
 from Engine.Graphics import MlxDisplay
 from Engine.Entity.Entity import Entity
 from Engine.Entity.PathFinding import HeuristicType, PathFinding
@@ -39,6 +40,7 @@ class Ghost(Entity):
 
     def __init__(
             self,
+            engine: Engine,
             movement_speed: float = DEFAULT_MOVEMENT_SPEED,
             chase_behaviour: GhostBehaviour | None = None,
     ) -> None:
