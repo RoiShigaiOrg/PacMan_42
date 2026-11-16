@@ -36,7 +36,6 @@ class AsepriteRectangle(AsepriteSize):
 
 
 class AsepriteFrameMetadata(_AsepriteModel):
-    filename: StrictStr
     frame: AsepriteRectangle
     rotated: StrictBool = False
     trimmed: StrictBool = False
@@ -93,16 +92,12 @@ class AsepriteMetadata(_AsepriteModel):
         if not self.frames:
             raise ValueError("spritesheet metadata must contain frames")
 
-        frame_names = [frame.filename for frame in self.frames]
-        if len(frame_names) != len(set(frame_names)):
-            raise ValueError("sprite frame filenames must be unique")
-
         width, height = self.meta.size.as_tuple()
-        for frame_metadata in self.frames:
+        for frame_index, frame_metadata in enumerate(self.frames):
             rect = frame_metadata.frame
             if rect.x + rect.width > width or rect.y + rect.height > height:
                 raise ValueError(
-                    f"frame rectangle for {frame_metadata.filename!r} "
+                    f"frame {frame_index} rectangle "
                     "is outside the spritesheet"
                 )
 

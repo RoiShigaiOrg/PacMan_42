@@ -1,5 +1,4 @@
 from Engine import Scene
-from Engine.Animation import Animation, AnimationHandler
 from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
@@ -52,10 +51,10 @@ class MapScene(Scene):
         self.__player: Player = Player(engine)
         self.__player.InitPlayer(display, self.map)
         self.__ghosts: Dict[str, Ghost] = {
-                "blinky": Blinky(),
-                "inky": Inky(),
-                "clyde": Clyde(),
-                "pinky": Pinky()
+                "blinky": Blinky(engine),
+                "inky": Inky(engine=engine),
+                "clyde": Clyde(engine=engine),
+                "pinky": Pinky(engine=engine)
             }
         self.__ghost_targets: dict[
             Ghost, tuple[Behaviour, TargetPlan]
@@ -177,16 +176,25 @@ class MapScene(Scene):
                 self.__ghost_targets[ghost] = behaviour_target
             old_ghost_position = ghost.position
             old_ghost_center = ghost.collider.world_position
+            old_visual_state = ghost.visual_state
             ghost.update_movement(
                 self.map, self.__physics, delta_time, self.stats
             )
-            if ghost.collider.world_position != old_ghost_center:
+            position_changed = (
+                ghost.collider.world_position != old_ghost_center
+            )
+            visual_changed = ghost.visual_state != old_visual_state
+            if position_changed or visual_changed:
+                regions = [
+                    self.movement_region(ghost.size, ghost.position)
+                ]
+                if position_changed:
+                    regions.append(
+                        self.movement_region(ghost.size, old_ghost_position)
+                    )
                 self.__dirty_region = self.union_regions(
                     self.__dirty_region,
-                    self.movement_region(ghost.size, old_ghost_position),
-                    self.movement_region(
-                        ghost.size, ghost.position
-                    ),
+                    *regions,
                 )
 
     def __check_player_ghost_collision(self) -> None:

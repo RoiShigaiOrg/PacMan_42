@@ -1,14 +1,16 @@
 from Engine.Physics.Vector2 import Vector2
+from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Circle import Circle
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
 from ..MapGeneration import Map
 from typing import Tuple
+from pathlib import Path
 from .Ghost import Ghost
 from .Behaviours import ClydeChaseBehaviour
 
-MOVEMENT_SPEED: float = 160.0
+MOVEMENT_SPEED: float = 100.0
 CLYDE_COLOR: int = 0xFFFFAA00
 COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
@@ -26,9 +28,22 @@ class Clyde(Ghost):
         and try to be in front of him at each moment.
     """
 
-    def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
+    def __init__(
+            self,
+            movement_speed: float = MOVEMENT_SPEED,
+            *,
+            engine: Engine | None = None,
+    ) -> None:
         """ Init Method of Clyde """
-        super().__init__(movement_speed, ClydeChaseBehaviour())
+        super().__init__(
+            movement_speed,
+            ClydeChaseBehaviour(),
+            engine=engine,
+            sprite_sheet_paths=(
+                Path("assets/Clyde/clydesheet.png"),
+                Path("assets/Clyde/clydesheet.json"),
+            ),
+        )
 
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
         """ Init The Ghost position depending of the actual map """

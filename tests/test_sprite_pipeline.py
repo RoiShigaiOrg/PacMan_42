@@ -209,6 +209,24 @@ def test_aseprite_metadata_validates_tag_ranges_and_frame_bounds() -> None:
         AsepriteMetadata.model_validate(invalid_frame)
 
 
+def test_ghost_spritesheet_metadata_does_not_require_frame_filenames() -> None:
+    asset_paths = (
+        Path(__file__).parents[1]
+        / "assets" / "BlinkySprite" / "blinkysheet.json",
+        Path(__file__).parents[1]
+        / "assets" / "InkySprite" / "inkysheet.json",
+        Path(__file__).parents[1]
+        / "assets" / "Clyde" / "clydesheet.json",
+    )
+
+    for metadata_path in asset_paths:
+        metadata = AsepriteMetadata.model_validate_json(
+            metadata_path.read_text(encoding="utf-8")
+        )
+        assert len(metadata.frames) == 36
+        assert metadata.tag("right").frame_indices() == tuple(range(30, 36))
+
+
 def test_pacman_aseprite_file_builds_a_timed_animation() -> None:
     metadata_path = (
         Path(__file__).parents[1]
