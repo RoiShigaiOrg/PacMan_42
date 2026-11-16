@@ -74,7 +74,7 @@ class GameOverScene(Scene):
         """ Reset the statistics for the next game and go back to the menu """
         self.__stats.reset_stats()
         self.__engine.scene_manager.change_scene(scene)
-    
+
     def __format_time(self) -> str:
         """ Format the time in '00:00:00' model """
         hour: int = int(self.__stats.play_time // 3600)
@@ -91,11 +91,11 @@ class GameOverScene(Scene):
         else:
             res = f"{res}{minutes}:"
         if seconds < 10:
-            res = f"{res}0{seconds}:"
+            res = f"{res}0{seconds}"
         else:
             res = f"{res}{seconds}"
+        print(res)
         return res
-
 
     def render(self) -> None:
         """ Present the image, then write the texts over it """
@@ -104,4 +104,4 @@ class GameOverScene(Scene):
         self.__display.write_text(self.__bar.x + 100, self.__bar.y - 70, WHITE,
                                   f"Your score : {self.__stats.scores}")
         self.__display.write_text(self.__bar.x + 100, self.__bar.y - 40, WHITE,
-                                  f"Your time  : " + self.__format_time())
+                                  f"Your time  : {self.__format_time()}")
