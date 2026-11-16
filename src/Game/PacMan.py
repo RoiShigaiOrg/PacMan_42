@@ -9,6 +9,7 @@ from typing import Tuple
 from pathlib import Path
 from .Scenes.GameOverScene import GameOverScene
 from .GameState import GameState
+from .Scenes.ScoreScene import ScoreScene
 
 
 class PacMan(Application):
@@ -45,6 +46,18 @@ class PacMan(Application):
                     self.engine,
                     self.engine.create_display((1280, 720)),
                     self.stats
+                ),
+                "score_scene": ScoreScene(
+                    self.engine,
+                    self.engine.create_display((1280, 720)),
+                    self.stats,
+                    False
+                ),
+                "leaderboard_scene": ScoreScene(
+                    self.engine,
+                    self.engine.create_display((1280, 720)),
+                    self.stats,
+                    True
                 ),
             }
         )
