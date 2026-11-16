@@ -3,8 +3,9 @@ from __future__ import annotations
 import math
 from typing import Tuple
 
+from Engine.Engine import Engine
 from Engine.Graphics import Circle, MlxDisplay
-from Engine.Animation import AnimationHandler
+from Engine.Animation import Animation, AnimationHandler
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import KEY_D, KEY_Q, KEY_S, KEY_Z
 from Engine.Physics.Collider import Collider
@@ -13,6 +14,7 @@ from Engine.Physics.Shapes import AABB
 from Engine.Physics.Vector2 import Vector2
 from Engine.Entity.Entity import Entity
 from ..MapGeneration import Map
+from pathlib import Path
 
 
 MOVEMENT_SPEED: float = 180.0
@@ -44,14 +46,28 @@ class Player(Entity):
 
     def __init__(
             self,
-            movement_speed: float = MOVEMENT_SPEED,
-            animation_handler: AnimationHandler | None = None,
+            engine: Engine,
+            movement_speed: float = MOVEMENT_SPEED
     ) -> None:
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
         self._movement_speed = movement_speed
         self._direction = Vector2(0.0, 0.0)
         self._requested_direction: Vector2 | None = None
+        sprite_sheet = engine.load_sprite_sheet(
+            Path("assets/PacManSprite/pacman-sprites-sheet.png"),
+            Path("assets/PacManSprite/pacman-sprites.json"),
+        )
+        player_animations = {
+            direction: Animation(sprite_sheet.get_sprite(tag))
+            for direction, tag in (
+                ("right", "walk_right"),
+                ("left", "walk_left"),
+                ("up", "walk_up"),
+                ("down", "walk_down"),
+            )
+        }
+        animation_handler = AnimationHandler(player_animations)
         self.__animation_handler = animation_handler
         if self.__animation_handler is not None:
             self.__animation_handler.set_animation("right")

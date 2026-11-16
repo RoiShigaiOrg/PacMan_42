@@ -20,13 +20,9 @@ from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Pinky import Pinky
 from typing import Tuple, Dict
-from pathlib import Path
 
 
 Region = Tuple[int, int, int, int]
-PACMAN_ASSET_DIR = (
-    Path(__file__).resolve().parents[3] / "assets" / "PacManSprite"
-)
 
 
 class MapScene(Scene):
@@ -40,20 +36,6 @@ class MapScene(Scene):
         self.__engine = engine
         self.stats = stats
         self.display = display
-        sprite_sheet = engine.load_sprite_sheet(
-            PACMAN_ASSET_DIR / "pacman-sprites-sheet.png",
-            PACMAN_ASSET_DIR / "pacman-sprites.json",
-        )
-        player_animations = {
-            direction: Animation(sprite_sheet.get_sprite(tag))
-            for direction, tag in (
-                ("right", "walk_right"),
-                ("left", "walk_left"),
-                ("up", "walk_up"),
-                ("down", "walk_down"),
-            )
-        }
-        player_animation_handler = AnimationHandler(player_animations)
         self.map = Map()
         self.display.clear(0xFFFF0000)
         map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
@@ -67,9 +49,7 @@ class MapScene(Scene):
                 map_height,
             )
         self.map.draw(display)
-        self.__player: Player = Player(
-            animation_handler=player_animation_handler
-        )
+        self.__player: Player = Player(engine)
         self.__player.InitPlayer(display, self.map)
         self.__ghosts: Dict[str, Ghost] = {
                 "blinky": Blinky(),
