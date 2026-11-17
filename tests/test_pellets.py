@@ -39,9 +39,14 @@ def make_map(
         [Cell((column, row), state) for column, state in enumerate(line)]
         for row, line in enumerate(walkable)
     ]
+    actual_map._Map__corner_coordinates = actual_map._find_corner_coordinates()
+    actual_map._Map__corner_cells = frozenset(
+        actual_map._Map__corner_coordinates.values()
+    )
     actual_map._Map__pellet = [
         cell for row in actual_map.grid for cell in row if cell.walkable
     ]
+    actual_map._Map__pacgum_sprite = Sprite((1, 1), [[0xFF0000FF]])
     actual_map._Map__animation_handler = AnimationHandler({
         "pellet": Animation(frames or make_frames()),
     })
@@ -70,10 +75,17 @@ def test_map_creates_a_pellet_for_every_walkable_cell_after_opening_center(
         def get_sprite(_tag: str) -> tuple[SpriteFrame, ...]:
             return make_frames()
 
+        @staticmethod
+        def extract_sprite(
+                _position: tuple[int, int], _size: tuple[int, int]
+        ) -> Sprite:
+            return Sprite((1, 1), [[0xFF0000FF]])
+
     class FakeEngine:
         @staticmethod
         def load_sprite_sheet(
-                _image_path: Path, _metadata_path: Path
+                _image_path: Path,
+                _metadata_path: Path | None = None,
         ) -> FakeSpriteSheet:
             return FakeSpriteSheet()
 
@@ -103,20 +115,22 @@ def test_consuming_a_pellet_removes_it_from_the_map() -> None:
     assert actual_map.consume_pellet_at(Vector2(15, 5)) is None
 
 
-def test_all_remaining_pellets_share_the_current_animation_frame() -> None:
-    actual_map = make_map([[True, True]])
+def test_only_corner_pellets_animate_and_other_cells_use_pacgum() -> None:
+    actual_map = make_map([[True, True, True]] * 3)
     display = RecordingDisplay()
 
     actual_map.render_pellets(display)
     assert display.pixels[(5, 5)] == 0xFFFF0000
-    assert display.pixels[(15, 5)] == 0xFFFF0000
+    assert display.pixels[(15, 5)] == 0xFF0000FF
+    assert display.pixels[(25, 25)] == 0xFFFF0000
 
     assert actual_map.update_pellet_animation(0.1)
     display.pixels.clear()
     actual_map.render_pellets(display)
 
     assert display.pixels[(5, 5)] == 0xFF00FF00
-    assert display.pixels[(15, 5)] == 0xFF00FF00
+    assert display.pixels[(15, 5)] == 0xFF0000FF
+    assert display.pixels[(25, 25)] == 0xFF00FF00
 
 
 def test_scene_scores_only_a_pellet_that_was_removed() -> None:

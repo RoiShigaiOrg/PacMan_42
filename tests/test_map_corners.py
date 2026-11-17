@@ -20,6 +20,7 @@ def make_map(width: int, height: int) -> Map:
         [Cell((column, row), False) for column in range(width)]
         for row in range(height)
     ]
+    actual_map._Map__corner_coordinates = {}
     return actual_map
 
 
@@ -40,6 +41,9 @@ def test_corner_search_returns_nearest_walkable_cell(
     actual_map = make_map(3, 3)
     column, row = walkable
     actual_map.grid[row][column].walkable = True
+    actual_map._Map__corner_coordinates = (
+        actual_map._find_corner_coordinates()
+    )
 
     assert actual_map.corner(corner) == expected
 
@@ -48,6 +52,9 @@ def test_corner_search_checks_corner_before_more_distant_cells() -> None:
     actual_map = make_map(3, 2)
     actual_map.grid[0][2].walkable = True
     actual_map.grid[1][1].walkable = True
+    actual_map._Map__corner_coordinates = (
+        actual_map._find_corner_coordinates()
+    )
 
     assert actual_map.corner(HIGH_RIGHT) == (2, 0)
 
@@ -56,6 +63,9 @@ def test_corner_search_uses_deterministic_order_for_equal_distance() -> None:
     actual_map = make_map(3, 3)
     actual_map.grid[0][1].walkable = True
     actual_map.grid[1][2].walkable = True
+    actual_map._Map__corner_coordinates = (
+        actual_map._find_corner_coordinates()
+    )
 
     # HIGH_RIGHT checks along the top edge before moving down the right edge.
     assert actual_map.corner(HIGH_RIGHT) == (1, 0)
@@ -68,3 +78,12 @@ def test_corner_search_rejects_unknown_corner_and_empty_maps() -> None:
         actual_map.corner(99)
     with pytest.raises(ValueError, match="no walkable cells"):
         actual_map.corner(HIGH_LEFT)
+
+
+def test_corner_lookup_returns_the_cached_coordinate() -> None:
+    actual_map = make_map(3, 3)
+    actual_map.grid[0][0].walkable = True
+    actual_map._Map__corner_coordinates = actual_map._find_corner_coordinates()
+    actual_map.grid[0][0].walkable = False
+
+    assert actual_map.corner(HIGH_LEFT) == (0, 0)

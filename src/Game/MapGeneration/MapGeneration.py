@@ -4,7 +4,7 @@ from Engine.Graphics import MlxDisplay
 from Engine.Animation import Animation, AnimationHandler
 from Engine.Sprite import Sprite
 from mazegenerator import MazeGenerator
-from typing import Dict, Mapping, Tuple
+from typing import Dict, Mapping, Tuple, List
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
 from pathlib import Path
@@ -34,7 +34,7 @@ class Map():
 
         gen = MazeGenerator(size=(width, height), perfect=False, seed=seed)
         gen.generate(seed=seed)
-        self.grid: list[list[Cell]] = self._symmetrize_vertical(
+        self.grid: List[List[Cell]] = self._symmetrize_vertical(
                 self._convert(gen.maze)
             )
         self.grid = self._symmetrize_horizontal(
@@ -43,12 +43,19 @@ class Map():
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
         self._open_center()
-        self.__pellet: list[Cell] = [
+        self.__corner_coordinates = self._find_corner_coordinates()
+        self.__corner_cells = frozenset(
+            self.__corner_coordinates.values()
+        )
+        self.__pellet: List[Cell] = [
             cell
             for row in self.grid
             for cell in row
             if cell.walkable
         ]
+        self.__pacgum_sprite: Sprite = engine.load_sprite_sheet(
+                Path("assets/Pellet/pacgum.png")
+            ).extract_sprite((0, 0), (32, 32))
         pellet_frames = engine.load_sprite_sheet(
             Path("assets/Pellet/pelletspritesheet.png"),
             Path("assets/Pellet/pelletspritesheet.json"),
@@ -78,7 +85,16 @@ class Map():
         )
 
     def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
-        """Return the nearest walkable cell to the requested map corner.
+        """Return the cached nearest walkable cell for a map corner."""
+        if corner not in (HIGH_LEFT, HIGH_RIGHT, LOW_LEFT, LOW_RIGHT):
+            raise ValueError(f"Unknown map corner: {corner}")
+        try:
+            return self.__corner_coordinates[corner]
+        except (AttributeError, KeyError) as error:
+            raise ValueError("Map has no walkable cells") from error
+
+    def _find_corner_coordinates(self) -> dict[int, Tuple[int, int]]:
+        """Find nearest walkable cells in stable corner-relative order.
 
         Cells are checked in increasing Manhattan-distance layers. Within a
         layer, the scan proceeds along the corner's outer edge before moving
@@ -90,24 +106,34 @@ class Map():
             LOW_LEFT: ((0, self.height - 1), 1, -1),
             LOW_RIGHT: ((self.width - 1, self.height - 1), -1, -1),
         }
-        if corner not in corners:
-            raise ValueError(f"Unknown map corner: {corner}")
-
-        (start_column, start_row), column_step, row_step = corners[corner]
+        coordinates: dict[int, Tuple[int, int]] = {}
         max_distance = self.width + self.height - 2
-        for distance in range(max_distance + 1):
-            for row_distance in range(distance + 1):
-                column_distance = distance - row_distance
-                column = start_column + column_step * column_distance
-                row = start_row + row_step * row_distance
-                if (
-                    0 <= column < self.width
-                    and 0 <= row < self.height
-                    and self.grid[row][column].walkable
-                ):
-                    return column, row
+        for corner, (
+                (start_column, start_row), column_step, row_step
+        ) in corners.items():
+            for distance in range(max_distance + 1):
+                for row_distance in range(distance + 1):
+                    column_distance = distance - row_distance
+                    column = start_column + column_step * column_distance
+                    row = start_row + row_step * row_distance
+                    if (
+                        0 <= column < self.width
+                        and 0 <= row < self.height
+                        and self.grid[row][column].walkable
+                    ):
+                        coordinates[corner] = (column, row)
+                        break
+                if corner in coordinates:
+                    break
+            else:
+                raise ValueError("Map has no walkable cells")
 
-        raise ValueError("Map has no walkable cells")
+        return coordinates
+
+    def is_corner(self, pos: Tuple[int, int]) -> bool:
+        """ Return a boolean if the given position is a map corner """
+        coordinate = self.cell_coordinates_at(pos)
+        return (coordinate in self.__corner_cells)
 
     @property
     def grid_origin(self) -> Tuple[int, int]:
@@ -384,17 +410,28 @@ class Map():
         """Draw the current shared animation frame in every pellet cell."""
         sprite: Sprite = self.__animation_handler.current_sprite
         cell_width, cell_height = self.cell_size
+        origin_x, origin_y = self.grid_origin
+
         for pellet in self.__pellet:
             column, row = pellet.coordinate
-            origin_x, origin_y = self.grid_origin
-            sprite.draw(
-                display,
-                (
-                    origin_x + column * cell_width,
-                    origin_y + row * cell_height,
-                ),
-                (cell_width, cell_height),
-            )
+            if pellet.coordinate in self.__corner_cells:
+                sprite.draw(
+                    display,
+                    (
+                        origin_x + column * cell_width,
+                        origin_y + row * cell_height
+                    ),
+                    (cell_width, cell_height)
+                )
+            else:
+                self.__pacgum_sprite.draw(
+                    display,
+                    (
+                        origin_x + column * cell_width,
+                        origin_y + row * cell_height,
+                    ),
+                    (cell_width, cell_height),
+                )
 
     def draw(self, display: MlxDisplay) -> None:
         """Draw the previously configured grid using its collider layout."""

@@ -36,7 +36,7 @@ class MapScene(Scene):
         self.stats = stats
         self.display = display
         self.map = Map(engine)
-        self.display.clear(0xFFFF0000)
+        self.display.clear(0xFF000000)
         map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
         map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
         map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
@@ -211,7 +211,10 @@ class MapScene(Scene):
         )
         if pellet is None:
             return
-        self.stats.eat_pac_dot()
+        if self.map.is_corner(self.__player.collider.world_position):
+            self.stats.eat_fruit()
+        else:
+            self.stats.eat_pac_dot()
         self.__dirty_region = self.union_regions(
             self.__dirty_region,
             self.map.cell_region(pellet.coordinate),

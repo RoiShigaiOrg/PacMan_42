@@ -96,7 +96,7 @@ class GameState:
         """add value point of pellet"""
         self.add_point(PELLET_POINTS)
 
-    def eat_Fruit(self) -> None:
+    def eat_fruit(self) -> None:
         """ add value point of power by pellet"""
         self.add_point(POWER_PELLET_POINTS)
         if self.state is not PacManState.DEAD:

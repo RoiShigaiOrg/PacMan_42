@@ -22,7 +22,7 @@ class Cell():
             width: int, height: int) -> None:
         """ Draw method of the Cell Object """
         if not self.__rect:
-            color: int = 0xFF00FF00 if self.walkable else 0xFF0000FF
+            color: int = 0xFF000000 if self.walkable else 0xFF0000FF
             self.__rect = Rect(width, height, pos_x, pos_y, color)
         else:
             self.__rect.update_size(width, height)

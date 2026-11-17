@@ -4,7 +4,7 @@ from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Circle import Circle
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Shapes import AABB
-from ..MapGeneration import Map
+from ..MapGeneration import HIGH_RIGHT, Map
 from typing import Tuple
 from .Ghost import Ghost
 from .Behaviours import BlinkyChaseBehaviour
@@ -14,10 +14,6 @@ MOVEMENT_SPEED: float = 100.0
 BLINKY_COLOR: int = 0xFFFF0000
 COLLIDER_DEBUG_COLOR: int = 0xFFFFFFFF
 COLLIDER_SIZE_RATIO: float = 0.8
-HIGH_LEFT: int = 1
-HIGH_RIGHT: int = 2
-LOW_LEFT: int = 3
-LOW_RIGHT: int = 4
 
 
 class Blinky(Ghost):
