@@ -1,8 +1,17 @@
 import pytest
 
 from Engine.Physics import AABB, Vector2
+from Engine.Sprite import Sprite
 from Game.MapGeneration.Cell import Cell
-from Game.MapGeneration.MapGeneration import Map
+from Game.MapGeneration.MapGeneration import (
+    DOWN,
+    LEFT,
+    RIGHT,
+    TOP,
+    WALL_MASK_TO_TAG,
+    Map,
+    wall_neighbor_mask,
+)
 
 
 def make_map(width: int, height: int, walkable: bool = True) -> Map:
@@ -19,9 +28,11 @@ def make_map(width: int, height: int, walkable: bool = True) -> Map:
 class RecordingDisplay:
     def __init__(self) -> None:
         self.pixels: set[tuple[int, int]] = set()
+        self.colors: dict[tuple[int, int], int] = {}
 
-    def draw_pixel(self, x: int, y: int, _color: int) -> None:
+    def draw_pixel(self, x: int, y: int, color: int) -> None:
         self.pixels.add((x, y))
+        self.colors[(x, y)] = color
 
 
 def test_map_layout_uses_centered_square_cells_and_square_colliders() -> None:
@@ -60,3 +71,69 @@ def test_map_rejects_bounds_that_cannot_fit_a_square_cell() -> None:
 
     with pytest.raises(ValueError, match="too small"):
         actual_map.set_colliders(0, 0, 2, 1)
+
+
+@pytest.mark.parametrize(
+    ("mask", "tag"),
+    [
+        (0, "solo"),
+        (TOP, "bottom"),
+        (RIGHT, "left"),
+        (DOWN, "top"),
+        (LEFT, "right"),
+        (TOP | DOWN, "vertical"),
+        (RIGHT | LEFT, "horizontal"),
+        (TOP | RIGHT, "corner_top_right"),
+        (TOP | LEFT, "corner_top_left"),
+        (DOWN | RIGHT, "corner_bot_right"),
+        (DOWN | LEFT, "corner_bottom_left"),
+        (TOP | RIGHT | LEFT, "horizontal_top"),
+        (DOWN | RIGHT | LEFT, "horizontal_bot"),
+        (TOP | DOWN | RIGHT, "vertical_right"),
+        (TOP | DOWN | LEFT, "vertical_left"),
+        (TOP | RIGHT | DOWN | LEFT, "center"),
+    ],
+)
+def test_wall_neighbor_masks_dispatch_to_all_sprite_tags(
+        mask: int, tag: str
+) -> None:
+    assert WALL_MASK_TO_TAG[mask] == tag
+
+
+@pytest.mark.parametrize("mask", range(16))
+def test_wall_neighbor_mask_reads_only_in_bounds_cardinal_walls(
+        mask: int,
+) -> None:
+    actual_map = make_map(3, 3)
+    actual_map.grid[1][1].walkable = False
+    neighbors = (
+        (TOP, 1, 0),
+        (RIGHT, 2, 1),
+        (DOWN, 1, 2),
+        (LEFT, 0, 1),
+    )
+    for direction, column, row in neighbors:
+        if mask & direction:
+            actual_map.grid[row][column].walkable = False
+
+    assert wall_neighbor_mask(actual_map.grid, 1, 1) == mask
+
+
+def test_map_draws_the_cached_sprite_for_each_wall_neighbor_mask() -> None:
+    actual_map = make_map(3, 3)
+    actual_map.grid[1][1].walkable = False
+    actual_map.grid[0][1].walkable = False
+    actual_map.grid[1][0].walkable = False
+    actual_map.grid[1][2].walkable = False
+    actual_map.set_colliders(0, 0, 30, 30)
+    actual_map._Map__wall_sprites = {
+        mask: Sprite((1, 1), [[0xFF000100 | mask]])
+        for mask in WALL_MASK_TO_TAG
+    }
+    display = RecordingDisplay()
+
+    actual_map.draw(display)
+
+    assert display.colors[(10, 10)] == 0xFF000100 | (
+        TOP | RIGHT | LEFT
+    )

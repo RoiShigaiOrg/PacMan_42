@@ -23,6 +23,49 @@ HIGH_RIGHT: int = 2
 LOW_LEFT: int = 3
 LOW_RIGHT: int = 4
 
+WALL_MASK_TO_TAG: dict[int, str] = {
+    0: "solo",
+    TOP: "bottom",
+    RIGHT: "left",
+    DOWN: "top",
+    LEFT: "right",
+    TOP | DOWN: "vertical",
+    RIGHT | LEFT: "horizontal",
+    TOP | RIGHT: "corner_bot_left",
+    TOP | LEFT: "corner_bot_right",
+    DOWN | RIGHT: "corner_top_left",
+    DOWN | LEFT: "corner_top_right",
+    TOP | RIGHT | LEFT: "horizontal_top",
+    DOWN | RIGHT | LEFT: "horizontal_bot",
+    TOP | DOWN | RIGHT: "vertical_right",
+    TOP | DOWN | LEFT: "vertical_left",
+    TOP | RIGHT | DOWN | LEFT: "center",
+}
+
+
+def wall_neighbor_mask(
+        grid: list[list[Cell]], column: int, row: int
+) -> int:
+    """Return the cardinal wall-neighbor mask for one cell.
+
+    Out-of-bounds neighbors are treated as open space. The direction bits
+    reuse the maze's TOP, RIGHT, DOWN, and LEFT flags.
+    """
+    height = len(grid)
+    width = len(grid[0])
+    mask = 0
+
+    if row > 0 and not grid[row - 1][column].walkable:
+        mask |= TOP
+    if column + 1 < width and not grid[row][column + 1].walkable:
+        mask |= RIGHT
+    if row + 1 < height and not grid[row + 1][column].walkable:
+        mask |= DOWN
+    if column > 0 and not grid[row][column - 1].walkable:
+        mask |= LEFT
+
+    return mask
+
 
 class Map():
     """class builds the map from the mazegenerator modules"""
@@ -43,6 +86,14 @@ class Map():
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
         self._open_center()
+        wall_sheet = engine.load_sprite_sheet(
+            Path("assets/Map/mapspritesheet.png"),
+            Path("assets/Map/Mapspritesheet.json"),
+        )
+        self.__wall_sprites: dict[int, Sprite] = {
+            mask: wall_sheet.get_sprite(tag)[0].sprite
+            for mask, tag in WALL_MASK_TO_TAG.items()
+        }
         self.__corner_coordinates = self._find_corner_coordinates()
         self.__corner_cells = frozenset(
             self.__corner_coordinates.values()
@@ -440,9 +491,16 @@ class Map():
 
         for y in range(self.height):
             for x in range(self.width):
+                cell = self.grid[y][x]
+                wall_sprite = None
+                if not cell.walkable:
+                    wall_sprite = self.__wall_sprites[
+                        wall_neighbor_mask(self.grid, x, y)
+                    ]
                 self.grid[y][x].draw(
                         display,
                         grid_origin_x + cell_width * x,
                         grid_origin_y + cell_height * y,
-                        cell_width, cell_height
+                        cell_width, cell_height,
+                        wall_sprite,
                     )
