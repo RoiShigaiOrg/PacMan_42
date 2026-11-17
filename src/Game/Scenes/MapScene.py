@@ -35,7 +35,7 @@ class MapScene(Scene):
         self.__engine = engine
         self.stats = stats
         self.display = display
-        self.map = Map()
+        self.map = Map(engine)
         self.display.clear(0xFFFF0000)
         map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
         map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
@@ -95,6 +95,7 @@ class MapScene(Scene):
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
+        self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
@@ -104,6 +105,11 @@ class MapScene(Scene):
         if self.stats.is_over():
             self.__engine.scene_manager.change_scene("game_over_scene")
             return
+        if self.map.update_pellet_animation(delta_time):
+            self.__dirty_region = self.union_regions(
+                self.__dirty_region,
+                self.map.pellet_bounds,
+            )
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_X):
@@ -134,6 +140,7 @@ class MapScene(Scene):
         self.__player.update_direction(
             input_handler, self.map, self.__physics, delta_time
         )
+        self.__consume_player_pellet()
         new_position = self.__player.position
         position_changed = self.__player.collider.world_position != old_center
         visual_changed = self.__player.visual_state != old_visual_state
@@ -197,6 +204,19 @@ class MapScene(Scene):
                     *regions,
                 )
 
+    def __consume_player_pellet(self) -> None:
+        """Consume and score the pellet in Pac-Man's current map cell."""
+        pellet = self.map.consume_pellet_at(
+            self.__player.collider.world_position
+        )
+        if pellet is None:
+            return
+        self.stats.eat_pac_dot()
+        self.__dirty_region = self.union_regions(
+            self.__dirty_region,
+            self.map.cell_region(pellet.coordinate),
+        )
+
     def __check_player_ghost_collision(self) -> None:
         """
         Check if the ghost and the player are overlapping and
@@ -231,6 +251,7 @@ class MapScene(Scene):
                 self.__static_layer, x, y, width, height
             )
             self.__dirty_region = None
+        self.map.render_pellets(self.display)
         self.__player.draw(self.display)
         for ghost in self.__ghosts.values():
             ghost.draw(self.display)

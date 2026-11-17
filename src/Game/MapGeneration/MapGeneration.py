@@ -1,9 +1,13 @@
 from collections import deque
+from Engine.Engine import Engine
 from Engine.Graphics import MlxDisplay
+from Engine.Animation import Animation, AnimationHandler
+from Engine.Sprite import Sprite
 from mazegenerator import MazeGenerator
 from typing import Dict, Mapping, Tuple
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
+from pathlib import Path
 from .Cell import Cell
 from .MapNode import MapNode
 import random
@@ -24,7 +28,7 @@ class Map():
     """class builds the map from the mazegenerator modules"""
 
     def __init__(
-            self, width: int = 5, height: int = 5,
+            self, engine: Engine, width: int = 5, height: int = 5,
             seed: int = random.randint(0, 10)):
         """ Init Method of Map Generation """
 
@@ -39,6 +43,19 @@ class Map():
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
         self._open_center()
+        self.__pellet: list[Cell] = [
+            cell
+            for row in self.grid
+            for cell in row
+            if cell.walkable
+        ]
+        pellet_frames = engine.load_sprite_sheet(
+            Path("assets/Pellet/pelletspritesheet.png"),
+            Path("assets/Pellet/pelletspritesheet.json"),
+        ).get_sprite("animation")
+        self.__animation_handler = AnimationHandler({
+            "pellet": Animation(pellet_frames),
+        })
         self.__grid_origin: Tuple[int, int] | None = None
         self.__cell_size: Tuple[int, int] | None = None
         self.graph: Dict[Tuple[int, int], MapNode] = self.build_graph()
@@ -121,6 +138,53 @@ class Map():
             0 <= column < self.width
             and 0 <= row < self.height
             and self.grid[row][column].walkable
+        )
+
+    @property
+    def pellet_cells(self) -> tuple[Tuple[int, int], ...]:
+        """Return coordinates for cells that still contain a pellet."""
+        return tuple(cell.coordinate for cell in self.__pellet)
+
+    @property
+    def pellet_bounds(self) -> Tuple[int, int, int, int]:
+        """Return the pixel bounds of the map's pellet grid."""
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return (
+            origin_x,
+            origin_y,
+            self.width * cell_width,
+            self.height * cell_height,
+        )
+
+    def cell_region(
+            self, coordinate: Tuple[int, int]
+    ) -> Tuple[int, int, int, int]:
+        """Return the pixel rectangle for a cell coordinate."""
+        column, row = coordinate
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return (
+            origin_x + column * cell_width,
+            origin_y + row * cell_height,
+            cell_width,
+            cell_height,
+        )
+
+    def consume_pellet_at(self, position: Vector2) -> Cell | None:
+        """Remove and return the pellet in the cell containing a position."""
+        coordinate = self.cell_coordinates_at(position)
+        for index, pellet in enumerate(self.__pellet):
+            if pellet.coordinate == coordinate:
+                return self.__pellet.pop(index)
+        return None
+
+    def update_pellet_animation(self, delta_time: float) -> bool:
+        """Advance the shared pellet animation and report frame changes."""
+        previous_frame = self.__animation_handler.current_frame_index
+        self.__animation_handler.update(delta_time)
+        return bool(
+            self.__animation_handler.current_frame_index != previous_frame
         )
 
     def next_cell_is_walkable(
@@ -315,6 +379,22 @@ class Map():
                         cell_size,
                         cell_size,
                     )
+
+    def render_pellets(self, display: MlxDisplay) -> None:
+        """Draw the current shared animation frame in every pellet cell."""
+        sprite: Sprite = self.__animation_handler.current_sprite
+        cell_width, cell_height = self.cell_size
+        for pellet in self.__pellet:
+            column, row = pellet.coordinate
+            origin_x, origin_y = self.grid_origin
+            sprite.draw(
+                display,
+                (
+                    origin_x + column * cell_width,
+                    origin_y + row * cell_height,
+                ),
+                (cell_width, cell_height),
+            )
 
     def draw(self, display: MlxDisplay) -> None:
         """Draw the previously configured grid using its collider layout."""

@@ -94,7 +94,6 @@ class GameOverScene(Scene):
             res = f"{res}0{seconds}"
         else:
             res = f"{res}{seconds}"
-        print(res)
         return res
 
     def render(self) -> None:

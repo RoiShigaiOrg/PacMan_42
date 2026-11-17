@@ -48,6 +48,15 @@ class AnimationHandler:
         """Return the active animation's current frame index."""
         return self.__actual_animation.current_index
 
+    @property
+    def current_sprite(self) -> Sprite:
+        """Return the sprite for the active animation's current frame."""
+        return self.__actual_animation.current_sprite
+
+    def get_actual_frame(self) -> Sprite:
+        """Return the active animation's current frame for rendering."""
+        return self.current_sprite
+
     def draw(
             self,
             display: MlxDisplay,
@@ -58,5 +67,5 @@ class AnimationHandler:
         Draw the actual animation on the given display
             at the given position
         """
-        sprite: Sprite = self.__actual_animation.current_sprite
+        sprite: Sprite = self.current_sprite
         sprite.draw(display, pos, size)
