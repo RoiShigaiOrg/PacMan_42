@@ -102,6 +102,7 @@ class MapScene(Scene):
         """ Update method for the MapScene Object """
         self.stats.time_in_level(delta_time)
         self.stats.update_death_recovery(delta_time)
+        self.stats.update_power_remaining(delta_time)
         if self.stats.is_over():
             self.__engine.scene_manager.change_scene("game_over_scene")
             return
