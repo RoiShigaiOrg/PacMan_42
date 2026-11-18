@@ -25,4 +25,4 @@ class Component(ABC):
 
     def add_label(self, text: str) -> None:
         """ Add text Label to this Selector """
-        self.__label: str = text
+        self._label: str = text

@@ -23,7 +23,7 @@ class Clickable(Component):
         self.__dimension: Tuple[float, float] = (width, height)
         self.__shape: Rect | None = None
         self.__value: bool = value
-        self.__label: str | None = None
+        self._label: str | None = None
 
     def read_value(self) -> None:
         """ Read the current toggle value hold by the Clickable. """
@@ -47,5 +47,5 @@ class Clickable(Component):
                     0xFF000000
                 )
         self.__shape.draw(display)
-        if self.__label:
-            display.write_text(pos[0], pos[1], 0xFFFFFFFF, self.__label)
+        if self._label:
+            display.write_text(pos[0], pos[1], 0xFFFFFFFF, self._label)
