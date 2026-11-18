@@ -5,6 +5,9 @@ from Engine.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (
     KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC
 )
+
+from .UI.Component import Component
+from .UI.Selector import Selector
 from typing import List
 
 
@@ -27,7 +30,10 @@ class OptionScene(Scene):
         self.__config_option: List[Component] = [
             Selector(
                 engine,
-                self.__engine.get_config_key("available_dimension")
+                self.__display.relative_width(0.9),
+                self.__display.relative_height(0.1),
+                self.__engine.get_config_key("available_dimension"),
+                "720",
             ),
             Selector(
                 engine,
