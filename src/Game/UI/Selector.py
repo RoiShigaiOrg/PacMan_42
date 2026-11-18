@@ -72,5 +72,3 @@ class Selector(Component):
                     0xFF000000
                 )
         self.__shape.draw(display)
-        if self._label:
-            display.write_text(pos[0], pos[1], 0xFFFFFFFF, self._label)

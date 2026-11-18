@@ -31,16 +31,16 @@ class OptionScene(Scene):
         self.__config_option: List[Component] = [
             Selector(
                 engine,
-                0.9, 0.1,
+                0.3, 0.05,
                 self.__engine.get_config_key("available_dimension"),
                 "720",
             ),
             Selector(
                 engine,
-                0.9, 0.1,
+                0.3, 0.05,
                 ["UP", "DOWN", "LEFT", "RIGHT"]
             ),
-            Clickable(0.9, 0.1)
+            Clickable(0.3, 0.05)
         ]
         self.__config_option[0].add_label("RESOLUTION")
         self.__config_option[1].add_label("MOVEMENT")
@@ -65,27 +65,24 @@ class OptionScene(Scene):
             self.__config_option[self.__select_iter].callback()
             return
         if input_handler.was_key_pressed(KEY_ESC):
-            print("return")
             self.__engine.scene_manager.last_scene()
             return
 
     def render(self) -> None:
         """ Render Method of the OptionScene """
-        self.__config_option[0].render(
-                self.__display,
-                (self.__display.relative_width(0.3),
-                self.__display.relative_height(0.3))
-            )
-        self.__config_option[1].render(
-                self.__display,
-                (self.__display.relative_width(0.3),
-                self.__display.relative_height(0.5))
-            )
-        self.__config_option[2].render(
-                self.__display,
-                (self.__display.relative_width(0.3),
-                self.__display.relative_height(0.7))
-            )
+        positions = (
+            (self.__display.relative_width(0.35),
+             self.__display.relative_height(0.4)),
+            (self.__display.relative_width(0.35),
+             self.__display.relative_height(0.45)),
+            (self.__display.relative_width(0.35),
+             self.__display.relative_height(0.5)),
+        )
+        for component, pos in zip(self.__config_option, positions):
+            component.render(self.__display, pos)
+        self.__display.render()
+        for component, pos in zip(self.__config_option, positions):
+            component.render_label(self.__display, pos)
 
     def render_on_change(self) -> None:
         """ Render on screen changes of the OptionScene. """
