@@ -29,7 +29,7 @@ class Engine:
     def __init__(
             self,
             program_name: str,
-            config_file: Path,
+            config_loader,
             target_fps: float | None = 60.0,
     ) -> None:
         """Initialize the engine.
@@ -46,7 +46,7 @@ class Engine:
         self.__file_manager: FileManager = FileManager()
         self.__config: ConfigHandler = ConfigHandler(
                 self.__file_manager.load(
-                    ConfigLoader(config_file)
+                    config_loader
                 )
             )
         print(f"config: {self.__config}")

@@ -3,7 +3,7 @@ from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from ..GameState import GameState, PacManState
-from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X
+from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
         RELATIVE_MAP_POS_X,
@@ -121,6 +121,8 @@ class MapScene(Scene):
                 self.stats.state = PacManState.SUPER
             elif self.stats.state == PacManState.SUPER:
                 self.stats.state = PacManState.NORMAL
+        if input_handler.was_key_pressed(KEY_H):
+            self.__engine.scene_manager.change_scene("endlevel_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.display.close()
         self.__update_player(input_handler, delta_time)
