@@ -36,7 +36,7 @@ class Selector(Component):
             self.__display_key: Any = key[0]
         else:
             raise ValueError("Selector: first key not given")
-        self.__shape: Rect = None
+        self.__shape: Rect | None = None
 
     def update(self, input_handler: InputHandler) -> None:
         """ Update the selector by referring on the user inputs """
@@ -73,7 +73,3 @@ class Selector(Component):
         self.__shape.draw(display)
         if self.__label:
             display.write_text(pos[0], pos[1], 0xFFFFFFFF, self.__label)
-
-    def add_label(self, text: str) -> None:
-        """ Add text Label to this Selector """
-        self.__label: str = text

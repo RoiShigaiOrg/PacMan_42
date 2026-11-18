@@ -30,8 +30,7 @@ class OptionScene(Scene):
         self.__config_option: List[Component] = [
             Selector(
                 engine,
-                self.__display.relative_width(0.9),
-                self.__display.relative_height(0.1),
+                0.9, 0.1,
                 self.__engine.get_config_key("available_dimension"),
                 "720",
             ),

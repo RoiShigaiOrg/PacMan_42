@@ -1,4 +1,7 @@
+from Engine import InputHandler
+from Engine.Graphics import MlxDisplay
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 
 class Component(ABC):
@@ -11,8 +14,15 @@ class Component(ABC):
     """
 
     @abstractmethod
-    def callback(self) -> None:
-        """
-        Run the method handled by the Component.
-        """
+    def update(self, input_handler: InputHandler) -> None:
+        """ Update Abstract Method of the Component Object """
         ...
+
+    @abstractmethod
+    def render(self, display: MlxDisplay, pos: Tuple[int, int]) -> None:
+        """ Render Abstract Method of the Component Object """
+        ...
+
+    def add_label(self, text: str) -> None:
+        """ Add text Label to this Selector """
+        self.__label: str = text
