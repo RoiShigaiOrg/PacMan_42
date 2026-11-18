@@ -1,4 +1,5 @@
-from Engine.Animation import Animation, AnimationHandler
+from pathlib import Path
+
 from Engine.InputHandler.KeyCode import KEY_D, KEY_Q, KEY_S, KEY_Z
 from Engine.Physics import PhysicsEngine
 from Engine.Sprite import Sprite, SpriteFrame
@@ -10,6 +11,36 @@ from Game.Scenes.MapScene import MapScene
 
 class FakeDisplay:
     pass
+
+
+class FakeSpriteSheet:
+    def __init__(self) -> None:
+        colors = {
+            "walk_right": 0xFFFF0000,
+            "walk_left": 0xFF00FF00,
+            "walk_up": 0xFF0000FF,
+            "walk_down": 0xFFFFFF00,
+        }
+        self._frames = {
+            tag: (
+                SpriteFrame(Sprite((1, 1), [[color]]), 100),
+                SpriteFrame(Sprite((1, 1), [[color ^ 0x00000001]]), 100),
+            )
+            for tag, color in colors.items()
+        }
+
+    def get_sprite(self, tag: str) -> tuple[SpriteFrame, ...]:
+        return self._frames[tag]
+
+
+class FakeEngine:
+    def __init__(self) -> None:
+        self.sprite_sheet = FakeSpriteSheet()
+
+    def load_sprite_sheet(
+            self, _image_path: Path, _metadata_path: Path,
+    ) -> FakeSpriteSheet:
+        return self.sprite_sheet
 
 
 class PixelDisplay:
@@ -43,33 +74,17 @@ def make_map(blocked: set[tuple[int, int]] | None = None) -> Map:
         ]
         for row in range(actual_map.height)
     ]
+    actual_map._Map__pellet = []
     actual_map.set_colliders(10, 10, 50, 50)
     return actual_map
-
-
-def make_animation_handler() -> AnimationHandler:
-    colors = {
-        "right": 0xFFFF0000,
-        "left": 0xFF00FF00,
-        "up": 0xFF0000FF,
-        "down": 0xFFFFFF00,
-    }
-    animations = {
-        direction: Animation((
-            SpriteFrame(Sprite((1, 1), [[color]]), 100),
-            SpriteFrame(Sprite((1, 1), [[color ^ 0x00000001]]), 100),
-        ))
-        for direction, color in colors.items()
-    }
-    return AnimationHandler(animations)
 
 
 def make_player(
         blocked: set[tuple[int, int]] | None = None,
 ) -> tuple[Player, Map]:
     player = Player(
+        FakeEngine(),
         movement_speed=120.0,
-        animation_handler=make_animation_handler(),
     )
     actual_map = make_map(blocked)
     player.InitPlayer(FakeDisplay(), actual_map)

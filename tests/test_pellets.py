@@ -134,7 +134,7 @@ def test_only_corner_pellets_animate_and_other_cells_use_pacgum() -> None:
 
 
 def test_scene_scores_only_a_pellet_that_was_removed() -> None:
-    actual_map = make_map([[True]])
+    actual_map = make_map([[True, True, True]] * 3)
     stats = GameState()
     scene = MapScene.__new__(MapScene)
     scene.map = actual_map
@@ -143,7 +143,7 @@ def test_scene_scores_only_a_pellet_that_was_removed() -> None:
         "PlayerStub",
         (),
         {"collider": type("ColliderStub", (), {
-            "world_position": Vector2(5, 5),
+            "world_position": Vector2(15, 15),
         })()},
     )()
     scene._MapScene__dirty_region = None
@@ -152,5 +152,6 @@ def test_scene_scores_only_a_pellet_that_was_removed() -> None:
     scene._MapScene__consume_player_pellet()
 
     assert stats.scores == 10
-    assert actual_map.pellet_cells == ()
-    assert scene._MapScene__dirty_region == (0, 0, 10, 10)
+    assert (1, 1) not in actual_map.pellet_cells
+    assert len(actual_map.pellet_cells) == 8
+    assert scene._MapScene__dirty_region == (10, 10, 10, 10)
