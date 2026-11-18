@@ -6,8 +6,9 @@ from Engine.InputHandler.KeyCode import (
     KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC
 )
 
-from .UI.Component import Component
-from .UI.Selector import Selector
+from ..UI.Component import Component
+from ..UI.Selector import Selector
+from ..UI.Clickable import Clickable
 from typing import List
 
 
@@ -36,10 +37,14 @@ class OptionScene(Scene):
             ),
             Selector(
                 engine,
+                0.9, 0.1,
                 ["UP", "DOWN", "LEFT", "RIGHT"]
             ),
-            Clickable()
+            Clickable(0.9, 0.1)
         ]
+        self.__config_option[0].add_label("RESOLUTION")
+        self.__config_option[1].add_label("MOVEMENT")
+        self.__config_option[2].add_label("DEBUG MODE")
         self.__select_iter: int = 0
 
     def update(self,
@@ -60,5 +65,29 @@ class OptionScene(Scene):
             self.__config_option[self.__select_iter].callback()
             return
         if input_handler.was_key_pressed(KEY_ESC):
+            print("return")
             self.__engine.scene_manager.last_scene()
             return
+
+    def render(self) -> None:
+        """ Render Method of the OptionScene """
+        self.__config_option[0].render(
+                self.__display,
+                (self.__display.relative_width(0.3),
+                self.__display.relative_height(0.3))
+            )
+        self.__config_option[1].render(
+                self.__display,
+                (self.__display.relative_width(0.3),
+                self.__display.relative_height(0.5))
+            )
+        self.__config_option[2].render(
+                self.__display,
+                (self.__display.relative_width(0.3),
+                self.__display.relative_height(0.7))
+            )
+
+    def render_on_change(self) -> None:
+        """ Render on screen changes of the OptionScene. """
+        self.__display.clear_window()
+        self.__display.clear(0xFF000000)

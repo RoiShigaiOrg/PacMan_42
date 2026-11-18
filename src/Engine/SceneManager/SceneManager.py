@@ -19,6 +19,7 @@ class SceneManager:
         """ Init Method of the ScreenManager Object """
         self.__screens: Dict[str, Scene] = dict(screen_dict or {})
         self.__actual_screen: Scene | None = None
+        self.__last: Scene | None = None
         if self.__screens:
             self.__actual_screen = next(iter(self.__screens.values()))
 
@@ -29,7 +30,9 @@ class SceneManager:
 
     def change_scene(self, scene_id: str) -> None:
         """ Change to the given screen_id to render in the mlx window """
+        print(f"scene_id: {scene_id}")
         if scene_id in self.__screens:
+            self.__last = self.__actual_screen
             self.__actual_screen = self.__screens[scene_id]
             self.__actual_screen.render_on_change()
         else:
@@ -38,6 +41,16 @@ class SceneManager:
     def add_scene(self, scene: Dict[str, Scene]) -> None:
         """Register a screen under ``screen_id``."""
         self.__screens.update(scene)
+
+    def last_scene(self) -> None:
+        """ Set the SceneManager to the last scene. """
+        if self.__last:
+            tmp: Scene = self.__actual_screen
+            self.__actual_screen = self.__last
+            self.__last = tmp
+            self.__actual_screen.render_on_change()
+        else:
+            raise ValueError("SceneManager: No Last Scene available")
 
     def render(self) -> None:
         """Render and present the currently selected screen."""

@@ -3,6 +3,7 @@ from Engine.Application import Application
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
 from .Scenes.MapScene import MapScene
+from .Scenes.OptionScene import OptionScene
 from .Scenes.EndLevelScene import EndLevel
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
@@ -60,6 +61,10 @@ class PacMan(Application):
                     self.engine,
                     self.engine.create_display((1280, 720)),
                     self.stats
+                ),
+                "option_scene": OptionScene(
+                    self.engine,
+                    self.engine.create_display((1280, 720)),
                 )
             }
         )

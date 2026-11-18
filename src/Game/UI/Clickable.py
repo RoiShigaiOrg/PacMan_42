@@ -23,6 +23,7 @@ class Clickable(Component):
         self.__dimension: Tuple[float, float] = (width, height)
         self.__shape: Rect | None = None
         self.__value: bool = value
+        self.__label: str | None = None
 
     def read_value(self) -> None:
         """ Read the current toggle value hold by the Clickable. """

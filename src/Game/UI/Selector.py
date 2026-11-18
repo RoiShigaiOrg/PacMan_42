@@ -25,11 +25,12 @@ class Selector(Component):
             raise ValueError("Selector: Negative dimension")
         self.__engine: Engine = engine
         self.__dimension: Tuple[float, float] = (width, height)
+        self.__label: str | None = None
         if isinstance(key, dict):
             self.__key: Any = [key.keys()]
         else:
             self.__key: Any = key
-        self.__callback()
+        self.__callback: Callable | None = callback
         if first_key:
             self.__display_key: Any = first_key
         elif isinstance(key, List):
