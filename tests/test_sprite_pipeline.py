@@ -197,6 +197,32 @@ def test_sprite_sheet_rejects_missing_tags_and_dimension_mismatches() -> None:
         SpriteSheet([[0xFFFFFFFF]], metadata)
 
 
+@pytest.mark.parametrize("draw_size", [(27, 27), (41, 41), (82, 82)])
+def test_sprite_draw_samples_right_and_bottom_edges_when_resized(
+    draw_size: tuple[int, int],
+) -> None:
+    pixels = [[0xFF000001] * 32 for _ in range(32)]
+    pixels[0][-1] = 0xFF000002
+    pixels[-1][0] = 0xFF000003
+    pixels[-1][-1] = 0xFF000004
+    sprite = Sprite((32, 32), pixels)
+
+    class RecordingDisplay:
+        def __init__(self) -> None:
+            self.drawn: dict[tuple[int, int], int] = {}
+
+        def draw_pixel(self, x: int, y: int, color: int) -> None:
+            self.drawn[(x, y)] = color
+
+    display = RecordingDisplay()
+    sprite.draw(display, (0, 0), draw_size)
+    last_x, last_y = draw_size[0] - 1, draw_size[1] - 1
+
+    assert display.drawn[(last_x, 0)] == 0xFF000002
+    assert display.drawn[(0, last_y)] == 0xFF000003
+    assert display.drawn[(last_x, last_y)] == 0xFF000004
+
+
 def test_aseprite_metadata_validates_tag_ranges_and_frame_bounds() -> None:
     invalid_tag = make_aseprite_metadata()
     invalid_tag["meta"]["frameTags"][0]["to"] = 2

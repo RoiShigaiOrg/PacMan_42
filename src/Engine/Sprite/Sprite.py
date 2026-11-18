@@ -65,9 +65,15 @@ class Sprite:
             raise ValueError("sprite draw dimensions must be positive")
 
         for dy in range(dst_h):
-            src_y = min(src_h - 1, int(dy * src_h / dst_h))
+            src_y = min(
+                src_h - 1,
+                ((2 * dy + 1) * src_h) // (2 * dst_h),
+            )
             for dx in range(dst_w):
-                src_x = min(src_w - 1, int(dx * src_w / dst_w))
+                src_x = min(
+                    src_w - 1,
+                    ((2 * dx + 1) * src_w) // (2 * dst_w),
+                )
                 color = self.pixels[src_y][src_x]
 
                 if color >> 24 == 0:
