@@ -161,9 +161,11 @@ class MapScene(Scene):
         self.stats.update_death_recovery(delta_time)
         self.stats.update_power_remaining(delta_time)
         if self.stats.is_over():
+            self.__reset_map()
             self.__engine.scene_manager.change_scene("game_over_scene")
             return
         if not self.map.contain_pellet():
+            self.__reset_map()
             self.__engine.scene_manager.change_scene("endlevel_scene")
         if self.map.update_pellet_animation(delta_time):
             self.__dirty_region = self.union_regions(
