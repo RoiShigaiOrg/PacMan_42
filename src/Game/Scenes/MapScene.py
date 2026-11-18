@@ -3,7 +3,7 @@ from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from ..GameState import GameState, PacManState
-from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H
+from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H, KEY_R
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
         RELATIVE_MAP_POS_X,
@@ -98,6 +98,64 @@ class MapScene(Scene):
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
 
+    def __reset_map(self) -> None:
+        """ Generate a New map and Reset the entity position """
+        self.map = Map(self.__engine)
+        self.display.clear(0xFF000000)
+        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
+        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
+        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
+        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
+        self.map.set_colliders(
+                map_x,
+                map_y,
+                map_width,
+                map_height,
+            )
+        self.map.draw(self.display)
+        self.__player: Player = Player(self.__engine)
+        self.__player.InitPlayer(self.display, self.map)
+        self.__ghost_targets: dict[
+            Ghost, tuple[Behaviour, TargetPlan]
+        ] = {}
+        for ghost in self.__ghosts.values():
+            ghost.init_ghost(self.display, self.map)
+
+        territories = self.map.graph_territories(
+            {
+                name: ghost.origin
+                for name, ghost in self.__ghosts.items()
+            },
+            FLEA_ROAM_RADIUS,
+        )
+        for name, ghost in self.__ghosts.items():
+            ghost.set_roam_territory(territories[name])
+
+        for ghost in self.__ghosts.values():
+            ghost_cell = self.map.cell_coordinates_at(
+                ghost.collider.world_position
+            )
+            target_plan = ghost.compute_target(
+                ghost.behaviour_context(
+                    self.__player, self.map, self.stats, self.__ghosts
+                )
+            )
+            self.__ghost_targets[ghost] = (
+                ghost.behaviour, target_plan
+            )
+            ghost.compute_path(
+                ghost_cell,
+                target_plan.target,
+                self.map.graph,
+                target_plan.allowed_cells,
+                target_plan.pathfinding,
+            )
+        self.__dirty_region: Region | None = (
+            0, 0, self.display.width, self.display.height
+        )
+        self.__consume_player_pellet()
+        self.__static_layer = self.display.snapshot()
+
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """ Update method for the MapScene Object """
         self.stats.time_in_level(delta_time)
@@ -106,6 +164,8 @@ class MapScene(Scene):
         if self.stats.is_over():
             self.__engine.scene_manager.change_scene("game_over_scene")
             return
+        if not self.map.contain_pellet():
+            self.__engine.scene_manager.change_scene("endlevel_scene")
         if self.map.update_pellet_animation(delta_time):
             self.__dirty_region = self.union_regions(
                 self.__dirty_region,
@@ -113,6 +173,8 @@ class MapScene(Scene):
             )
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
+        if input_handler.was_key_pressed(KEY_R):
+            self.__reset_map()
         if input_handler.was_key_pressed(KEY_X):
             for ghost in self.__ghosts.values():
                 ghost.change_behaviour(Behaviour.DEAD)

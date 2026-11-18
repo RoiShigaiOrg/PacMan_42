@@ -71,10 +71,9 @@ class Map():
     """class builds the map from the mazegenerator modules"""
 
     def __init__(
-            self, engine: Engine, width: int = 5, height: int = 5,
-            seed: int = random.randint(0, 10)):
+            self, engine: Engine, width: int = 5, height: int = 5):
         """ Init Method of Map Generation """
-
+        seed: int = random.randint(0, 100)
         gen = MazeGenerator(size=(width, height), perfect=False, seed=seed)
         gen.generate(seed=seed)
         self.grid: List[List[Cell]] = self._symmetrize_vertical(
@@ -117,6 +116,11 @@ class Map():
         self.__grid_origin: Tuple[int, int] | None = None
         self.__cell_size: Tuple[int, int] | None = None
         self.graph: Dict[Tuple[int, int], MapNode] = self.build_graph()
+        print("map generated")
+
+    def contain_pellet(self) -> bool:
+        """ Return a boolean indicating if there is pellet or not in the map """
+        return (self.__pellet)
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """
