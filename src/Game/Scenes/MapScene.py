@@ -115,11 +115,8 @@ class MapScene(Scene):
                 map_height,
             )
         self.map.draw(self.display)
-        self.__player: Player = Player(self.__engine)
+        self.__player = Player(self.__engine)
         self.__player.InitPlayer(self.display, self.map)
-        self.__ghost_targets: dict[
-            Ghost, tuple[Behaviour, TargetPlan]
-        ] = {}
         for ghost in self.__ghosts.values():
             ghost.init_ghost(self.display, self.map)
 
@@ -152,7 +149,7 @@ class MapScene(Scene):
                 target_plan.allowed_cells,
                 target_plan.pathfinding,
             )
-        self.__dirty_region: Region | None = (
+        self.__dirty_region = (
             0, 0, self.display.width, self.display.height
         )
         self.__consume_player_pellet()

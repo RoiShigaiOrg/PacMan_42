@@ -123,7 +123,7 @@ class Map():
         Return a boolean indicating if there is pellet or
             not in the map.
         """
-        return (self.__pellet)
+        return True if self.__pellet else False
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """

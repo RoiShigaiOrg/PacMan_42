@@ -3,7 +3,7 @@ from pathlib import Path
 
 PELLET_POINTS: int = 10
 POWER_PELLET_POINTS: int = 50
-POWER_DURATION: int = 10.0
+POWER_DURATION: float = 10.0
 GHOST_POINTS: tuple[int, ...] = (200, 400, 800, 1600)
 EXTRA_LIFE_SCORE: int = 10000
 LEVEL_TIME: float = 120.0
