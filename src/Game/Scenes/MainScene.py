@@ -1,7 +1,7 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (
-    KEY_V, KEY_ESC, KEY_C, KEY_N, KEY_L
+    KEY_V, KEY_ESC, KEY_C, KEY_L
 )
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect

@@ -119,7 +119,10 @@ class Map():
         print("map generated")
 
     def contain_pellet(self) -> bool:
-        """ Return a boolean indicating if there is pellet or not in the map """
+        """
+        Return a boolean indicating if there is pellet or
+            not in the map.
+        """
         return (self.__pellet)
 
     def center(self) -> Tuple[int, int]:

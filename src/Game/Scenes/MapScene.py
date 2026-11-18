@@ -3,7 +3,9 @@ from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from ..GameState import GameState, PacManState
-from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H, KEY_R
+from Engine.InputHandler.KeyCode import (
+        KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H, KEY_R
+    )
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
         RELATIVE_MAP_POS_X,

@@ -29,7 +29,7 @@ class Engine:
     def __init__(
             self,
             program_name: str,
-            config_loader,
+            config_loader: ConfigLoader,
             target_fps: float | None = 60.0,
     ) -> None:
         """Initialize the engine.
