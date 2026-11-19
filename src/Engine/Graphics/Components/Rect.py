@@ -47,7 +47,6 @@ class Rect(Components):
         self.__text: TextBox | None = None
         self.__text_flag: bool = False
         self.__justify_text: int | None = None
-        print(f"rect dim: {x} {y}")
         self.__width: int = x
         self.__height: int = y
         self.__pos: List[int] = [pos_x, pos_y]

@@ -12,6 +12,7 @@ from .FileManager.Loader.SpriteLoader import SpriteLoader
 from .Sprite.SpriteSheet import SpriteSheet
 from pathlib import Path
 import mlx
+import time
 
 
 class Engine:
@@ -122,11 +123,21 @@ class Engine:
         Args:
             application: Application object to update and render.
         """
+        fps_frames = 0
+        fps_started = time.perf_counter()
 
         def frame(_param: object) -> None:
+            nonlocal fps_frames, fps_started
             delta_time = self._clock.tick()
             application.update(delta_time, self._input_handler)
             application.render()
+            fps_frames += 1
+            now = time.perf_counter()
+            elapsed = now - fps_started
+            if elapsed >= 1.0:
+                print(f"FPS: {fps_frames / elapsed:.1f}")
+                fps_frames = 0
+                fps_started = now
             self._input_handler.end_frame()
 
         self._input_handler.register_hooks()

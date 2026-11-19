@@ -27,44 +27,44 @@ class PacMan(Application):
         self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
         self.stats: GameState = GameState()
         self.color: str
-        self.dimension: Tuple[int, int]
+        self.dimension: Tuple[int, int] = self.engine.get_config_key("dimension")
         self.display: MlxDisplay
         self.engine.scene_manager.add_scene(
             {
                 "main_scene": MainScene(
                     self.engine,
-                    self.engine.create_display((1280, 720))
+                    self.engine.create_display(self.dimension)
                 ),
                 "game_scene": MapScene(
                     self.engine,
-                    self.engine.create_display((1280, 720)),
+                    self.engine.create_display(self.dimension),
                     self.stats
                 ),
                 "game_over_scene": GameOverScene(
                     self.engine,
-                    self.engine.create_display((1280, 720)),
+                    self.engine.create_display(self.dimension),
                     self.stats
                 ),
                 "score_scene": ScoreScene(
                     self.engine,
-                    self.engine.create_display((1280, 720)),
+                    self.engine.create_display(self.dimension),
                     self.stats,
                     False
                 ),
                 "leaderboard_scene": ScoreScene(
                     self.engine,
-                    self.engine.create_display((1280, 720)),
+                    self.engine.create_display(self.dimension),
                     self.stats,
                     True
                 ),
                 "endlevel_scene": EndLevel(
                     self.engine,
-                    self.engine.create_display((1280, 720)),
+                    self.engine.create_display(self.dimension),
                     self.stats
                 ),
                 "option_scene": OptionScene(
                     self.engine,
-                    self.engine.create_display((1280, 720)),
+                    self.engine.create_display(self.dimension),
                 )
             }
         )
