@@ -27,7 +27,7 @@ class Selector(Component):
         self.__dimension: Tuple[float, float] = (width, height)
         self._label: str | None = None
         if isinstance(key, dict):
-            self.__key: Any = [key.keys()]
+            self.__key: Any = list(key.keys())
         else:
             self.__key: Any = key
         self.__callback: Callable | None = callback
@@ -38,15 +38,17 @@ class Selector(Component):
         else:
             raise ValueError("Selector: first key not given")
         self.__shape: Rect | None = None
+        self.__selector: int = 0
 
     def update(self, input_handler: InputHandler) -> None:
         """ Update the selector by referring on the user inputs """
         if input_handler.was_key_pressed(KEY_RIGHT):
-            self.__selector = self.__selector + 1 % len(self.__key)
+            self.__selector = (self.__selector + 1) % len(self.__key)
         if input_handler.was_key_pressed(KEY_LEFT):
-            self.__selector = self.__selector - 1
+            self.__selector = (self.__selector - 1)
             if self.__selector < 0:
-                self.__selector = len(self.__key)
+                self.__selector = len(self.__key) - 1
+        self.__display_key = str(self.__key[self.__selector])
 
     def callback(self) -> None:
         """ Run the callback method associated to the selector. """
@@ -72,3 +74,12 @@ class Selector(Component):
                     0xFF000000
                 )
         self.__shape.draw(display)
+
+    def render_label(self, display: MlxDisplay, pos: Tuple[int, int]) -> None:
+        """ Render label method of the Selector class """
+        text_x: int = int(display.relative_width(self.__dimension[0]) * 0.7)
+        select_text: str = f"<  {self.__display_key}  >"
+        if self._label:
+            display.write_text(pos[0], pos[1], 0xFFFFFFFF, self._label)
+            display.write_text(pos[0] + text_x, pos[1], 0xFFFFFFFF, select_text)
+

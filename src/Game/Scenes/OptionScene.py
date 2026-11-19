@@ -59,7 +59,7 @@ class OptionScene(Scene):
         if input_handler.was_key_pressed(KEY_DOWN):
             self.__select_iter = self.__select_iter - 1
             if self.__select_iter < 0:
-                self.__select_iter = len(self.__config_option)
+                self.__select_iter = len(self.__config_option) - 1
             return
         if input_handler.was_key_pressed(KEY_ENTER):
             self.__config_option[self.__select_iter].callback()
@@ -67,6 +67,7 @@ class OptionScene(Scene):
         if input_handler.was_key_pressed(KEY_ESC):
             self.__engine.scene_manager.last_scene()
             return
+        self.__config_option[self.__select_iter].update(input_handler)
 
     def render(self) -> None:
         """ Render Method of the OptionScene """
