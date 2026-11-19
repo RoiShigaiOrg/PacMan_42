@@ -1,7 +1,7 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (
-    KEY_V, KEY_ESC, KEY_C, KEY_N, KEY_L
+    KEY_V, KEY_ESC, KEY_C, KEY_L
 )
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Graphics.Components.Rect import Rect
@@ -60,11 +60,11 @@ class MainScene(Scene):
                 TEXT_CENTER
             )
         self.__rect2.add_text(
-                TextBox("Press V to TestScene", 0xFFFFFFFF),
+                TextBox("Press V to LeaderBoard", 0xFFFFFFFF),
                 TEXT_CENTER
             )
         self.__rect3.add_text(
-                TextBox("Press ESC to TestScene", 0xFFFFFFFF),
+                TextBox("Press ESC to quit", 0xFFFFFFFF),
                 TEXT_CENTER
             )
         self.__dirty_region: Region | None = (
@@ -82,9 +82,7 @@ class MainScene(Scene):
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("game_scene")
         if input_handler.was_key_pressed(KEY_V):
-            self.__engine.scene_manager.change_scene("test_scene")
-        if input_handler.was_key_pressed(KEY_N):
-            self.__engine.scene_manager.change_scene("game_over_scene")
+            self.__engine.scene_manager.change_scene("leaderboard_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.__display.close()
         if input_handler.was_key_pressed(KEY_L):

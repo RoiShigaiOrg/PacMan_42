@@ -3,13 +3,14 @@ from Engine.Application import Application
 from Engine.InputHandler import InputHandler
 from .Scenes.MainScene import MainScene
 from .Scenes.MapScene import MapScene
-from .Scenes.TestScene import TestScene
+from .Scenes.EndLevelScene import EndLevel
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
 from pathlib import Path
 from .Scenes.GameOverScene import GameOverScene
 from .GameState import GameState
 from .Scenes.ScoreScene import ScoreScene
+from .Config import GameConfigLoader
 
 
 class PacMan(Application):
@@ -22,7 +23,7 @@ class PacMan(Application):
 
     def __init__(self, config_file: Path) -> None:
         """ Init Method of the PacMan """
-        self.engine: Engine = Engine("Pac-Man", config_file)
+        self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
         self.stats: GameState = GameState()
         self.color: str
         self.dimension: Tuple[int, int]
@@ -37,10 +38,6 @@ class PacMan(Application):
                     self.engine,
                     self.engine.create_display((1280, 720)),
                     self.stats
-                ),
-                "test_scene": TestScene(
-                    self.engine,
-                    self.engine.create_display((1280, 720))
                 ),
                 "game_over_scene": GameOverScene(
                     self.engine,
@@ -59,6 +56,11 @@ class PacMan(Application):
                     self.stats,
                     True
                 ),
+                "endlevel_scene": EndLevel(
+                    self.engine,
+                    self.engine.create_display((1280, 720)),
+                    self.stats
+                )
             }
         )
 

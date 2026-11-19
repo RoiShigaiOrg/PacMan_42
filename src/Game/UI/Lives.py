@@ -6,7 +6,10 @@ HEART_EMPTY_FILE: str | None = None
 
 
 class Heart():
-    """"""
+    """Show "HEART" at (x, y).
+            The MLX the sprite is load of the xpm, drawn on the window,
+            over the image:
+            it must be written again at every frame."""
     def __init__(self, x: int, y: int, sprite: XpmImage,
                  empty_sprite: XpmImage | None = None, scale: int = 1) -> None:
         self.x = x
@@ -27,14 +30,16 @@ class Heart():
         return self.__sprite.height * self.scale
 
     def draw(self, display: MlxDisplay):
-        """"""
+        """draw the heart, if it is to be drawn"""
         sprite = self.__sprite if self.full else self.__empty_sprite
         if sprite is not None:
             sprite.draw(display, self.x, self.y, self.scale, {})
 
 
 class Lives():
-    """"""
+    """Show bar of "HEART" at (x, y).
+            add a heart or remove a heart,
+            and display the correct number of hearts again."""
     def __init__(self, x: int, y: int, max_lives: int, scale: int = 1,
                  gap: int = 6,
                  heart_file: XpmImage = HEART_FILE,

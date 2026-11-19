@@ -33,9 +33,14 @@ class ScoreScene(Scene):
 
         Show the best scores saved in the leaderboard file.
     """
-    def __init__(self, engine: Engine, display: MlxDisplay,
-                 stats: GameState, can_switch: bool = False) -> None:
-        """"""
+
+    def __init__(
+            self,
+            engine: Engine,
+            display: MlxDisplay,
+            stats: GameState,
+            can_switch: bool = False) -> None:
+        """Init Method of the ScoreScene Class"""
         self.__engine = engine
         self.__display = display
         self.__title_font = XpmAlphabet(FILE_ALPHABET)

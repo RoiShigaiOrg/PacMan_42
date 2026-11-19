@@ -3,6 +3,7 @@ from pathlib import Path
 
 PELLET_POINTS: int = 10
 POWER_PELLET_POINTS: int = 50
+POWER_DURATION: float = 10.0
 GHOST_POINTS: tuple[int, ...] = (200, 400, 800, 1600)
 EXTRA_LIFE_SCORE: int = 10000
 LEVEL_TIME: float = 120.0
@@ -50,6 +51,7 @@ class GameState:
         self.state: PacManState = PacManState.NORMAL
         self._death_recovery_remaining: float = 0.0
         self.play_time: float = 0.0
+        self._power_remaining: float = 0.0
 
     @property
     def game_mode(self) -> GameMode:
@@ -96,11 +98,12 @@ class GameState:
         """add value point of pellet"""
         self.add_point(PELLET_POINTS)
 
-    def eat_Fruit(self) -> None:
+    def eat_fruit(self) -> None:
         """ add value point of power by pellet"""
         self.add_point(POWER_PELLET_POINTS)
         if self.state is not PacManState.DEAD:
             self.state = PacManState.SUPER
+            self._power_remaining = POWER_DURATION
         self.ghost_combo = 0
 
     def eat_ghost(self) -> int:
@@ -116,6 +119,25 @@ class GameState:
         if self.state is PacManState.SUPER:
             self.state = PacManState.NORMAL
         self.ghost_combo = 0
+
+    @property
+    def power_remaining(self) -> float:
+        """Return the remaining shared Pac-Man/ghost recovery duration."""
+        return self._power_remaining
+
+    def update_power_remaining(self, delta_time: float) -> None:
+        """Advance the power remaining time and restore normal mode."""
+        if (
+            self.state is not PacManState.SUPER
+            or self._power_remaining <= 0
+            or delta_time <= 0
+        ):
+            return
+        self._power_remaining = max(
+            0.0, self._power_remaining - delta_time
+        )
+        if self._power_remaining == 0:
+            self.end_power_mode()
 
     def lose_life(self) -> None:
         """ managing the loss of a life and the death of Pac-Man"""

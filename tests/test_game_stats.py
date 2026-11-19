@@ -10,7 +10,7 @@ def test_new_game() -> None:
 
 def test_ghost_combo_doubles() -> None:
     stats = GameState()
-    stats.eat_Fruit()
+    stats.eat_fruit()
     assert stats.state == PacManState.SUPER
     assert [stats.eat_ghost() for _ in range(5)] == [200, 400, 800, 1600, 1600]
 
