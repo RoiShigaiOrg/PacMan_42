@@ -4,7 +4,7 @@ from Engine.Graphics import MlxDisplay
 from Engine.Animation import Animation, AnimationHandler
 from Engine.Sprite import Sprite
 from mazegenerator import MazeGenerator
-from typing import Dict, Mapping, Tuple, List
+from typing import Dict, Mapping, Tuple, List, Sequence
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
 from pathlib import Path
@@ -41,6 +41,8 @@ WALL_MASK_TO_TAG: dict[int, str] = {
     TOP | DOWN | LEFT: "vertical_left",
     TOP | RIGHT | DOWN | LEFT: "center",
 }
+
+Region = Tuple[int, int, int, int]
 
 
 def wall_neighbor_mask(
@@ -103,6 +105,9 @@ class Map():
             for cell in row
             if cell.walkable
         ]
+        self.__pellet_coordinates = {
+            pellet.coordinate for pellet in self.__pellet
+        }
         self.__pacgum_sprite: Sprite = engine.load_sprite_sheet(
                 Path("assets/Pellet/pacgum.png")
             ).extract_sprite((0, 0), (32, 32))
@@ -241,6 +246,15 @@ class Map():
             self.height * cell_height,
         )
 
+    @property
+    def animated_pellet_regions(self) -> tuple[Region, ...]:
+        """Return dirty regions for corner pellets that remain on the map."""
+        return tuple(
+            self.cell_region(coordinate)
+            for coordinate in sorted(self.__corner_cells)
+            if coordinate in self.__remaining_pellet_coordinates()
+        )
+
     def cell_region(
             self, coordinate: Tuple[int, int]
     ) -> Tuple[int, int, int, int]:
@@ -258,10 +272,23 @@ class Map():
     def consume_pellet_at(self, position: Vector2) -> Cell | None:
         """Remove and return the pellet in the cell containing a position."""
         coordinate = self.cell_coordinates_at(position)
+        remaining = self.__remaining_pellet_coordinates()
+        if coordinate not in remaining:
+            return None
+
         for index, pellet in enumerate(self.__pellet):
             if pellet.coordinate == coordinate:
+                remaining.remove(coordinate)
                 return self.__pellet.pop(index)
         return None
+
+    def __remaining_pellet_coordinates(self) -> set[Tuple[int, int]]:
+        """Return the coordinate index, building it if not initialized."""
+        if not hasattr(self, "_Map__pellet_coordinates"):
+            self.__pellet_coordinates = {
+                pellet.coordinate for pellet in self.__pellet
+            }
+        return self.__pellet_coordinates
 
     def update_pellet_animation(self, delta_time: float) -> bool:
         """Advance the shared pellet animation and report frame changes."""
@@ -464,32 +491,80 @@ class Map():
                         cell_size,
                     )
 
-    def render_pellets(self, display: MlxDisplay) -> None:
-        """Draw the current shared animation frame in every pellet cell."""
-        sprite: Sprite = self.__animation_handler.current_sprite
+    def render_pellets(
+            self,
+            display: MlxDisplay,
+            regions: Sequence[Region] | None = None,
+    ) -> None:
+        """Draw pellets in the supplied dirty regions, or all if omitted."""
         cell_width, cell_height = self.cell_size
         origin_x, origin_y = self.grid_origin
+        if regions is None:
+            coordinates = tuple(
+                pellet.coordinate for pellet in self.__pellet
+            )
+        else:
+            if not regions:
+                return
+            coordinates = tuple(sorted(
+                self.__pellets_in_regions(regions)
+            ))
 
-        for pellet in self.__pellet:
-            column, row = pellet.coordinate
-            if pellet.coordinate in self.__corner_cells:
+        sprite: Sprite = self.__animation_handler.current_sprite
+        for column, row in coordinates:
+            coordinate = (column, row)
+            x = origin_x + column * cell_width
+            y = origin_y + row * cell_height
+
+            if coordinate in self.__corner_cells:
                 sprite.draw(
                     display,
-                    (
-                        origin_x + column * cell_width,
-                        origin_y + row * cell_height
-                    ),
+                    (x, y),
                     (cell_width, cell_height)
                 )
             else:
                 self.__pacgum_sprite.draw(
                     display,
-                    (
-                        origin_x + column * cell_width,
-                        origin_y + row * cell_height,
-                    ),
+                    (x, y),
                     (cell_width, cell_height),
                 )
+
+    def __pellets_in_regions(
+            self, regions: Sequence[Region]
+    ) -> set[Tuple[int, int]]:
+        """Find remaining pellets by visiting cells covered by dirty areas."""
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        map_right = origin_x + self.width * cell_width
+        map_bottom = origin_y + self.height * cell_height
+        remaining = self.__remaining_pellet_coordinates()
+        coordinates: set[Tuple[int, int]] = set()
+
+        for x, y, width, height in regions:
+            left = max(x, origin_x)
+            top = max(y, origin_y)
+            right = min(x + width, map_right)
+            bottom = min(y + height, map_bottom)
+            if left >= right or top >= bottom:
+                continue
+
+            first_column = (left - origin_x) // cell_width
+            first_row = (top - origin_y) // cell_height
+            column_stop = min(
+                self.width,
+                (right - origin_x + cell_width - 1) // cell_width,
+            )
+            row_stop = min(
+                self.height,
+                (bottom - origin_y + cell_height - 1) // cell_height,
+            )
+            for row in range(first_row, row_stop):
+                for column in range(first_column, column_stop):
+                    coordinate = (column, row)
+                    if coordinate in remaining:
+                        coordinates.add(coordinate)
+
+        return coordinates
 
     def draw(self, display: MlxDisplay) -> None:
         """Draw the previously configured grid using its collider layout."""
