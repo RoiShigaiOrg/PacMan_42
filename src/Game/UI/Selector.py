@@ -39,6 +39,7 @@ class Selector(Component):
             raise ValueError("Selector: first key not given")
         self.__shape: Rect | None = None
         self.__selector: int = 0
+        self._selected: bool = False
 
     def update(self, input_handler: InputHandler) -> None:
         """ Update the selector by referring on the user inputs """
@@ -73,7 +74,9 @@ class Selector(Component):
                     pos[0], pos[1],
                     0xFF000000
                 )
-        self.__shape.draw(display)
+        color: int = 0xFF0A0A0A if self._selected else 0xFF000000
+        self.__shape.update_color(color)
+        self.__shape.fill(display)
 
     def render_label(self, display: MlxDisplay, pos: Tuple[int, int]) -> None:
         """ Render label method of the Selector class """

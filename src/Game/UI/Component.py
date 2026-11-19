@@ -14,6 +14,7 @@ class Component(ABC):
     """
 
     _label: str | None = None
+    _selected: bool = False
 
     @abstractmethod
     def update(self, input_handler: InputHandler) -> None:
@@ -29,6 +30,14 @@ class Component(ABC):
     def callback(self) -> None:
         """Activate the component from the option scene."""
         ...
+
+    def select(self) -> None:
+        """ Select Method of the component """
+        self._selected = True
+
+    def unselect(self) -> None:
+        """ Unselect Method of the component """
+        self._selected = False
 
     def add_label(self, text: str) -> None:
         """ Add text Label to this Selector """

@@ -30,6 +30,7 @@ class Clickable(Component):
         self.__square: Rect | None = None
         self.__value: bool = value
         self._label: str | None = None
+        self._selected: bool = False
 
     def read_value(self) -> bool:
         """ Read the current toggle value hold by the Clickable. """
@@ -83,5 +84,7 @@ class Clickable(Component):
             self.__square.update_pos(square_x, square_y)
             self.__square.update_color(color)
 
-        self.__shape.draw(display)
+        color: int = 0xFF0A0A0A if self._selected else 0xFF000000
+        self.__shape.update_color(color)
+        self.__shape.fill(display)
         self.__square.fill(display)

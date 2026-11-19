@@ -46,20 +46,25 @@ class OptionScene(Scene):
         self.__config_option[1].add_label("MOVEMENT")
         self.__config_option[2].add_label("DEBUG MODE")
         self.__select_iter: int = 0
+        self.__config_option[self.__select_iter].select()
 
     def update(self,
                delta_time: float,
                input_handler: InputHandler) -> None:
         """ Update the Screen using the current frame's input state. """
         if input_handler.was_key_pressed(KEY_UP):
-            self.__select_iter = self.__select_iter + 1 % len(
-                    self.__config_option
-                )
-            return
-        if input_handler.was_key_pressed(KEY_DOWN):
+            self.__config_option[self.__select_iter].unselect()
             self.__select_iter = self.__select_iter - 1
             if self.__select_iter < 0:
                 self.__select_iter = len(self.__config_option) - 1
+            self.__config_option[self.__select_iter].select()
+            return
+        if input_handler.was_key_pressed(KEY_DOWN):
+            self.__config_option[self.__select_iter].unselect()
+            self.__select_iter = (self.__select_iter + 1) % len(
+                    self.__config_option
+                )
+            self.__config_option[self.__select_iter].select()
             return
         if input_handler.was_key_pressed(KEY_ENTER):
             self.__config_option[self.__select_iter].callback()
@@ -68,6 +73,7 @@ class OptionScene(Scene):
             self.__engine.scene_manager.last_scene()
             return
         self.__config_option[self.__select_iter].update(input_handler)
+        print(self.__select_iter)
 
     def render(self) -> None:
         """ Render Method of the OptionScene """
