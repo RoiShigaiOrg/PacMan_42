@@ -66,7 +66,7 @@ owners and deadlines.
 | Game / Scene | OptionScene | 🔴 Not started | leybessa | MEDIUM | TBD |
 | Game / Scene | CheatScene | 🔴 Not started | leybessa | MEDIUM | TBD |
 | Game / Scene | SelectMode | 🔴 Not started | leybessa | MEDIUM | TBD |
-| Game / Scene | Leaderboard | 🔴 Not started | leybessa | HIGH | TBD |
+| Game / Scene | Leaderboard | 🟡 In progress  | leybessa | HIGH | TBD |
 | Game / Scene | GameOverScene | 🟡 In progress | leybessa | HIGH | TBD |
 | Gane / Scene | ScoreScene | 🟡 In progress | leybessa | HIGH | TBD |
 

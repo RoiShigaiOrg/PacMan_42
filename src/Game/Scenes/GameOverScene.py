@@ -46,7 +46,7 @@ class GameOverScene(Scene):
         self.__bar.text = ""
         self.__display.clear_window()
         self.__display.clear(BLACK)
-        title = "game  over"
+        title = "game   over"
         width = self.__title_font.length_texte(title, spacing=4)
         self.__title_font.write(self.__display,
                                 (self.__display.width - width) // 2,
@@ -81,5 +81,6 @@ class GameOverScene(Scene):
         self.__bar.draw_text(self.__display, WHITE)
         self.__display.write_text(self.__bar.x + 100, self.__bar.y - 70, WHITE,
                                   f"Your score : {self.__stats.scores}")
-        self.__display.write_text(self.__bar.x + 100, self.__bar.y - 40, WHITE,
-                                  f"Your time  : {self.__stats.play_time}")
+        message = f"Your time  : {round(self.__stats.play_time, 2)}"
+        self.__display.write_text(self.__bar.x + 100,
+                                  self.__bar.y - 40, WHITE, message)

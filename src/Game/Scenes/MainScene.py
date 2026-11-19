@@ -9,7 +9,6 @@ from Engine.Graphics.Components.TextBox import TextBox
 from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 from Engine.Engine import Engine
 
-
 Region = tuple[int, int, int, int]
 
 
