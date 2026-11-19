@@ -33,7 +33,7 @@ class OptionScene(Scene):
                 engine,
                 0.3, 0.05,
                 self.__engine.get_config_key("available_dimension"),
-                "720",
+                str(self.__engine.get_config_key("dimension")[1])
             ),
             Selector(
                 engine,
@@ -70,10 +70,12 @@ class OptionScene(Scene):
             self.__config_option[self.__select_iter].callback()
             return
         if input_handler.was_key_pressed(KEY_ESC):
+            self.__engine.set_config_key(
+                    "debug", self.__config_option[2].read_value()
+                )
             self.__engine.scene_manager.last_scene()
             return
         self.__config_option[self.__select_iter].update(input_handler)
-        print(self.__select_iter)
 
     def render(self) -> None:
         """ Render Method of the OptionScene """

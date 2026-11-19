@@ -38,7 +38,7 @@ class Selector(Component):
         else:
             raise ValueError("Selector: first key not given")
         self.__shape: Rect | None = None
-        self.__selector: int = 0
+        self.__selector: int = self.__init_selector()
         self._selected: bool = False
 
     def update(self, input_handler: InputHandler) -> None:
@@ -86,3 +86,8 @@ class Selector(Component):
             display.write_text(pos[0], pos[1], 0xFFFFFFFF, self._label)
             display.write_text(pos[0] + text_x, pos[1], 0xFFFFFFFF, select_text)
 
+    def __init_selector(self) -> int:
+        for i, key in enumerate(self.__key):
+            if key == self.__display_key:
+                return i
+        return 0
