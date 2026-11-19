@@ -3,7 +3,9 @@ from __future__ import annotations
 import math
 from typing import Tuple
 
+from Engine.Engine import Engine
 from Engine.Graphics import Circle, MlxDisplay
+from Engine.Animation import Animation, AnimationHandler
 from Engine.InputHandler.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import KEY_D, KEY_Q, KEY_S, KEY_Z
 from Engine.Physics.Collider import Collider
@@ -12,9 +14,10 @@ from Engine.Physics.Shapes import AABB
 from Engine.Physics.Vector2 import Vector2
 from Engine.Entity.Entity import Entity
 from ..MapGeneration import Map
+from pathlib import Path
 
 
-MOVEMENT_SPEED: float = 180.0
+MOVEMENT_SPEED: float = 140.0
 PLAYER_COLOR: int = 0xFFFFFF00
 COLLIDER_DEBUG_COLOR: int = 0xFFFF0000
 COLLIDER_SIZE_RATIO: float = 0.8
@@ -41,12 +44,33 @@ class Player(Entity):
         - InputHandling from the user to update character position
     """
 
-    def __init__(self, movement_speed: float = MOVEMENT_SPEED) -> None:
+    def __init__(
+            self,
+            engine: Engine,
+            movement_speed: float = MOVEMENT_SPEED
+    ) -> None:
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
         self._movement_speed = movement_speed
         self._direction = Vector2(0.0, 0.0)
         self._requested_direction: Vector2 | None = None
+        sprite_sheet = engine.load_sprite_sheet(
+            Path("assets/PacManSprite/pacman-sprites-sheet.png"),
+            Path("assets/PacManSprite/pacman-sprites.json"),
+        )
+        player_animations = {
+            direction: Animation(sprite_sheet.get_sprite(tag))
+            for direction, tag in (
+                ("right", "walk_right"),
+                ("left", "walk_left"),
+                ("up", "walk_up"),
+                ("down", "walk_down"),
+            )
+        }
+        animation_handler = AnimationHandler(player_animations)
+        self.__animation_handler = animation_handler
+        if self.__animation_handler is not None:
+            self.__animation_handler.set_animation("right")
 
     def InitPlayer(self, display: MlxDisplay, actual_map: Map) -> None:
         """
@@ -103,6 +127,16 @@ class Player(Entity):
         return self._direction
 
     @property
+    def visual_state(self) -> tuple[str, int] | None:
+        """Return the active animation and frame for render invalidation."""
+        if self.__animation_handler is None:
+            return None
+        return (
+            self.__animation_handler.current_key,
+            self.__animation_handler.current_frame_index,
+        )
+
+    @property
     def size(self) -> Tuple[int, int]:
         """Return the graphical and collider dimensions of the Player."""
         return self._width, self._height
@@ -127,6 +161,7 @@ class Player(Entity):
         """
         self.__capture_requested_direction(inputs)
         if delta_time <= 0:
+            self.__sync_animation()
             return
 
         remaining_distance = self._movement_speed * delta_time
@@ -171,6 +206,26 @@ class Player(Entity):
                 break
             self._move(current_delta)
             remaining_distance -= step
+
+        self.__sync_animation()
+        if self.__animation_handler is not None:
+            self.__animation_handler.update(delta_time)
+
+    def __sync_animation(self) -> None:
+        """Select the travel animation, defaulting to right at rest."""
+        if self.__animation_handler is None:
+            return
+        if self._direction.x > 0:
+            animation_key = "right"
+        elif self._direction.x < 0:
+            animation_key = "left"
+        elif self._direction.y < 0:
+            animation_key = "up"
+        elif self._direction.y > 0:
+            animation_key = "down"
+        else:
+            animation_key = "right"
+        self.__animation_handler.set_animation(animation_key)
 
     def _distance_to_next_grid_center(
             self,
@@ -220,6 +275,11 @@ class Player(Entity):
             self._requested_direction = held
 
     def draw(self, display: MlxDisplay) -> None:
-        """ draw Method of the Player Class """
-        self._graphical_shape.fill(display)
+        """Draw the animated Player and its debug collider."""
+        if self.__animation_handler is None:
+            self._graphical_shape.fill(display)
+        else:
+            self.__animation_handler.draw(
+                display, self.position, self.size
+            )
         self._collider.debug_draw(display, COLLIDER_DEBUG_COLOR)

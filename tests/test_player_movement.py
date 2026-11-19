@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
 from Engine.InputHandler.KeyCode import KEY_D, KEY_Z
+from Engine.Sprite import Sprite, SpriteFrame
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Player.Player import Player
@@ -102,8 +104,20 @@ class FakeInput:
         return key in self._down
 
 
+class FakeSpriteSheet:
+    def get_sprite(self, _tag: str) -> tuple[SpriteFrame, ...]:
+        return (SpriteFrame(Sprite((1, 1), [[0xFFFFFFFF]]), 100),)
+
+
+class FakeEngine:
+    def load_sprite_sheet(
+            self, _image_path: Path, _metadata_path: Path,
+    ) -> FakeSpriteSheet:
+        return FakeSpriteSheet()
+
+
 def make_player(walls: tuple[Collider, ...] = ()) -> Player:
-    player = Player(movement_speed=120.0)
+    player = Player(FakeEngine(), movement_speed=120.0)
     player.InitPlayer(FakeDisplay(), FakeMap(walls))  # type: ignore[arg-type]
     return player
 

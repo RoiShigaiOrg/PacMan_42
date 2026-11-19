@@ -3,7 +3,9 @@ from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from ..GameState import GameState, PacManState
-from Engine.InputHandler.KeyCode import KEY_ESC, KEY_C, KEY_B, KEY_X
+from Engine.InputHandler.KeyCode import (
+        KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H, KEY_R
+    )
 from ..MapGeneration.MapGeneration import Map
 from ..MapGeneration import (
         RELATIVE_MAP_POS_X,
@@ -35,28 +37,26 @@ class MapScene(Scene):
         self.__engine = engine
         self.stats = stats
         self.display = display
-        self.map = Map()
-        self.display.clear(0xFFFF0000)
+        self.map = Map(engine)
+        self.display.clear(0xFF000000)
+        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
+        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
+        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
+        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
         self.map.set_colliders(
-                self.display.relative_width(RELATIVE_MAP_POS_X),
-                self.display.relative_height(RELATIVE_MAP_POS_Y),
-                self.display.relative_width(RELATIVE_MAP_WIDTH),
-                self.display.relative_height(RELATIVE_MAP_HEIGHT),
+                map_x,
+                map_y,
+                map_width,
+                map_height,
             )
-        self.map.draw(
-                display,
-                self.display.relative_width(RELATIVE_MAP_POS_X),
-                self.display.relative_height(RELATIVE_MAP_POS_Y),
-                self.display.relative_width(RELATIVE_MAP_WIDTH),
-                self.display.relative_height(RELATIVE_MAP_HEIGHT),
-                )
-        self.__player: Player = Player()
+        self.map.draw(display)
+        self.__player: Player = Player(engine)
         self.__player.InitPlayer(display, self.map)
         self.__ghosts: Dict[str, Ghost] = {
-                "blinky": Blinky(),
-                "inky": Inky(),
-                "clyde": Clyde(),
-                "pinky": Pinky()
+                "blinky": Blinky(engine),
+                "inky": Inky(engine=engine),
+                "clyde": Clyde(engine=engine),
+                "pinky": Pinky(engine=engine)
             }
         self.__ghost_targets: dict[
             Ghost, tuple[Behaviour, TargetPlan]
@@ -97,17 +97,85 @@ class MapScene(Scene):
         self.__dirty_region: Region | None = (
             0, 0, display.width, display.height
         )
+        self.__consume_player_pellet()
+        self.__static_layer = self.display.snapshot()
+
+    def __reset_map(self) -> None:
+        """ Generate a New map and Reset the entity position """
+        self.map = Map(self.__engine)
+        self.display.clear(0xFF000000)
+        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
+        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
+        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
+        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
+        self.map.set_colliders(
+                map_x,
+                map_y,
+                map_width,
+                map_height,
+            )
+        self.map.draw(self.display)
+        self.__player = Player(self.__engine)
+        self.__player.InitPlayer(self.display, self.map)
+        for ghost in self.__ghosts.values():
+            ghost.init_ghost(self.display, self.map)
+
+        territories = self.map.graph_territories(
+            {
+                name: ghost.origin
+                for name, ghost in self.__ghosts.items()
+            },
+            FLEA_ROAM_RADIUS,
+        )
+        for name, ghost in self.__ghosts.items():
+            ghost.set_roam_territory(territories[name])
+
+        for ghost in self.__ghosts.values():
+            ghost_cell = self.map.cell_coordinates_at(
+                ghost.collider.world_position
+            )
+            target_plan = ghost.compute_target(
+                ghost.behaviour_context(
+                    self.__player, self.map, self.stats, self.__ghosts
+                )
+            )
+            self.__ghost_targets[ghost] = (
+                ghost.behaviour, target_plan
+            )
+            ghost.compute_path(
+                ghost_cell,
+                target_plan.target,
+                self.map.graph,
+                target_plan.allowed_cells,
+                target_plan.pathfinding,
+            )
+        self.__dirty_region = (
+            0, 0, self.display.width, self.display.height
+        )
+        self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """ Update method for the MapScene Object """
         self.stats.time_in_level(delta_time)
         self.stats.update_death_recovery(delta_time)
+        self.stats.update_power_remaining(delta_time)
         if self.stats.is_over():
+            self.__reset_map()
             self.__engine.scene_manager.change_scene("game_over_scene")
             return
+        if not self.map.contain_pellet():
+            self.__reset_map()
+            self.__engine.scene_manager.change_scene("endlevel_scene")
+        if self.map.update_pellet_animation(delta_time):
+            self.__dirty_region = self.union_regions(
+                self.__dirty_region,
+                self.map.pellet_bounds,
+            )
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
+        if input_handler.was_key_pressed(KEY_R):
+            self.__reset_map()
         if input_handler.was_key_pressed(KEY_X):
             for ghost in self.__ghosts.values():
                 ghost.change_behaviour(Behaviour.DEAD)
@@ -116,6 +184,8 @@ class MapScene(Scene):
                 self.stats.state = PacManState.SUPER
             elif self.stats.state == PacManState.SUPER:
                 self.stats.state = PacManState.NORMAL
+        if input_handler.was_key_pressed(KEY_H):
+            self.__engine.scene_manager.change_scene("endlevel_scene")
         if input_handler.was_key_pressed(KEY_ESC):
             self.display.close()
         self.__update_player(input_handler, delta_time)
@@ -132,16 +202,23 @@ class MapScene(Scene):
         """
         old_position = self.__player.position
         old_center = self.__player.collider.world_position
+        old_visual_state = self.__player.visual_state
         self.__player.update_direction(
             input_handler, self.map, self.__physics, delta_time
         )
-        if self.__player.collider.world_position != old_center:
+        self.__consume_player_pellet()
+        new_position = self.__player.position
+        position_changed = self.__player.collider.world_position != old_center
+        visual_changed = self.__player.visual_state != old_visual_state
+        if position_changed or visual_changed:
+            regions = [self.movement_region(self.__player.size, new_position)]
+            if position_changed:
+                regions.append(
+                    self.movement_region(self.__player.size, old_position)
+                )
             self.__dirty_region = self.union_regions(
                 self.__dirty_region,
-                self.movement_region(self.__player.size, old_position),
-                self.movement_region(
-                    self.__player.size, self.__player.position
-                ),
+                *regions,
             )
 
     def __update_ghosts(
@@ -172,17 +249,42 @@ class MapScene(Scene):
                 self.__ghost_targets[ghost] = behaviour_target
             old_ghost_position = ghost.position
             old_ghost_center = ghost.collider.world_position
+            old_visual_state = ghost.visual_state
             ghost.update_movement(
                 self.map, self.__physics, delta_time, self.stats
             )
-            if ghost.collider.world_position != old_ghost_center:
+            position_changed = (
+                ghost.collider.world_position != old_ghost_center
+            )
+            visual_changed = ghost.visual_state != old_visual_state
+            if position_changed or visual_changed:
+                regions = [
+                    self.movement_region(ghost.size, ghost.position)
+                ]
+                if position_changed:
+                    regions.append(
+                        self.movement_region(ghost.size, old_ghost_position)
+                    )
                 self.__dirty_region = self.union_regions(
                     self.__dirty_region,
-                    self.movement_region(ghost.size, old_ghost_position),
-                    self.movement_region(
-                        ghost.size, ghost.position
-                    ),
+                    *regions,
                 )
+
+    def __consume_player_pellet(self) -> None:
+        """Consume and score the pellet in Pac-Man's current map cell."""
+        pellet = self.map.consume_pellet_at(
+            self.__player.collider.world_position
+        )
+        if pellet is None:
+            return
+        if self.map.is_corner(self.__player.collider.world_position):
+            self.stats.eat_fruit()
+        else:
+            self.stats.eat_pac_dot()
+        self.__dirty_region = self.union_regions(
+            self.__dirty_region,
+            self.map.cell_region(pellet.coordinate),
+        )
 
     def __check_player_ghost_collision(self) -> None:
         """
@@ -218,6 +320,7 @@ class MapScene(Scene):
                 self.__static_layer, x, y, width, height
             )
             self.__dirty_region = None
+        self.map.render_pellets(self.display)
         self.__player.draw(self.display)
         for ghost in self.__ghosts.values():
             ghost.draw(self.display)

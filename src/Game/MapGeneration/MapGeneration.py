@@ -1,9 +1,13 @@
 from collections import deque
+from Engine.Engine import Engine
 from Engine.Graphics import MlxDisplay
+from Engine.Animation import Animation, AnimationHandler
+from Engine.Sprite import Sprite
 from mazegenerator import MazeGenerator
-from typing import Dict, Mapping, Tuple
+from typing import Dict, Mapping, Tuple, List
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Vector2 import Vector2
+from pathlib import Path
 from .Cell import Cell
 from .MapNode import MapNode
 import random
@@ -19,18 +23,60 @@ HIGH_RIGHT: int = 2
 LOW_LEFT: int = 3
 LOW_RIGHT: int = 4
 
+WALL_MASK_TO_TAG: dict[int, str] = {
+    0: "solo",
+    TOP: "bottom",
+    RIGHT: "left",
+    DOWN: "top",
+    LEFT: "right",
+    TOP | DOWN: "vertical",
+    RIGHT | LEFT: "horizontal",
+    TOP | RIGHT: "corner_bot_left",
+    TOP | LEFT: "corner_bot_right",
+    DOWN | RIGHT: "corner_top_left",
+    DOWN | LEFT: "corner_top_right",
+    TOP | RIGHT | LEFT: "horizontal_top",
+    DOWN | RIGHT | LEFT: "horizontal_bot",
+    TOP | DOWN | RIGHT: "vertical_right",
+    TOP | DOWN | LEFT: "vertical_left",
+    TOP | RIGHT | DOWN | LEFT: "center",
+}
+
+
+def wall_neighbor_mask(
+        grid: list[list[Cell]], column: int, row: int
+) -> int:
+    """Return the cardinal wall-neighbor mask for one cell.
+
+    Out-of-bounds neighbors are treated as open space. The direction bits
+    reuse the maze's TOP, RIGHT, DOWN, and LEFT flags.
+    """
+    height = len(grid)
+    width = len(grid[0])
+    mask = 0
+
+    if row > 0 and not grid[row - 1][column].walkable:
+        mask |= TOP
+    if column + 1 < width and not grid[row][column + 1].walkable:
+        mask |= RIGHT
+    if row + 1 < height and not grid[row + 1][column].walkable:
+        mask |= DOWN
+    if column > 0 and not grid[row][column - 1].walkable:
+        mask |= LEFT
+
+    return mask
+
 
 class Map():
     """class builds the map from the mazegenerator modules"""
 
     def __init__(
-            self, width: int = 5, height: int = 5,
-            seed: int = random.randint(0, 10)):
+            self, engine: Engine, width: int = 5, height: int = 5):
         """ Init Method of Map Generation """
-
+        seed: int = random.randint(0, 100)
         gen = MazeGenerator(size=(width, height), perfect=False, seed=seed)
         gen.generate(seed=seed)
-        self.grid: list[list[Cell]] = self._symmetrize_vertical(
+        self.grid: List[List[Cell]] = self._symmetrize_vertical(
                 self._convert(gen.maze)
             )
         self.grid = self._symmetrize_horizontal(
@@ -39,9 +85,45 @@ class Map():
         self.height: int = len(self.grid)
         self.width: int = len(self.grid[0])
         self._open_center()
+        wall_sheet = engine.load_sprite_sheet(
+            Path("assets/Map/mapspritesheet.png"),
+            Path("assets/Map/Mapspritesheet.json"),
+        )
+        self.__wall_sprites: dict[int, Sprite] = {
+            mask: wall_sheet.get_sprite(tag)[0].sprite
+            for mask, tag in WALL_MASK_TO_TAG.items()
+        }
+        self.__corner_coordinates = self._find_corner_coordinates()
+        self.__corner_cells = frozenset(
+            self.__corner_coordinates.values()
+        )
+        self.__pellet: List[Cell] = [
+            cell
+            for row in self.grid
+            for cell in row
+            if cell.walkable
+        ]
+        self.__pacgum_sprite: Sprite = engine.load_sprite_sheet(
+                Path("assets/Pellet/pacgum.png")
+            ).extract_sprite((0, 0), (32, 32))
+        pellet_frames = engine.load_sprite_sheet(
+            Path("assets/Pellet/pelletspritesheet.png"),
+            Path("assets/Pellet/pelletspritesheet.json"),
+        ).get_sprite("animation")
+        self.__animation_handler = AnimationHandler({
+            "pellet": Animation(pellet_frames),
+        })
         self.__grid_origin: Tuple[int, int] | None = None
         self.__cell_size: Tuple[int, int] | None = None
         self.graph: Dict[Tuple[int, int], MapNode] = self.build_graph()
+        print("map generated")
+
+    def contain_pellet(self) -> bool:
+        """
+        Return a boolean indicating if there is pellet or
+            not in the map.
+        """
+        return True if self.__pellet else False
 
     def center(self) -> Tuple[int, int]:
         """ Return the center coordonates of the map """
@@ -61,7 +143,16 @@ class Map():
         )
 
     def corner(self, corner: int = HIGH_LEFT) -> Tuple[int, int]:
-        """Return the nearest walkable cell to the requested map corner.
+        """Return the cached nearest walkable cell for a map corner."""
+        if corner not in (HIGH_LEFT, HIGH_RIGHT, LOW_LEFT, LOW_RIGHT):
+            raise ValueError(f"Unknown map corner: {corner}")
+        try:
+            return self.__corner_coordinates[corner]
+        except (AttributeError, KeyError) as error:
+            raise ValueError("Map has no walkable cells") from error
+
+    def _find_corner_coordinates(self) -> dict[int, Tuple[int, int]]:
+        """Find nearest walkable cells in stable corner-relative order.
 
         Cells are checked in increasing Manhattan-distance layers. Within a
         layer, the scan proceeds along the corner's outer edge before moving
@@ -73,24 +164,34 @@ class Map():
             LOW_LEFT: ((0, self.height - 1), 1, -1),
             LOW_RIGHT: ((self.width - 1, self.height - 1), -1, -1),
         }
-        if corner not in corners:
-            raise ValueError(f"Unknown map corner: {corner}")
-
-        (start_column, start_row), column_step, row_step = corners[corner]
+        coordinates: dict[int, Tuple[int, int]] = {}
         max_distance = self.width + self.height - 2
-        for distance in range(max_distance + 1):
-            for row_distance in range(distance + 1):
-                column_distance = distance - row_distance
-                column = start_column + column_step * column_distance
-                row = start_row + row_step * row_distance
-                if (
-                    0 <= column < self.width
-                    and 0 <= row < self.height
-                    and self.grid[row][column].walkable
-                ):
-                    return column, row
+        for corner, (
+                (start_column, start_row), column_step, row_step
+        ) in corners.items():
+            for distance in range(max_distance + 1):
+                for row_distance in range(distance + 1):
+                    column_distance = distance - row_distance
+                    column = start_column + column_step * column_distance
+                    row = start_row + row_step * row_distance
+                    if (
+                        0 <= column < self.width
+                        and 0 <= row < self.height
+                        and self.grid[row][column].walkable
+                    ):
+                        coordinates[corner] = (column, row)
+                        break
+                if corner in coordinates:
+                    break
+            else:
+                raise ValueError("Map has no walkable cells")
 
-        raise ValueError("Map has no walkable cells")
+        return coordinates
+
+    def is_corner(self, pos: Tuple[int, int]) -> bool:
+        """ Return a boolean if the given position is a map corner """
+        coordinate = self.cell_coordinates_at(pos)
+        return (coordinate in self.__corner_cells)
 
     @property
     def grid_origin(self) -> Tuple[int, int]:
@@ -121,6 +222,53 @@ class Map():
             0 <= column < self.width
             and 0 <= row < self.height
             and self.grid[row][column].walkable
+        )
+
+    @property
+    def pellet_cells(self) -> tuple[Tuple[int, int], ...]:
+        """Return coordinates for cells that still contain a pellet."""
+        return tuple(cell.coordinate for cell in self.__pellet)
+
+    @property
+    def pellet_bounds(self) -> Tuple[int, int, int, int]:
+        """Return the pixel bounds of the map's pellet grid."""
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return (
+            origin_x,
+            origin_y,
+            self.width * cell_width,
+            self.height * cell_height,
+        )
+
+    def cell_region(
+            self, coordinate: Tuple[int, int]
+    ) -> Tuple[int, int, int, int]:
+        """Return the pixel rectangle for a cell coordinate."""
+        column, row = coordinate
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return (
+            origin_x + column * cell_width,
+            origin_y + row * cell_height,
+            cell_width,
+            cell_height,
+        )
+
+    def consume_pellet_at(self, position: Vector2) -> Cell | None:
+        """Remove and return the pellet in the cell containing a position."""
+        coordinate = self.cell_coordinates_at(position)
+        for index, pellet in enumerate(self.__pellet):
+            if pellet.coordinate == coordinate:
+                return self.__pellet.pop(index)
+        return None
+
+    def update_pellet_animation(self, delta_time: float) -> bool:
+        """Advance the shared pellet animation and report frame changes."""
+        previous_frame = self.__animation_handler.current_frame_index
+        self.__animation_handler.update(delta_time)
+        return bool(
+            self.__animation_handler.current_frame_index != previous_frame
         )
 
     def next_cell_is_walkable(
@@ -292,32 +440,74 @@ class Map():
             self,
             pos_x: int, pos_y: int,
             width: int, height: int) -> None:
-        """ The colliders for every cells in the map """
-        cell_height: int = int(height / self.height)
-        cell_width: int = int(width / self.width)
-        self.__grid_origin = (pos_x, pos_y)
-        self.__cell_size = (cell_width, cell_height)
+        """Fit a centered, square-cell grid inside the requested bounds."""
+        if width <= 0 or height <= 0:
+            raise ValueError("map bounds must have positive dimensions")
+
+        cell_size = min(width // self.width, height // self.height)
+        if cell_size <= 0:
+            raise ValueError("map bounds are too small for square cells")
+
+        grid_width = cell_size * self.width
+        grid_height = cell_size * self.height
+        grid_origin_x = pos_x + (width - grid_width) // 2
+        grid_origin_y = pos_y + (height - grid_height) // 2
+        self.__grid_origin = (grid_origin_x, grid_origin_y)
+        self.__cell_size = (cell_size, cell_size)
 
         for y in range(self.height):
             for x in range(self.width):
                 self.grid[y][x].set_collider(
-                        pos_x + (cell_width * x), pos_y + (cell_height * y),
-                        cell_width, cell_height
+                        grid_origin_x + cell_size * x,
+                        grid_origin_y + cell_size * y,
+                        cell_size,
+                        cell_size,
                     )
 
-    def draw(
-            self,
-            display: MlxDisplay,
-            pos_x: int, pos_y: int,
-            width: int, height: int) -> None:
-        """ Draw method of the Map Object """
-        cell_height: int = int(height / self.height)
-        cell_width: int = int(width / self.width)
+    def render_pellets(self, display: MlxDisplay) -> None:
+        """Draw the current shared animation frame in every pellet cell."""
+        sprite: Sprite = self.__animation_handler.current_sprite
+        cell_width, cell_height = self.cell_size
+        origin_x, origin_y = self.grid_origin
+
+        for pellet in self.__pellet:
+            column, row = pellet.coordinate
+            if pellet.coordinate in self.__corner_cells:
+                sprite.draw(
+                    display,
+                    (
+                        origin_x + column * cell_width,
+                        origin_y + row * cell_height
+                    ),
+                    (cell_width, cell_height)
+                )
+            else:
+                self.__pacgum_sprite.draw(
+                    display,
+                    (
+                        origin_x + column * cell_width,
+                        origin_y + row * cell_height,
+                    ),
+                    (cell_width, cell_height),
+                )
+
+    def draw(self, display: MlxDisplay) -> None:
+        """Draw the previously configured grid using its collider layout."""
+        grid_origin_x, grid_origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
 
         for y in range(self.height):
             for x in range(self.width):
+                cell = self.grid[y][x]
+                wall_sprite = None
+                if not cell.walkable:
+                    wall_sprite = self.__wall_sprites[
+                        wall_neighbor_mask(self.grid, x, y)
+                    ]
                 self.grid[y][x].draw(
                         display,
-                        pos_x + (cell_width * x), pos_y + (cell_height * y),
-                        cell_width, cell_height
+                        grid_origin_x + cell_width * x,
+                        grid_origin_y + cell_height * y,
+                        cell_width, cell_height,
+                        wall_sprite,
                     )

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Dict, Tuple, cast
 
+from Engine.Animation import Animation, AnimationHandler
+from Engine.Engine import Engine
 from Engine.Graphics import MlxDisplay
 from Engine.Entity.Entity import Entity
 from Engine.Entity.PathFinding import HeuristicType, PathFinding
@@ -41,10 +44,28 @@ class Ghost(Entity):
             self,
             movement_speed: float = DEFAULT_MOVEMENT_SPEED,
             chase_behaviour: GhostBehaviour | None = None,
+            *,
+            engine: Engine | None = None,
+            sprite_sheet_paths: tuple[Path, Path] | None = None,
     ) -> None:
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
         self._movement_speed = movement_speed
+        self._direction_key = "right"
+        self.__animation_handler: AnimationHandler | None = None
+        if engine is not None and sprite_sheet_paths is not None:
+            sprite_sheet = engine.load_sprite_sheet(*sprite_sheet_paths)
+            self.__animation_handler = AnimationHandler({
+                direction: Animation(sprite_sheet.get_sprite(tag))
+                for direction, tag in (
+                    ("right", "right"),
+                    ("left", "left"),
+                    ("up", "up"),
+                    ("down", "down"),
+                    ("roam", "roam"),
+                )
+            })
+            self.__animation_handler.set_animation(self._direction_key)
         self._origin: Tuple[int, int] = (0, 0)
         self._path: list[MapNode] = []
         self._path_index = 0
@@ -72,11 +93,13 @@ class Ghost(Entity):
         """Change behavior and discard a path planned for the previous mode."""
         if self._behaviour_handler.change_behaviour(behaviour):
             self._clear_path()
+            self._sync_animation()
 
     def synchronize_behaviour(self, context: BehaviourContext) -> None:
         """Align a living ghost's mode with Pac-Man's game state."""
         if self._behaviour_handler.synchronize(context):
             self._clear_path()
+            self._sync_animation()
 
     def compute_target(self, context: BehaviourContext) -> TargetPlan:
         """Ask the active behavior strategy for a target and path policy."""
@@ -151,10 +174,36 @@ class Ghost(Entity):
         """Return graphical dimensions used for dirty-region redraws."""
         return self._width, self._height
 
+    @property
+    def direction(self) -> str:
+        """Return the last cardinal direction in which this ghost moved."""
+        return self._direction_key
+
+    @property
+    def visual_state(self) -> tuple[str, int] | None:
+        """Return the active animation and frame for render invalidation."""
+        if self.__animation_handler is None:
+            return None
+        return (
+            self.__animation_handler.current_key,
+            self.__animation_handler.current_frame_index,
+        )
+
     def draw(self, display: MlxDisplay) -> None:
         """Draw the ghost and its debug collider."""
-        self._graphical_shape.fill(display)
+        if self.__animation_handler is None:
+            self._graphical_shape.fill(display)
+        else:
+            self.__animation_handler.draw(display, self.position, self.size)
         self._collider.debug_draw(display, COLLIDER_DEBUG_COLOR)
+
+    def _move(self, delta: Vector2) -> None:
+        """Move the ghost and remember the direction of actual travel."""
+        super()._move(delta)
+        if abs(delta.x) >= abs(delta.y) and delta.x != 0:
+            self._direction_key = "right" if delta.x > 0 else "left"
+        elif delta.y != 0:
+            self._direction_key = "down" if delta.y > 0 else "up"
 
     @abstractmethod
     def init_ghost(self, display: MlxDisplay, actual_map: Map) -> None:
@@ -191,6 +240,20 @@ class Ghost(Entity):
         """Update special behavior movement or follow the planned path."""
         if delta_time <= 0:
             return
+
+        self._update_movement(actual_map, physics, delta_time, game_state)
+        self._sync_animation()
+        if self.__animation_handler is not None:
+            self.__animation_handler.update(delta_time)
+
+    def _update_movement(
+            self,
+            actual_map: Map,
+            physics: PhysicsEngine,
+            delta_time: float,
+            game_state: GameState | None,
+    ) -> None:
+        """Apply behavior-specific movement and follow the active path."""
 
         context = BehaviourContext(self, actual_map, game_state=game_state)
         previous_behaviour = self.behaviour
@@ -255,6 +318,16 @@ class Ghost(Entity):
             remaining_distance -= step
             if step >= distance:
                 self._path_index += 1
+
+    def _sync_animation(self) -> None:
+        """Select frightened or travel-direction animation for this mode."""
+        if self.__animation_handler is None:
+            return
+        animation_key = (
+            "roam" if self.behaviour is Behaviour.FLEAT
+            else self._direction_key
+        )
+        self.__animation_handler.set_animation(animation_key)
 
     def compute_path(
             self,
