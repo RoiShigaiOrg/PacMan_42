@@ -29,7 +29,7 @@ class Heart():
         """ Height of the heart in pixels """
         return self.__sprite.height * self.scale
 
-    def draw(self, display: MlxDisplay):
+    def draw(self, display: MlxDisplay) -> None:
         """draw the heart, if it is to be drawn"""
         sprite = self.__sprite if self.full else self.__empty_sprite
         if sprite is not None:
@@ -48,8 +48,8 @@ class Lives():
         self.y = y
         self.scale = scale
         self.gap = gap
-        self.sprite = XpmImage(heart_file)
-        self.empty = XpmImage(empty_file) if empty_file else None
+        self.sprite = heart_file
+        self.empty = empty_file if empty_file else None
         step = self.sprite.width * scale + gap
         self.hearts: list[Heart] = [
             Heart(x + index * step, y, self.sprite, self.empty, scale)

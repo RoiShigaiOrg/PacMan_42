@@ -16,11 +16,11 @@ class Score():
         self.__text: str = ""
         self.set_score(0)
 
-    def set_score(self, score: int) -> int:
+    def set_score(self, score: int) -> None:
         """Add the score"""
         self.__text = f"{self.label}  {score:>{self.digits}}"
 
-    def draw(self, display: MlxDisplay):
+    def draw(self, display: MlxDisplay) -> None:
         """write the score"""
         display.write_text(self.x,
                            self.y, self.color, self.__text)
