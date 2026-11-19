@@ -42,14 +42,14 @@ class Lives():
             and display the correct number of hearts again."""
     def __init__(self, x: int, y: int, max_lives: int, scale: int = 1,
                  gap: int = 6,
-                 heart_file: XpmImage = HEART_FILE,
-                 empty_file: XpmImage | None = None) -> None:
+                 heart_file: str = HEART_FILE,
+                 empty_file: str | None = None) -> None:
         self.x = x
         self.y = y
         self.scale = scale
         self.gap = gap
-        self.sprite = heart_file
-        self.empty = empty_file if empty_file else None
+        self.sprite = XpmImage(heart_file)
+        self.empty = XpmImage(empty_file) if empty_file else None
         step = self.sprite.width * scale + gap
         self.hearts: list[Heart] = [
             Heart(x + index * step, y, self.sprite, self.empty, scale)
