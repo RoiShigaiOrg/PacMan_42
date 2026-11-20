@@ -9,6 +9,7 @@ from Engine.InputHandler.KeyCode import (
 from ..UI.Component import Component
 from ..UI.Selector import Selector
 from ..UI.Clickable import Clickable
+from ..UI.InputBar import InputBar
 from typing import List
 
 
@@ -43,6 +44,7 @@ class OptionScene(Scene):
             ),
             Clickable(0.3, 0.05)
         ]
+        self.__input: InputBar = InputBar()
         self.__config_option[0].add_label("RESOLUTION")
         self.__config_option[1].add_label("MOVEMENT")
         self.__config_option[2].add_label("DEBUG MODE")

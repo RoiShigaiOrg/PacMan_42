@@ -5,7 +5,7 @@ PELLET_POINTS: int = 10
 POWER_PELLET_POINTS: int = 50
 POWER_DURATION: float = 10.0
 GHOST_POINTS: tuple[int, ...] = (200, 400, 800, 1600)
-EXTRA_LIFE_SCORE: int = 10000
+EXTRA_LIFE_SCORE: int = 3000
 LEVEL_TIME: float = 120.0
 DEATH_RECOVERY_DURATION: float = 3.0
 MAX_LEVEL = 10
@@ -178,7 +178,9 @@ class GameState:
         self.ghost_combo = 0
         self.level_time = 0.0
         self.state = PacManState.NORMAL
+        self.lives = 3
         self._death_recovery_remaining = 0.0
+        print("reset level stats")
 
     def is_over(self) -> bool:
         """ init the end of game"""

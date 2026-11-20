@@ -135,7 +135,6 @@ class Engine:
             now = time.perf_counter()
             elapsed = now - fps_started
             if elapsed >= 1.0:
-                print(f"FPS: {fps_frames / elapsed:.1f}")
                 fps_frames = 0
                 fps_started = now
             self._input_handler.end_frame()

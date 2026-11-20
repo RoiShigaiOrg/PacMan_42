@@ -64,6 +64,7 @@ class EndLevel(Scene):
             input_handler: InputHandler) -> None:
         """Advance the animation or leave the results scene immediately."""
         if input_handler.was_key_pressed(KEY_ENTER):
+            self.stats.next_level()
             self.__engine.scene_manager.change_scene("game_scene")
             return
         if input_handler.was_key_pressed(KEY_ESC):
