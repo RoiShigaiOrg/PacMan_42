@@ -1,4 +1,4 @@
-from typing import Any, overload, Tuple
+from typing import Any, overload, Tuple, List
 from .MlxDisplay import MlxDisplay
 
 
@@ -10,25 +10,6 @@ class MlxWindow:
         Graphical object using its buffer. The goal of this object is to mimic
         the pygame display object.
     """
-
-    @overload
-    def __init__(
-        self,
-        session: Any,
-        mlx_ptr: Any,
-        dimension: tuple[int, int],
-        title: str,
-    ) -> None: ...
-
-    @overload
-    def __init__(
-        self,
-        session: Any,
-        mlx_ptr: Any,
-        dimension: int,
-        title: int,
-        legacy_title: str,
-    ) -> None: ...
 
     def __init__(
         self,
@@ -63,6 +44,7 @@ class MlxWindow:
             self.__height,
             title,
         )
+        self.__display_list: List[MlxDisplay] = []
         if not self.__window_ptr:
             raise RuntimeError("failed to create MLX window")
 
@@ -136,4 +118,5 @@ class MlxWindow:
             self.__window_ptr,
             size,
         )
+        self.__display_list.append(display)
         return display
