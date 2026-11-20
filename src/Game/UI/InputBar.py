@@ -53,6 +53,10 @@ class InputBar(Component):
                 return None
         return None
 
+    def render(self, display:MlxDisplay, pos: Tuple[int, int]) -> None:
+        """ Render Method of the InputHandler."""
+        raise NotImplementedError("Input Handle not implemented with the proper logic.")
+
     def draw(self, display: MlxDisplay, background: int, border: int) -> None:
         """ Draw the frame of the bar in the image (before render()) """
         display.fill_rect(self.x + 2, self.y + 2,
@@ -72,3 +76,7 @@ class InputBar(Component):
                 same short text is written again each frame.
         """
         display.write_text(self.x + 6, self.y + 4, 0xFFFFFFFF, self.inputed_text + "_")
+
+    def callback(self) -> None:
+        """Activate the component from the option scene."""
+        pass
