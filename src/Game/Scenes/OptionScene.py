@@ -81,37 +81,14 @@ class OptionScene(Scene):
 
         if input_handler.was_key_pressed(
                 self.__engine.get_config_key("UP")):
-            previous = self.__select_iter
-            self.__config_option[self.__select_iter].unselect()
-            self.__select_iter = self.__select_iter - 1
-            if self.__select_iter < 0:
-                self.__select_iter = len(self.__config_option) - 1
-            self.__config_option[self.__select_iter].select()
-            self.__mark_option_dirty(previous, self.__select_iter)
+            self.__process_up()
             return
         if input_handler.was_key_pressed(
                 self.__engine.get_config_key("DOWN")):
-            previous = self.__select_iter
-            self.__config_option[self.__select_iter].unselect()
-            self.__select_iter = (self.__select_iter + 1) % len(
-                    self.__config_option
-                )
-            self.__config_option[self.__select_iter].select()
-            self.__mark_option_dirty(previous, self.__select_iter)
+            self.__process_down()
             return
         if input_handler.was_key_pressed(KEY_ENTER):
-            if self.__select_iter == 1:
-                movement_option = self.__config_option[1]
-                if isinstance(movement_option, Selector):
-                    self.__input_target = str(movement_option.read_value())
-                    self.__input.begin_key_capture(
-                        self.__input_target,
-                        self.__engine.get_config_key(self.__input_target),
-                    )
-                    self.__mark_input_dirty()
-            else:
-                self.__config_option[self.__select_iter].callback()
-                self.__mark_option_dirty(self.__select_iter)
+            self.__process_enter()
             return
         if input_handler.was_key_pressed(KEY_ESC):
             debug_option = self.__config_option[2]
@@ -121,18 +98,7 @@ class OptionScene(Scene):
                 )
             self.__engine.scene_manager.last_scene()
             return
-        component = self.__config_option[self.__select_iter]
-        previous_value = (
-            component.read_value()
-            if isinstance(component, Selector)
-            else None
-        )
-        component.update(input_handler)
-        if (
-                isinstance(component, Selector)
-                and component.read_value() != previous_value
-        ):
-            self.__mark_option_dirty(self.__select_iter)
+        self.__update_selected(input_handler)
 
     def render(self) -> None:
         """Restore and redraw only controls whose state has changed."""
@@ -171,6 +137,56 @@ class OptionScene(Scene):
             component.render(self.__display, pos)
         self.__static_layer = self.__display.snapshot()
         self.mark_full_screen_dirty(self.__display)
+
+    def __update_selected(self, input_handler: InputHandler) -> None:
+        """ Update the selected Component in the Option Scene."""
+        component = self.__config_option[self.__select_iter]
+        previous_value = (
+            component.read_value()
+            if isinstance(component, Selector)
+            else None
+        )
+        component.update(input_handler)
+        if (
+                isinstance(component, Selector)
+                and component.read_value() != previous_value
+        ):
+            self.__mark_option_dirty(self.__select_iter)
+
+    def __process_up(self) -> None:
+        """ Process the Up key for the Option Scene. """
+        previous = self.__select_iter
+        self.__config_option[self.__select_iter].unselect()
+        self.__select_iter = self.__select_iter - 1
+        if self.__select_iter < 0:
+            self.__select_iter = len(self.__config_option) - 1
+        self.__config_option[self.__select_iter].select()
+        self.__mark_option_dirty(previous, self.__select_iter)
+
+    def __process_down(self) -> None:
+        """ Process the Down key for the Option Scene. """
+        previous = self.__select_iter
+        self.__config_option[self.__select_iter].unselect()
+        self.__select_iter = (self.__select_iter + 1) % len(
+                self.__config_option
+            )
+        self.__config_option[self.__select_iter].select()
+        self.__mark_option_dirty(previous, self.__select_iter)
+
+    def __process_enter(self) -> None:
+        """ Process the Enter Key for the Option Scene """
+        if self.__select_iter == 1:
+            movement_option = self.__config_option[1]
+            if isinstance(movement_option, Selector):
+                self.__input_target = str(movement_option.read_value())
+                self.__input.begin_key_capture(
+                    self.__input_target,
+                    self.__engine.get_config_key(self.__input_target),
+                )
+                self.__mark_input_dirty()
+        else:
+            self.__config_option[self.__select_iter].callback()
+            self.__mark_option_dirty(self.__select_iter)
 
     def __option_positions(self) -> tuple[tuple[int, int], ...]:
         return tuple(
