@@ -28,6 +28,7 @@ class GameOverScene(Scene):
             self, engine: Engine, display: MlxDisplay,
             stats: GameState) -> None:
         """ Init Method of the GameOverScene Class """
+        super().__init__()
         self.__engine = engine
         self.__display = display
         self.__stats = stats

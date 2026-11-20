@@ -10,9 +10,6 @@ from Engine.Graphics.Components.TextJustify import TEXT_CENTER
 from Engine.Engine import Engine
 
 
-Region = tuple[int, int, int, int]
-
-
 class MainScene(Scene):
     """
         Main Screen Class Definition
@@ -27,6 +24,7 @@ class MainScene(Scene):
 
     def __init__(self, engine: Engine, display: MlxDisplay) -> None:
         """ Init Method of the MainScreen Class """
+        super().__init__()
         self.__engine = engine
         self.__display = display
         self.__rect: Rect = Rect(
@@ -68,9 +66,7 @@ class MainScene(Scene):
                 TextBox("Press ESC to quit", 0xFFFFFFFF),
                 TEXT_CENTER
             )
-        self.__dirty_region: Region | None = (
-            0, 0, display.width, display.height
-        )
+        self.mark_full_screen_dirty(display)
 
     def update(
             self, delta_time: float, input_handler: InputHandler
@@ -95,19 +91,14 @@ class MainScene(Scene):
         """ Render on change method of MainScreen """
         self.__display.clear_window()
         self.__display.clear(0xFFFF0000)
-        self.__dirty_region = (
-            0, 0, self.__display.width, self.__display.height
-        )
+        self.mark_full_screen_dirty(self.__display)
 
     def render(self) -> None:
         """ Render all the the current frame in the Window """
-        if self.__dirty_region is not None:
-            x, y, width, height = self.__dirty_region
-            self.__display.restore_region(
-                self.__static_layer, x, y, width, height
-            )
+        if self.dirty_regions:
+            self.restore_dirty_regions(self.__display, self.__static_layer)
             self.__display.render()
             self.__rect.draw_text(self.__display)
             self.__rect2.draw_text(self.__display)
             self.__rect3.draw_text(self.__display)
-            self.__dirty_region = None
+            self.clear_dirty_regions()

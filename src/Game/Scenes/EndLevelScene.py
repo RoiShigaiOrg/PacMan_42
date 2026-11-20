@@ -32,6 +32,7 @@ class EndLevel(Scene):
             engine: Engine,
             display: MlxDisplay,
             stats: GameState) -> None:
+        super().__init__()
         self.__engine = engine
         self.__display = display
         self.stats = stats

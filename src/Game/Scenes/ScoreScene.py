@@ -41,6 +41,7 @@ class ScoreScene(Scene):
             stats: GameState,
             can_switch: bool = False) -> None:
         """Init Method of the ScoreScene Class"""
+        super().__init__()
         self.__engine = engine
         self.__display = display
         self.__title_font = XpmAlphabet(FILE_ALPHABET)

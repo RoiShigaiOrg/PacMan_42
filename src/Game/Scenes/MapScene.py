@@ -20,10 +20,7 @@ from ..Ghosts.Blinky import Blinky
 from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Pinky import Pinky
-from typing import Tuple, Dict
-
-
-Region = Tuple[int, int, int, int]
+from typing import Dict
 
 
 class MapScene(Scene):
@@ -34,6 +31,7 @@ class MapScene(Scene):
             self, engine: Engine,
             display: MlxDisplay,
             stats: GameState) -> None:
+        super().__init__()
         self.__engine = engine
         self.stats = stats
         self.display = display
@@ -94,12 +92,7 @@ class MapScene(Scene):
                 target_plan.pathfinding,
             )
         self.__physics = engine.physics
-        self.__dirty_regions: list[Region] = [
-            (0, 0, display.width, display.height)
-        ]
-        self.__dirty_region: Region | None = (
-            0, 0, display.width, display.height
-        )
+        self.mark_full_screen_dirty(display)
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
 
@@ -152,10 +145,7 @@ class MapScene(Scene):
                 target_plan.allowed_cells,
                 target_plan.pathfinding,
             )
-        self.__dirty_regions = [
-            (0, 0, self.display.width, self.display.height)
-        ]
-        self.__dirty_region = self.__dirty_regions[0]
+        self.mark_full_screen_dirty(self.display)
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
 
@@ -172,7 +162,7 @@ class MapScene(Scene):
             self.__reset_map()
             self.__engine.scene_manager.change_scene("endlevel_scene")
         if self.map.update_pellet_animation(delta_time):
-            self.__mark_dirty(*self.map.animated_pellet_regions)
+            self.mark_dirty(*self.map.animated_pellet_regions)
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_R):
@@ -217,7 +207,7 @@ class MapScene(Scene):
                 regions.append(
                     self.movement_region(self.__player.size, old_position)
                 )
-            self.__mark_dirty(*regions)
+            self.mark_dirty(*regions)
 
     def __update_ghosts(
             self, delta_time: float,
@@ -263,7 +253,7 @@ class MapScene(Scene):
                     regions.append(
                         self.movement_region(ghost.size, old_ghost_position)
                     )
-                self.__mark_dirty(*regions)
+                self.mark_dirty(*regions)
 
     def __consume_player_pellet(self) -> None:
         """Consume and score the pellet in Pac-Man's current map cell."""
@@ -276,7 +266,7 @@ class MapScene(Scene):
             self.stats.eat_fruit()
         else:
             self.stats.eat_pac_dot()
-        self.__mark_dirty(self.map.cell_region(pellet.coordinate))
+        self.mark_dirty(self.map.cell_region(pellet.coordinate))
 
     def __check_player_ghost_collision(self) -> None:
         """
@@ -304,71 +294,20 @@ class MapScene(Scene):
                 self.__player.set_to_origin()
                 break
 
-    def __mark_dirty(self, *regions: Region) -> None:
-        """Record changed rectangles, merging only overlapping areas."""
-        if not hasattr(self, "_MapScene__dirty_regions"):
-            self.__dirty_regions = []
-            if self.__dirty_region is not None:
-                self.__dirty_regions.append(self.__dirty_region)
-
-        for region in regions:
-            if region[2] <= 0 or region[3] <= 0:
-                continue
-
-            pending = region
-            index = 0
-            while index < len(self.__dirty_regions):
-                existing = self.__dirty_regions[index]
-                overlaps = (
-                    pending[0] < existing[0] + existing[2]
-                    and existing[0] < pending[0] + pending[2]
-                    and pending[1] < existing[1] + existing[3]
-                    and existing[1] < pending[1] + pending[3]
-                )
-                if not overlaps:
-                    index += 1
-                    continue
-
-                pending = self.__combined_region(pending, existing)
-                self.__dirty_regions.pop(index)
-                index = 0
-            self.__dirty_regions.append(pending)
-
-        if self.__dirty_regions:
-            self.__dirty_region = self.__combined_region(
-                *self.__dirty_regions
-            )
-        else:
-            self.__dirty_region = None
-
-    @staticmethod
-    def __combined_region(*regions: Region) -> Region:
-        """Return the bounding rectangle containing the supplied regions."""
-        left = min(region[0] for region in regions)
-        top = min(region[1] for region in regions)
-        right = max(region[0] + region[2] for region in regions)
-        bottom = max(region[1] + region[3] for region in regions)
-        return left, top, right - left, bottom - top
-
     def render(self) -> None:
         """Restore and redraw only the changed areas of the backbuffer."""
-        dirty_regions = tuple(self.__dirty_regions)
-        for x, y, width, height in dirty_regions:
-            self.display.restore_region(
-                self.__static_layer, x, y, width, height
-            )
+        dirty_regions = self.restore_dirty_regions(
+            self.display, self.__static_layer
+        )
         self.map.render_pellets(self.display, dirty_regions)
         self.__player.draw(self.display)
         for ghost in self.__ghosts.values():
             ghost.draw(self.display)
         self.display.render()
-        self.__dirty_regions.clear()
-        self.__dirty_region = None
+        self.clear_dirty_regions()
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
         self.display.clear_window()
         self.display.clear(0xFFFF0000)
-        self.__mark_dirty(
-            (0, 0, self.display.width, self.display.height)
-        )
+        self.mark_full_screen_dirty(self.display)

@@ -17,7 +17,7 @@ from ..MapGeneration import Map
 from pathlib import Path
 
 
-MOVEMENT_SPEED: float = 140.0
+MOVEMENT_SPEED: float = 160.0
 PLAYER_COLOR: int = 0xFFFFFF00
 COLLIDER_DEBUG_COLOR: int = 0xFFFF0000
 COLLIDER_SIZE_RATIO: float = 0.8

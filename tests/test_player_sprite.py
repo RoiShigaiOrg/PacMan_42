@@ -2,6 +2,7 @@ from pathlib import Path
 
 from Engine.InputHandler.KeyCode import KEY_D, KEY_Q, KEY_S, KEY_Z
 from Engine.Physics import PhysicsEngine
+from Engine.SceneManager.Scene.Scene import Scene
 from Engine.Sprite import Sprite, SpriteFrame
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
@@ -162,13 +163,13 @@ def test_player_sprite_is_scaled_to_square_cell_display_pixels() -> None:
 def test_idle_animation_frame_change_invalidates_player_region() -> None:
     player, actual_map = make_player()
     scene = MapScene.__new__(MapScene)
+    Scene.__init__(scene)
     scene.map = actual_map
     scene._MapScene__player = player
     scene._MapScene__physics = PhysicsEngine()
-    scene._MapScene__dirty_region = None
 
     scene._MapScene__update_player(FakeInput(), 0.1)
 
     assert player.position == (30, 30)
     assert player.visual_state == ("right", 1)
-    assert scene._MapScene__dirty_region == (30, 30, 10, 10)
+    assert scene.dirty_regions == ((30, 30, 10, 10),)

@@ -26,6 +26,7 @@ class OptionScene(Scene):
             engine: Engine,
             display: MlxDisplay) -> None:
         """ Init Method of the OptionScene. """
+        super().__init__()
         self.__engine: Engine = engine
         self.__display: MlxDisplay = display
         self.__config_option: List[Component] = [
