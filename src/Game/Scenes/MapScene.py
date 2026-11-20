@@ -21,7 +21,9 @@ from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Pinky import Pinky
 from typing import Tuple, Dict
-
+from Game.UI.Lives import Lives
+from Game.UI.Score import Score
+from Game.UI.PowerTime import PowerTimer
 
 Region = Tuple[int, int, int, int]
 
@@ -99,6 +101,9 @@ class MapScene(Scene):
         )
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
+        self.lives = Lives(10, 10, max_lives=4, scale=2)
+        self.score = Score(self.display.relative_width(0.6), 10, 0xFFFFFFFF)
+        self.power_timer = PowerTimer(self.display.relative_width(0.35), 10)
 
     def __reset_map(self) -> None:
         """ Generate a New map and Reset the entity position """
@@ -191,6 +196,9 @@ class MapScene(Scene):
         self.__update_player(input_handler, delta_time)
         self.__update_ghosts(delta_time)
         self.__check_player_ghost_collision()
+        self.lives.set_lives(self.stats.lives)
+        self.score.set_score(self.stats.scores)
+        self.power_timer.set_time(self.stats.power_remaining)
 
     def __update_player(
             self,
@@ -325,11 +333,15 @@ class MapScene(Scene):
         for ghost in self.__ghosts.values():
             ghost.draw(self.display)
         self.display.render()
+        self.power_timer.draw(self.display)
+        self.lives.draw(self.display, 0xFF000000)
+        self.score.draw(self.display)
 
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
         self.display.clear_window()
         self.display.clear(0xFFFF0000)
+        self.lives.redraw()
         self.__dirty_region = (
             0, 0, self.display.width, self.display.height
         )
