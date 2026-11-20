@@ -20,7 +20,7 @@ from ..Ghosts.Blinky import Blinky
 from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Pinky import Pinky
-from typing import Tuple, Dict
+from typing import Dict
 from Game.UI.Lives import Lives
 from Game.UI.Score import Score
 from Game.UI.PowerTime import PowerTimer

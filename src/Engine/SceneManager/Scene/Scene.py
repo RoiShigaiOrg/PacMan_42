@@ -132,3 +132,18 @@ class Scene(ABC):
         right = max(region[0] + region[2] for region in all_regions)
         bottom = max(region[1] + region[3] for region in all_regions)
         return left, top, right - left, bottom - top
+
+    def intersects_regions(
+            self,
+            target: tuple[int, int, int, int],
+            regions: tuple[tuple[int, int, int, int], ...],
+    ) -> bool:
+        """ Method to check if a region intersect with other region. """
+        x, y, width, height = target
+        return any(
+            x < rx + rwidth
+            and rx < x + width
+            and y < ry + rheight
+            and ry < y + height
+            for rx, ry, rwidth, rheight in regions
+        )

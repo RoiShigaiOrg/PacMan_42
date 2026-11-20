@@ -144,13 +144,13 @@ class OptionScene(Scene):
         )
         for index, (component, pos) in enumerate(zip(
                 self.__config_option, self.__option_positions())):
-            if self.__intersects(self.__option_region(index), dirty_regions):
+            if self.intersects_regions(self.__option_region(index), dirty_regions):
                 component.render(self.__display, pos)
 
         input_pos = self.__input_position()
         if (
                 self.__input.key_capture_active
-                and self.__intersects(self.__input_region(), dirty_regions)
+                and self.intersects_regions(self.__input_region(), dirty_regions)
         ):
             self.__input.render(self.__display, input_pos)
 
@@ -210,17 +210,3 @@ class OptionScene(Scene):
 
     def __mark_input_dirty(self) -> None:
         self.mark_dirty(self.__input_region())
-
-    @staticmethod
-    def __intersects(
-            target: tuple[int, int, int, int],
-            regions: tuple[tuple[int, int, int, int], ...],
-    ) -> bool:
-        x, y, width, height = target
-        return any(
-            x < rx + rwidth
-            and rx < x + width
-            and y < ry + rheight
-            and ry < y + height
-            for rx, ry, rwidth, rheight in regions
-        )
