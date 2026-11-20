@@ -51,6 +51,7 @@ class GameState:
         self.state: PacManState = PacManState.NORMAL
         self._death_recovery_remaining: float = 0.0
         self.play_time: float = 0.0
+        self._power_remaining: float = 0.0
 
     @property
     def game_mode(self) -> GameMode:
