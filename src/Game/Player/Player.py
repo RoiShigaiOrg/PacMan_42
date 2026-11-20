@@ -7,7 +7,6 @@ from Engine.Engine import Engine
 from Engine.Graphics import Circle, MlxDisplay
 from Engine.Animation import Animation, AnimationHandler
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import KEY_D, KEY_Q, KEY_S, KEY_Z
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Physics import PhysicsEngine
 from Engine.Physics.Shapes import AABB
@@ -23,11 +22,11 @@ COLLIDER_DEBUG_COLOR: int = 0xFFFF0000
 COLLIDER_SIZE_RATIO: float = 0.8
 GRID_CENTER_TOLERANCE: float = 1e-6
 
-_DIRECTION_KEYS: tuple[tuple[int, Vector2], ...] = (
-    (KEY_Z, Vector2(0.0, -1.0)),
-    (KEY_Q, Vector2(-1.0, 0.0)),
-    (KEY_S, Vector2(0.0, 1.0)),
-    (KEY_D, Vector2(1.0, 0.0)),
+_DIRECTION_KEYS: tuple[tuple[str, Vector2], ...] = (
+    ("UP", Vector2(0.0, -1.0)),
+    ("LEFT", Vector2(-1.0, 0.0)),
+    ("DOWN", Vector2(0.0, 1.0)),
+    ("RIGHT", Vector2(1.0, 0.0)),
 )
 
 
@@ -51,6 +50,7 @@ class Player(Entity):
     ) -> None:
         if movement_speed <= 0:
             raise ValueError("movement_speed must be positive")
+        self.__engine = engine
         self._movement_speed = movement_speed
         self._direction = Vector2(0.0, 0.0)
         self._requested_direction: Vector2 | None = None
@@ -258,8 +258,10 @@ class Player(Entity):
     def __capture_requested_direction(self, inputs: InputHandler) -> None:
         """Remember the newest pressed or held direction until it can turn."""
         pressed = next(
-            (direction for key, direction in _DIRECTION_KEYS
-             if inputs.was_key_pressed(key)),
+            (direction for config_key, direction in _DIRECTION_KEYS
+             if inputs.was_key_pressed(
+                 self.__engine.get_config_key(config_key)
+             )),
             None,
         )
         if pressed is not None:
@@ -267,8 +269,10 @@ class Player(Entity):
             return
 
         held = next(
-            (direction for key, direction in _DIRECTION_KEYS
-             if inputs.is_key_down(key)),
+            (direction for config_key, direction in _DIRECTION_KEYS
+             if inputs.is_key_down(
+                 self.__engine.get_config_key(config_key)
+             )),
             None,
         )
         if held is not None:

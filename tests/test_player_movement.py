@@ -4,7 +4,7 @@ import math
 from pathlib import Path
 
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
-from Engine.InputHandler.KeyCode import KEY_D, KEY_Z
+from Engine.InputHandler.KeyCode import KEY_D, KEY_RIGHT, KEY_Z
 from Engine.Sprite import Sprite, SpriteFrame
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
@@ -110,10 +110,21 @@ class FakeSpriteSheet:
 
 
 class FakeEngine:
+    def __init__(self) -> None:
+        self.config = {
+            "UP": KEY_Z,
+            "DOWN": ord("s"),
+            "LEFT": ord("q"),
+            "RIGHT": KEY_D,
+        }
+
     def load_sprite_sheet(
             self, _image_path: Path, _metadata_path: Path,
     ) -> FakeSpriteSheet:
         return FakeSpriteSheet()
+
+    def get_config_key(self, key: str) -> int:
+        return self.config[key]
 
 
 def make_player(walls: tuple[Collider, ...] = ()) -> Player:
@@ -138,6 +149,22 @@ def test_player_moves_smoothly_and_graphics_follow_collider() -> None:
 
     assert player.collider.world_position == Vector2(31.0, 25.0)
     assert player.position == (26, 20)
+    assert player.direction == Vector2(1.0, 0.0)
+
+
+def test_player_uses_the_engine_movement_key_config() -> None:
+    engine = FakeEngine()
+    engine.config["RIGHT"] = KEY_RIGHT
+    player = Player(engine, movement_speed=120.0)
+    player.InitPlayer(FakeDisplay(), FakeMap())  # type: ignore[arg-type]
+
+    player.update_direction(
+        FakeInput(pressed={KEY_RIGHT}, down={KEY_RIGHT}),
+        FakeMap(),  # type: ignore[arg-type]
+        PhysicsEngine(),
+        0.05,
+    )
+
     assert player.direction == Vector2(1.0, 0.0)
 
 

@@ -6,12 +6,10 @@
 		"1440": [2560, 1440],
 		"2160": [3840, 2160]
 	},
-	"key_config": {
-		"Up": 122,
-		"Down": 115,
-		"Left": 113,
-		"Right": 100
-	},
+	"UP": 122,
+	"DOWN": 115,
+	"LEFT": 113,
+	"RIGHT": 100,
 	"debug": false,
 	"pacgum_points": 10,
 	"super_points": 50,

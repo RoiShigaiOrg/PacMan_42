@@ -17,7 +17,7 @@ class Component(ABC):
     _selected: bool = False
 
     @abstractmethod
-    def update(self, input_handler: InputHandler) -> None:
+    def update(self, input_handler: InputHandler) -> object | None:
         """ Update Abstract Method of the Component Object """
         ...
 

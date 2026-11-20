@@ -2,7 +2,7 @@ from Engine.Engine import Engine
 from Engine.Graphics import MlxDisplay, Rect
 from Engine.InputHandler import InputHandler
 from Engine.InputHandler.KeyCode import (KEY_RIGHT, KEY_LEFT)
-from typing import Callable, Any, List, Tuple
+from typing import Callable, Any, Tuple
 from .Component import Component
 
 
@@ -26,15 +26,12 @@ class Selector(Component):
         self.__engine: Engine = engine
         self.__dimension: Tuple[float, float] = (width, height)
         self._label: str | None = None
-        if isinstance(key, dict):
-            self.__key: Any = list(key.keys())
-        else:
-            self.__key: Any = key
+        self.__key: Any = list(key.keys()) if isinstance(key, dict) else key
         self.__callback: Callable | None = callback
-        if first_key:
+        if first_key is not None:
             self.__display_key: Any = first_key
-        elif isinstance(key, List):
-            self.__display_key: Any = key[0]
+        elif isinstance(self.__key, list) and self.__key:
+            self.__display_key = self.__key[0]
         else:
             raise ValueError("Selector: first key not given")
         self.__shape: Rect | None = None
@@ -43,21 +40,25 @@ class Selector(Component):
 
     def update(self, input_handler: InputHandler) -> None:
         """ Update the selector by referring on the user inputs """
-        if input_handler.was_key_pressed(KEY_RIGHT):
+        if input_handler.was_key_pressed(
+                self.__engine.get_config_key("RIGHT")):
             self.__selector = (self.__selector + 1) % len(self.__key)
-        if input_handler.was_key_pressed(KEY_LEFT):
+        if input_handler.was_key_pressed(
+                self.__engine.get_config_key("LEFT")):
             self.__selector = (self.__selector - 1)
             if self.__selector < 0:
                 self.__selector = len(self.__key) - 1
         self.__display_key = str(self.__key[self.__selector])
 
+    def read_value(self) -> Any:
+        """Return the currently selected value (for example, ``UP``)."""
+        return self.__key[self.__selector]
+
     def callback(self) -> None:
         """ Run the callback method associated to the selector. """
-        if not self.__callback():
-            raise ValueError("Selector: No callback function")
-        if isinstance(self.__key, dict):
-            self.__callback(self.__key[self.__display_key])
-        elif isinstance(self.__key, list):
+        if self.__callback is None:
+            return
+        if isinstance(self.__key, list):
             self.__callback(self.__key[self.__selector])
         else:
             raise ValueError("Selector: Error key format")
@@ -84,7 +85,9 @@ class Selector(Component):
         select_text: str = f"<  {self.__display_key}  >"
         if self._label:
             display.write_text(pos[0], pos[1], 0xFFFFFFFF, self._label)
-            display.write_text(pos[0] + text_x, pos[1], 0xFFFFFFFF, select_text)
+            display.write_text(
+                pos[0] + text_x, pos[1], 0xFFFFFFFF, select_text
+            )
 
     def __init_selector(self) -> int:
         for i, key in enumerate(self.__key):

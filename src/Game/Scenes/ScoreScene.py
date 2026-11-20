@@ -3,7 +3,7 @@ from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
 from Game.UI.XpmAlphabet import XpmAlphabet
-from Engine.InputHandler.KeyCode import KEY_ESC, KEY_LEFT, KEY_RIGHT
+from Engine.InputHandler.KeyCode import KEY_ESC
 from Engine.FileManager.Loader import ScoreLoader
 from Game.GameState import GameState, GameMode
 
@@ -67,8 +67,12 @@ class ScoreScene(Scene):
         if input_handler.was_key_pressed(KEY_ESC):
             self.__engine.scene_manager.change_scene("main_scene")
         if self.__can_switch and (
-                input_handler.was_key_pressed(KEY_LEFT)
-                or input_handler.was_key_pressed(KEY_RIGHT)):
+                input_handler.was_key_pressed(
+                    self.__engine.get_config_key("LEFT")
+                )
+                or input_handler.was_key_pressed(
+                    self.__engine.get_config_key("RIGHT")
+                    )):
             self.__mode = self.__other_mode()
             self.__show()
 

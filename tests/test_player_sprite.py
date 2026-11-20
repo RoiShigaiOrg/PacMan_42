@@ -37,11 +37,20 @@ class FakeSpriteSheet:
 class FakeEngine:
     def __init__(self) -> None:
         self.sprite_sheet = FakeSpriteSheet()
+        self.config = {
+            "UP": KEY_Z,
+            "DOWN": KEY_S,
+            "LEFT": KEY_Q,
+            "RIGHT": KEY_D,
+        }
 
     def load_sprite_sheet(
             self, _image_path: Path, _metadata_path: Path,
     ) -> FakeSpriteSheet:
         return self.sprite_sheet
+
+    def get_config_key(self, key: str) -> int:
+        return self.config[key]
 
 
 class PixelDisplay:

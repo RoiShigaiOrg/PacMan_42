@@ -66,11 +66,15 @@ def test_key_state_tracks_held_keys_and_transitions() -> None:
 
     assert handler.is_key_down(119)
     assert handler.was_key_pressed(119)
+    assert handler.last_key_pressed == 119
 
     session.hooks[3](119, None)
 
     assert not handler.is_key_down(119)
     assert handler.was_key_released(119)
+
+    handler.end_frame()
+    assert handler.last_key_pressed is None
 
 
 def test_close_requests_loop_exit() -> None:

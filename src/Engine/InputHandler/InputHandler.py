@@ -22,6 +22,7 @@ class InputHandler:
         self.__keys_down: set[int] = set()
         self.__keys_pressed: set[int] = set()
         self.__keys_released: set[int] = set()
+        self.__last_key_pressed: int | None = None
         self.__mouse_position = (0, 0)
         self.__mouse_buttons_down: set[int] = set()
         self.__mouse_buttons_pressed: set[int] = set()
@@ -51,6 +52,7 @@ class InputHandler:
     def __on_key_press(self, key: int, _: object) -> None:
         self.__keys_down.add(key)
         self.__keys_pressed.add(key)
+        self.__last_key_pressed = key
 
     def __on_key_release(self, key: int, _: object) -> None:
         self.__keys_down.discard(key)
@@ -84,6 +86,11 @@ class InputHandler:
         """Return whether a key was pressed during the current frame."""
         return key in self.__keys_pressed
 
+    @property
+    def last_key_pressed(self) -> int | None:
+        """Return the most recently pressed key during the current frame."""
+        return self.__last_key_pressed
+
     def was_key_released(self, key: int) -> bool:
         """Return whether a key was released during the current frame."""
         return key in self.__keys_released
@@ -109,6 +116,7 @@ class InputHandler:
         """Clear input events that are only meaningful for one frame."""
         self.__keys_pressed.clear()
         self.__keys_released.clear()
+        self.__last_key_pressed = None
         self.__mouse_buttons_pressed.clear()
         self.__mouse_buttons_released.clear()
 

@@ -8,7 +8,10 @@ import json
 class EngineConfig(BaseModel):
     dimension: List[int]
     available_dimension: Dict[str, List[int]]
-    key_config: Dict[str, int]
+    UP: int
+    DOWN: int
+    LEFT: int
+    RIGHT: int
     debug: bool
 
 
