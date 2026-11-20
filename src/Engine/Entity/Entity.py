@@ -12,6 +12,9 @@ class _PositionableShape(Protocol):
     def update_pos(self, pos_x: int, pos_y: int) -> None:
         ...
 
+    def update_size(self, size: Tuple[int, int]) -> None:
+        ...
+
 
 class Entity(ABC):
     """

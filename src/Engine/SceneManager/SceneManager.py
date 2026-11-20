@@ -32,8 +32,13 @@ class SceneManager:
         """ Change to the given screen_id to render in the mlx window """
         print(f"scene_id: {scene_id}")
         if scene_id in self.__screens:
+            next_screen = self.__screens[scene_id]
+            if next_screen is self.__actual_screen:
+                return
+            if self.__actual_screen is not None:
+                self.__actual_screen.on_exit()
             self.__last = self.__actual_screen
-            self.__actual_screen = self.__screens[scene_id]
+            self.__actual_screen = next_screen
             self.__actual_screen.render_on_change()
         else:
             raise ValueError(f"ScreenManager Error: {scene_id} do not exist")
@@ -44,13 +49,14 @@ class SceneManager:
 
     def last_scene(self) -> None:
         """ Set the SceneManager to the last scene. """
-        if self.__last:
-            tmp: Scene = self.__actual_screen
-            self.__actual_screen = self.__last
-            self.__last = tmp
-            self.__actual_screen.render_on_change()
-        else:
+        if self.__last is None or self.__actual_screen is None:
             raise ValueError("SceneManager: No Last Scene available")
+
+        current = self.__actual_screen
+        current.on_exit()
+        self.__actual_screen = self.__last
+        self.__last = current
+        self.__actual_screen.render_on_change()
 
     def render(self) -> None:
         """Render and present the currently selected screen."""
@@ -58,6 +64,13 @@ class SceneManager:
             raise RuntimeError("ScreenManager has no active screen")
 
         self.__actual_screen.render()
+
+    def resolution_changed(self) -> None:
+        """Notify registered scenes and redraw the active one."""
+        for scene in dict.fromkeys(self.__screens.values()):
+            scene.on_resolution_changed()
+        if self.__actual_screen is not None:
+            self.__actual_screen.render_on_change()
 
     def update(
             self,

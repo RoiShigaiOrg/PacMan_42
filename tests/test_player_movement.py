@@ -57,6 +57,18 @@ class FakeMap:
             math.floor((position.y - self.grid_origin[1]) / self.cell_size[1]),
         )
 
+    def world_to_grid_position(self, position: Vector2) -> Vector2:
+        return Vector2(
+            (position.x - self.grid_origin[0]) / self.cell_size[0],
+            (position.y - self.grid_origin[1]) / self.cell_size[1],
+        )
+
+    def grid_to_world_position(self, position: Vector2) -> Vector2:
+        return Vector2(
+            self.grid_origin[0] + position.x * self.cell_size[0],
+            self.grid_origin[1] + position.y * self.cell_size[1],
+        )
+
     def is_walkable_cell(self, column: int, row: int) -> bool:
         return (
             0 <= column < self.width
@@ -175,6 +187,25 @@ def test_player_collider_is_smaller_than_a_map_cell() -> None:
 
     assert isinstance(shape, AABB)
     assert shape.half_size == Vector2(4.0, 4.0)
+
+
+def test_player_layout_update_preserves_cell_position_and_scales_speed() -> None:
+    player = make_player()
+    old_map = FakeMap()
+    grid_position = old_map.world_to_grid_position(
+        player.collider.world_position
+    )
+    new_map = FakeMap()
+    new_map.grid_origin = (20, 30)
+    new_map.cell_size = (20, 20)
+
+    player.update_layout(new_map, grid_position)  # type: ignore[arg-type]
+
+    assert grid_position == Vector2(1.5, 1.5)
+    assert player.collider.world_position == Vector2(50.0, 60.0)
+    assert player.size == (20, 20)
+    assert player.collider.shape == AABB(Vector2(8.0, 8.0))
+    assert player._movement_speed == 240.0
 
 
 def test_player_does_not_shift_sideways_when_a_turn_is_blocked() -> None:

@@ -27,6 +27,11 @@ class MainScene(Scene):
         super().__init__()
         self.__engine = engine
         self.__display = display
+        self.__rebuild_layout()
+        self.mark_full_screen_dirty(display)
+
+    def __rebuild_layout(self) -> None:
+        """Recreate pixel-based menu geometry for the current display size."""
         self.__rect: Rect = Rect(
                 self.__display.relative_width(0.3),
                 self.__display.relative_height(0.05),
@@ -53,7 +58,6 @@ class MainScene(Scene):
         self.__rect2.draw(self.__display)
         self.__rect3.draw(self.__display)
         self.__static_layer = self.__display.snapshot()
-
         self.__rect.add_text(
                 TextBox("Press C to MapScene", 0xFFFFFFFF),
                 TEXT_CENTER
@@ -66,7 +70,12 @@ class MainScene(Scene):
                 TextBox("Press ESC to quit", 0xFFFFFFFF),
                 TEXT_CENTER
             )
-        self.mark_full_screen_dirty(display)
+
+    def on_resolution_changed(self) -> None:
+        """Refresh menu shapes and their cached background image."""
+        self.__rebuild_layout()
+        self.clear_dirty_regions()
+        self.mark_full_screen_dirty(self.__display)
 
     def update(
             self, delta_time: float, input_handler: InputHandler

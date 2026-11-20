@@ -68,7 +68,10 @@ class FakeEngine:
     def __init__(self) -> None:
         self.config: dict[str, object] = {
             "dimension": [1920, 1080],
-            "available_dimension": {"1080": [1920, 1080]},
+            "available_dimension": {
+                "720": [1280, 720],
+                "1080": [1920, 1080],
+            },
             "UP": ord("z"),
             "DOWN": ord("s"),
             "LEFT": ord("q"),
@@ -77,6 +80,7 @@ class FakeEngine:
         }
         self.scene_manager = FakeSceneManager()
         self.updated_keys: list[tuple[str, object]] = []
+        self.applied_resolutions: list[tuple[int, int]] = []
 
     def get_config_key(self, key: str) -> object:
         return self.config[key]
@@ -84,6 +88,12 @@ class FakeEngine:
     def set_config_key(self, key: str, value: object) -> None:
         self.config[key] = value
         self.updated_keys.append((key, value))
+
+    def apply_resolution(self, size: tuple[int, int]) -> None:
+        if list(size) == self.config["dimension"]:
+            return
+        self.applied_resolutions.append(size)
+        self.config["dimension"] = list(size)
 
 
 class FakeInput:
@@ -120,6 +130,30 @@ def test_escape_cancels_capture_without_changing_the_binding() -> None:
 
     assert engine.config["UP"] == ord("z")
     assert engine.updated_keys == []
+
+
+def test_resolution_selection_is_pending_until_enter() -> None:
+    scene, engine = make_scene()
+
+    scene.update(0.0, FakeInput(ord("q")))
+
+    assert engine.config["dimension"] == [1920, 1080]
+    assert engine.applied_resolutions == []
+
+    scene.update(0.0, FakeInput(KEY_ENTER))
+
+    assert engine.config["dimension"] == [1280, 720]
+    assert engine.applied_resolutions == [(1280, 720)]
+
+
+def test_resolution_selection_applies_when_leaving_options() -> None:
+    scene, engine = make_scene()
+    scene.update(0.0, FakeInput(ord("q")))
+
+    scene.on_exit()
+
+    assert engine.config["dimension"] == [1280, 720]
+    assert engine.applied_resolutions == [(1280, 720)]
 
 
 def test_option_scene_blits_only_when_dirty_and_restores_bar_region() -> None:

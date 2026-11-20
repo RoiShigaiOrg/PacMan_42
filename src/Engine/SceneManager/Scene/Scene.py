@@ -63,6 +63,12 @@ class Scene(ABC):
         """Update this screen using the current frame's input state."""
         ...
 
+    def on_exit(self) -> None:
+        """Run scene-specific work before this scene is left."""
+
+    def on_resolution_changed(self) -> None:
+        """Refresh cached layout after its display changes dimensions."""
+
     def movement_region(
             self,
             size: Tuple[int, int],

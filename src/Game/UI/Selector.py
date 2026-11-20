@@ -1,7 +1,6 @@
 from Engine.Engine import Engine
 from Engine.Graphics import MlxDisplay, Rect
 from Engine.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import (KEY_RIGHT, KEY_LEFT)
 from typing import Callable, Any, Tuple
 from .Component import Component
 
@@ -19,7 +18,7 @@ class Selector(Component):
             width: float, height: float,
             key: Any,
             first_key: Any | None = None,
-            callback: Callable | None = None) -> None:
+            callback: Callable[[Any], None] | None = None) -> None:
         """ Init method of the Selector Component. """
         if width <= 0.0 or height <= 0.0:
             raise ValueError("Selector: Negative dimension")
@@ -27,7 +26,7 @@ class Selector(Component):
         self.__dimension: Tuple[float, float] = (width, height)
         self._label: str | None = None
         self.__key: Any = list(key.keys()) if isinstance(key, dict) else key
-        self.__callback: Callable | None = callback
+        self.__callback: Callable[[Any], None] | None = callback
         if first_key is not None:
             self.__display_key: Any = first_key
         elif isinstance(self.__key, list) and self.__key:
@@ -68,13 +67,18 @@ class Selector(Component):
             display: MlxDisplay,
             pos: Tuple[int, int]) -> None:
         """ Render Method of the Selector Object """
+        width = max(1, display.relative_width(self.__dimension[0]))
+        height = max(1, display.relative_height(self.__dimension[1]))
         if not self.__shape:
             self.__shape = Rect(
-                    display.relative_width(self.__dimension[0]),
-                    display.relative_height(self.__dimension[1]),
+                    width,
+                    height,
                     pos[0], pos[1],
                     0xFF000000
                 )
+        else:
+            self.__shape.update_size(width, height)
+            self.__shape.update_pos(pos[0], pos[1])
         color: int = 0xFF0A0A0A if self._selected else 0xFF000000
         self.__shape.update_color(color)
         self.__shape.fill(display)

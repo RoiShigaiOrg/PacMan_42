@@ -141,6 +141,34 @@ class Player(Entity):
         """Return the graphical and collider dimensions of the Player."""
         return self._width, self._height
 
+    def update_layout(
+            self, actual_map: Map, grid_position: Vector2
+    ) -> None:
+        """Resize the player while retaining its continuous map position."""
+        old_width = self._width
+        self._width, self._height = actual_map.cell_size
+        self._movement_speed *= self._width / old_width
+        self._collider.shape = AABB(Vector2(
+            self._width * COLLIDER_SIZE_RATIO / 2,
+            self._height * COLLIDER_SIZE_RATIO / 2,
+        ))
+        self._collider.position = (
+            actual_map.grid_to_world_position(grid_position)
+            - self._collider.offset
+        )
+        self._graphical_shape.update_size((self._width, self._height))
+
+        map_center = actual_map.center()
+        origin_center = actual_map.grid_to_world_position(Vector2(
+            map_center[0] + 0.5,
+            map_center[1] + 0.5,
+        ))
+        self.__origin = (
+            round(origin_center.x - self._width / 2),
+            round(origin_center.y - self._height / 2),
+        )
+        self._sync_graphics_position()
+
     def set_to_origin(self) -> None:
         """ Reset the Player position to the origin of the map """
         self.position = self.__origin

@@ -9,6 +9,8 @@ class RecordingScene(Scene):
         self.marker = marker
         self.render_count = 0
         self.change_render = 0
+        self.exit_count = 0
+        self.resolution_change_count = 0
 
     def render(self) -> None:
         self.render_count += 1
@@ -18,6 +20,12 @@ class RecordingScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         print("update")
+
+    def on_exit(self) -> None:
+        self.exit_count += 1
+
+    def on_resolution_changed(self) -> None:
+        self.resolution_change_count += 1
 
 
 def test_empty_manager_has_no_active_scene() -> None:
@@ -66,6 +74,20 @@ def test_change_screen_selects_registered_scene() -> None:
     assert manager.actual_screen is second
     assert first.render_count == 0
     assert second.render_count == 1
+    assert first.exit_count == 1
+
+
+def test_resolution_change_notifies_all_scenes_and_redraws_active_scene() -> None:
+    first = RecordingScene("first")
+    second = RecordingScene("second")
+    manager = SceneManager({"first": first, "second": second})
+
+    manager.change_scene("second")
+    manager.resolution_changed()
+
+    assert first.resolution_change_count == 1
+    assert second.resolution_change_count == 1
+    assert second.change_render == 2
 
 
 def test_render_without_a_scene_fails() -> None:

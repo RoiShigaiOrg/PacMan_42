@@ -50,6 +50,19 @@ def test_map_layout_uses_centered_square_cells_and_square_colliders() -> None:
     assert actual_map.cell_coordinates_at(collider.world_position) == (2, 1)
 
 
+def test_map_layout_conversion_preserves_a_continuous_cell_position() -> None:
+    actual_map = make_map(3, 2)
+    actual_map.set_colliders(10, 20, 100, 80)
+    old_world_position = Vector2(60.0, 60.0)
+    grid_position = actual_map.world_to_grid_position(old_world_position)
+
+    actual_map.set_colliders(100, 200, 200, 160)
+    new_world_position = actual_map.grid_to_world_position(grid_position)
+
+    assert grid_position == Vector2(50 / 33, 1.0)
+    assert new_world_position == Vector2(201.0, 280.0)
+
+
 def test_map_draw_uses_the_same_square_layout_as_its_colliders() -> None:
     actual_map = make_map(2, 2)
     display = RecordingDisplay()

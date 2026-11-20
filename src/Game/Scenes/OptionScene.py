@@ -110,13 +110,16 @@ class OptionScene(Scene):
         )
         for index, (component, pos) in enumerate(zip(
                 self.__config_option, self.__option_positions())):
-            if self.intersects_regions(self.__option_region(index), dirty_regions):
+            region = self.__option_region(index)
+            if self.intersects_regions(region, dirty_regions):
                 component.render(self.__display, pos)
 
         input_pos = self.__input_position()
         if (
                 self.__input.key_capture_active
-                and self.intersects_regions(self.__input_region(), dirty_regions)
+                and self.intersects_regions(
+                    self.__input_region(), dirty_regions
+                )
         ):
             self.__input.render(self.__display, input_pos)
 
@@ -137,6 +140,15 @@ class OptionScene(Scene):
             component.render(self.__display, pos)
         self.__static_layer = self.__display.snapshot()
         self.mark_full_screen_dirty(self.__display)
+
+    def on_exit(self) -> None:
+        """Apply the selected resolution when leaving the options menu."""
+        self.__apply_resolution()
+
+    def on_resolution_changed(self) -> None:
+        """Discard size-dependent cached content before the menu is redrawn."""
+        self.__static_layer = None
+        self.clear_dirty_regions()
 
     def __update_selected(self, input_handler: InputHandler) -> None:
         """ Update the selected Component in the Option Scene."""
@@ -175,7 +187,10 @@ class OptionScene(Scene):
 
     def __process_enter(self) -> None:
         """ Process the Enter Key for the Option Scene """
-        if self.__select_iter == 1:
+        if self.__select_iter == 0:
+            self.__apply_resolution()
+            self.__mark_option_dirty(self.__select_iter)
+        elif self.__select_iter == 1:
             movement_option = self.__config_option[1]
             if isinstance(movement_option, Selector):
                 self.__input_target = str(movement_option.read_value())
@@ -187,6 +202,16 @@ class OptionScene(Scene):
         else:
             self.__config_option[self.__select_iter].callback()
             self.__mark_option_dirty(self.__select_iter)
+
+    def __apply_resolution(self) -> None:
+        """Apply the selected available resolution through the engine."""
+        resolution_option = self.__config_option[0]
+        if not isinstance(resolution_option, Selector):
+            return
+        available = self.__engine.get_config_key("available_dimension")
+        key = str(resolution_option.read_value())
+        size = available[key]
+        self.__engine.apply_resolution((int(size[0]), int(size[1])))
 
     def __option_positions(self) -> tuple[tuple[int, int], ...]:
         return tuple(

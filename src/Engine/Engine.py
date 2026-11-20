@@ -11,6 +11,7 @@ from .ConfigHandler.ConfigHandler import ConfigHandler
 from .FileManager.Loader.SpriteLoader import SpriteLoader
 from .Sprite.SpriteSheet import SpriteSheet
 from pathlib import Path
+from pydantic import BaseModel
 import mlx
 import time
 
@@ -45,7 +46,7 @@ class Engine:
         if not self._mlx_ptr:
             raise RuntimeError("failed to initialize MLX")
         self.__file_manager: FileManager = FileManager()
-        self.__config: ConfigHandler = ConfigHandler(
+        self.__config: ConfigHandler[BaseModel] = ConfigHandler(
                 self.__file_manager.load(
                     config_loader
                 )
@@ -102,6 +103,25 @@ class Engine:
         return self._window.create_display(
                     size
                 )
+
+    def apply_resolution(self, size: tuple[int, int]) -> None:
+        """Replace the window and refresh scenes for an allowed resolution."""
+        available = self.get_config_key("available_dimension")
+        if not isinstance(available, dict):
+            raise ValueError("available resolutions must be a mapping")
+        allowed_sizes = {
+            tuple(dimension)
+            for dimension in available.values()
+            if isinstance(dimension, (list, tuple))
+        }
+        if size not in allowed_sizes:
+            raise ValueError(f"unsupported resolution: {size}")
+        if size == self._window.size():
+            return
+
+        self._window.recreate(size, self._input_handler.attach_window)
+        self.set_config_key("dimension", list(size))
+        self.scene_manager.resolution_changed()
 
     def load_sprite_sheet(
             self,

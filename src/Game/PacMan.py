@@ -27,7 +27,9 @@ class PacMan(Application):
         self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
         self.stats: GameState = GameState()
         self.color: str
-        self.dimension: Tuple[int, int] = self.engine.get_config_key("dimension")
+        self.dimension: Tuple[int, int] = self.engine.get_config_key(
+            "dimension"
+        )
         self.display: MlxDisplay
         self.engine.scene_manager.add_scene(
             {

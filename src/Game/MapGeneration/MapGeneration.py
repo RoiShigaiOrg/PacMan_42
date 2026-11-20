@@ -221,6 +221,24 @@ class Map():
             math.floor((position.y - pos_y) / cell_height),
         )
 
+    def world_to_grid_position(self, position: Vector2) -> Vector2:
+        """Convert a pixel-space point to continuous map-cell coordinates."""
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return Vector2(
+            (position.x - origin_x) / cell_width,
+            (position.y - origin_y) / cell_height,
+        )
+
+    def grid_to_world_position(self, position: Vector2) -> Vector2:
+        """Convert continuous map-cell coordinates to pixel space."""
+        origin_x, origin_y = self.grid_origin
+        cell_width, cell_height = self.cell_size
+        return Vector2(
+            origin_x + position.x * cell_width,
+            origin_y + position.y * cell_height,
+        )
+
     def is_walkable_cell(self, column: int, row: int) -> bool:
         """Return whether a cell is in bounds and walkable."""
         return (

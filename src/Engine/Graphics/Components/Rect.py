@@ -86,6 +86,7 @@ class Rect(Components):
             display.draw_pixel(
                     self.__pos[0] + self.__width - 1, y, self.__color
                     )
+        self.__draw_text(display)
 
     def fill(self, display: Any) -> None:
         """ Draw a filled Rect """

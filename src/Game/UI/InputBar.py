@@ -18,7 +18,7 @@ class InputBar(Component):
 
     def __init__(
             self, width: float, height: float,
-            callback: Callable | None = None,
+            callback: Callable[[str], None] | None = None,
             max_len: int = 30) -> None:
         """ Init Method of the InputBar Widget """
         if width <= 0 or height <= 0:
@@ -28,7 +28,7 @@ class InputBar(Component):
         self.__dimension: Tuple[float, float] = (width, height)
         self.max_len = max_len
         self._label: str | None = None
-        self.__callback: Callable | None = callback
+        self.__callback: Callable[[str], None] | None = callback
         self.inputed_text = ""
         self.__capture_target: str | None = None
         self.__current_key: int | None = None

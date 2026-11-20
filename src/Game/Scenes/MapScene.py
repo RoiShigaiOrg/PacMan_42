@@ -40,16 +40,7 @@ class MapScene(Scene):
         self.display = display
         self.map = Map(engine)
         self.display.clear(0xFF000000)
-        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
-        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
-        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
-        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
-        self.map.set_colliders(
-                map_x,
-                map_y,
-                map_width,
-                map_height,
-            )
+        self.__configure_map_layout()
         self.map.draw(display)
         self.__player: Player = Player(engine)
         self.__player.InitPlayer(display, self.map)
@@ -106,16 +97,7 @@ class MapScene(Scene):
         """ Generate a New map and Reset the entity position """
         self.map = Map(self.__engine)
         self.display.clear(0xFF000000)
-        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
-        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
-        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
-        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
-        self.map.set_colliders(
-                map_x,
-                map_y,
-                map_width,
-                map_height,
-            )
+        self.__configure_map_layout()
         self.map.draw(self.display)
         self.__player = Player(self.__engine)
         self.__player.InitPlayer(self.display, self.map)
@@ -154,6 +136,42 @@ class MapScene(Scene):
         self.mark_full_screen_dirty(self.display)
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
+
+    def __configure_map_layout(self) -> None:
+        """Recalculate the map grid and cell colliders for this display."""
+        self.map.set_colliders(
+            self.display.relative_width(RELATIVE_MAP_POS_X),
+            self.display.relative_height(RELATIVE_MAP_POS_Y),
+            self.display.relative_width(RELATIVE_MAP_WIDTH),
+            self.display.relative_height(RELATIVE_MAP_HEIGHT),
+        )
+
+    def on_resolution_changed(self) -> None:
+        """Resize the existing map and actors without resetting game state."""
+        player_position = self.map.world_to_grid_position(
+            self.__player.collider.world_position
+        )
+        ghost_positions = {
+            ghost: self.map.world_to_grid_position(
+                ghost.collider.world_position
+            )
+            for ghost in self.__ghosts.values()
+        }
+
+        self.__configure_map_layout()
+        self.__player.update_layout(self.map, player_position)
+        for ghost, position in ghost_positions.items():
+            ghost.update_layout(self.map, position)
+
+        self.__ghost_targets.clear()
+        self.score.x = self.display.relative_width(0.6)
+        self.power_timer.x = self.display.relative_width(0.35)
+        self.display.clear(0xFF000000)
+        self.map.draw(self.display)
+        self.__static_layer = self.display.snapshot()
+        self.clear_dirty_regions()
+        self.mark_full_screen_dirty(self.display)
+        self.lives.redraw()
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """ Update method for the MapScene Object """
