@@ -78,7 +78,7 @@ def test_main_scene_defers_window_drawing_until_render() -> None:
     leaderboard_label = next(
         event for event in session.events if event[-1] == "LeaderBoard"
     )
-    assert leaderboard_label[3:5] == (56, 97)
+    assert leaderboard_label[3:5] == (56, 107)
 
 
 def test_main_scene_marks_old_and_new_panels_dirty_on_navigation() -> None:
@@ -90,8 +90,8 @@ def test_main_scene_marks_old_and_new_panels_dirty_on_navigation() -> None:
     scene.update(0.0, FakeInput(ord("s")))  # Move down to LeaderBoard.
 
     assert scene.dirty_regions == (
-        (60, 80, 80, 10),
         (60, 100, 80, 10),
+        (60, 110, 80, 10),
     )
 
     scene.render()
