@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
+from Engine.SceneManager.Scene.Scene import Scene
 from Engine.Sprite import Sprite, SpriteFrame
 from Game.GameState import GameState
 from Game.Ghosts.Blinky import Blinky
@@ -137,6 +138,7 @@ def test_idle_ghost_animation_frame_change_invalidates_its_region() -> None:
     ghost._collider = Collider(AABB(Vector2(4, 4)), Vector2(5, 5))
 
     scene = MapScene.__new__(MapScene)
+    Scene.__init__(scene)
     scene.map = actual_map
     scene.stats = GameState()
     scene._MapScene__player = SimpleNamespace(
@@ -145,10 +147,9 @@ def test_idle_ghost_animation_frame_change_invalidates_its_region() -> None:
     scene._MapScene__ghosts = {"ghost": ghost}
     scene._MapScene__ghost_targets = {}
     scene._MapScene__physics = PhysicsEngine()
-    scene._MapScene__dirty_region = None
 
     scene._MapScene__update_ghosts(0.1)
 
     assert ghost.position == (0, 0)
     assert ghost.visual_state == ("right", 1)
-    assert scene._MapScene__dirty_region == (0, 0, 10, 10)
+    assert scene.dirty_regions == ((0, 0, 10, 10),)

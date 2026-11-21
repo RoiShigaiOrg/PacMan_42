@@ -6,6 +6,7 @@ from typing import Any
 
 from Engine.Animation import Animation, AnimationHandler
 from Engine.Physics import Vector2
+from Engine.SceneManager.Scene.Scene import Scene
 from Engine.Sprite import Sprite, SpriteFrame
 from Game.GameState import GameState
 from Game.MapGeneration.Cell import Cell
@@ -137,6 +138,7 @@ def test_scene_scores_only_a_pellet_that_was_removed() -> None:
     actual_map = make_map([[True, True, True]] * 3)
     stats = GameState()
     scene = MapScene.__new__(MapScene)
+    Scene.__init__(scene)
     scene.map = actual_map
     scene.stats = stats
     scene._MapScene__player = type(
@@ -146,7 +148,6 @@ def test_scene_scores_only_a_pellet_that_was_removed() -> None:
             "world_position": Vector2(15, 15),
         })()},
     )()
-    scene._MapScene__dirty_region = None
 
     scene._MapScene__consume_player_pellet()
     scene._MapScene__consume_player_pellet()
@@ -154,4 +155,4 @@ def test_scene_scores_only_a_pellet_that_was_removed() -> None:
     assert stats.scores == 10
     assert (1, 1) not in actual_map.pellet_cells
     assert len(actual_map.pellet_cells) == 8
-    assert scene._MapScene__dirty_region == (10, 10, 10, 10)
+    assert scene.dirty_regions == ((10, 10, 10, 10),)

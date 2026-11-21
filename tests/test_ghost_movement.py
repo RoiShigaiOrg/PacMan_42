@@ -12,8 +12,14 @@ from Game.MapGeneration.MapNode import MapNode
 
 
 class FakeShape:
+    def __init__(self) -> None:
+        self.size = (10, 10)
+
     def update_pos(self, _x: int, _y: int) -> None:
         pass
+
+    def update_size(self, size: tuple[int, int]) -> None:
+        self.size = size
 
     def fill(self, _display: MlxDisplay) -> None:
         pass
@@ -82,6 +88,24 @@ def test_ghost_moves_smoothly_toward_next_cell_center() -> None:
     ghost.update_movement(actual_map, PhysicsEngine(), 0.25)
 
     assert ghost.collider.world_position == Vector2(17.5, 25.0)
+
+
+def test_ghost_layout_update_preserves_cell_position_and_path() -> None:
+    actual_map = make_map([[True, True], [True, True]])
+    ghost = MovementGhost(movement_speed=10.0)
+    ghost.set_path(nodes((0, 0), (1, 0)))
+    grid_position = actual_map.world_to_grid_position(
+        ghost.collider.world_position
+    )
+    actual_map.set_colliders(20, 30, 40, 40)
+
+    ghost.update_layout(actual_map, grid_position)
+
+    assert ghost.collider.world_position == Vector2(30.0, 40.0)
+    assert ghost.size == (20, 20)
+    assert ghost._graphical_shape.size == (20, 20)
+    assert ghost.movement_speed == 20.0
+    assert ghost.path_complete is False
 
 
 def test_ghost_does_not_enter_a_non_walkable_waypoint() -> None:

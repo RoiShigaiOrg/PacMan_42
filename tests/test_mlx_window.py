@@ -10,6 +10,7 @@ class FakeMlx:
         self.image_format = image_format
         self.fail_window = False
         self.fail_image = False
+        self.fail_image_on: int | None = None
         self.data = memoryview(bytearray(64))
         self.windows: list[tuple[Any, int, int, str]] = []
         self.images: list[tuple[Any, int, int]] = []
@@ -20,11 +21,15 @@ class FakeMlx:
         self, mlx_ptr: Any, width: int, height: int, title: str
     ) -> object:
         self.windows.append((mlx_ptr, width, height, title))
-        return None if self.fail_window else "window"
+        if self.fail_window:
+            return None
+        return "window" if len(self.windows) == 1 else f"window-{len(self.windows)}"
 
     def mlx_new_image(self, mlx_ptr: Any, width: int, height: int) -> object:
         self.images.append((mlx_ptr, width, height))
-        return None if self.fail_image else "image"
+        if self.fail_image or len(self.images) == self.fail_image_on:
+            return None
+        return "image" if len(self.images) == 1 else f"image-{len(self.images)}"
 
     def mlx_get_data_addr(
         self, image_ptr: Any
@@ -134,3 +139,101 @@ def test_close_only_destroys_the_window_and_is_idempotent() -> None:
     window.close()
 
     assert session.destroyed == [("window", "window")]
+
+
+def test_close_releases_attached_display_images_before_window() -> None:
+    session = FakeMlx()
+    window = MlxWindow(session, "mlx", (10, 8), "title")
+    window.create_display((10, 8))
+
+    window.close()
+
+    assert session.destroyed == [
+        ("image", "image"), ("window", "window")
+    ]
+
+
+def test_recreate_replaces_window_and_attached_display_in_place() -> None:
+    session = FakeMlx()
+    window = MlxWindow(session, "mlx", (10, 8), "title")
+    display = window.create_display((10, 8))
+
+    window.recreate((20, 16))
+
+    assert window.size() == (20, 16)
+    assert display.size() == (20, 16)
+    display.render()
+    assert session.presented[-1] == (
+        "mlx", "window-2", "image-2", 0, 0
+    )
+    assert session.destroyed == [
+        ("image", "image"), ("window", "window")
+    ]
+
+
+def test_recreate_attaches_hooks_before_destroying_the_old_window() -> None:
+    session = FakeMlx()
+    window = MlxWindow(session, "mlx", (10, 8), "title")
+    display = window.create_display((10, 8))
+    attached: list[Any] = []
+
+    def attach(native_window: Any) -> None:
+        attached.append(native_window)
+        assert session.destroyed == []
+
+    window.recreate((20, 16), attach)
+
+    assert attached == ["window-2"]
+    assert display.size() == (20, 16)
+
+
+def test_recreate_rolls_back_when_new_window_cannot_be_attached() -> None:
+    session = FakeMlx()
+    window = MlxWindow(session, "mlx", (10, 8), "title")
+    display = window.create_display((10, 8))
+
+    def fail_attach(_native_window: Any) -> None:
+        raise RuntimeError("hook registration failed")
+
+    with pytest.raises(RuntimeError, match="hook registration failed"):
+        window.recreate((20, 16), fail_attach)
+
+    assert window.size() == (10, 8)
+    assert display.size() == (10, 8)
+    assert session.destroyed == [
+        ("image", "image-2"), ("window", "window-2")
+    ]
+
+
+def test_recreate_preserves_old_window_if_replacement_image_fails() -> None:
+    session = FakeMlx()
+    window = MlxWindow(session, "mlx", (10, 8), "title")
+    display = window.create_display((10, 8))
+    session.fail_image = True
+
+    with pytest.raises(RuntimeError, match="failed to create MLX display"):
+        window.recreate((20, 16))
+
+    assert window.size() == (10, 8)
+    assert display.size() == (10, 8)
+    display.render()
+    assert session.presented[-1] == ("mlx", "window", "image", 0, 0)
+    assert session.destroyed == [("window", "window-2")]
+
+
+def test_recreate_releases_prepared_images_when_a_later_image_fails() -> None:
+    session = FakeMlx()
+    window = MlxWindow(session, "mlx", (10, 8), "title")
+    first = window.create_display((10, 8))
+    second = window.create_display((10, 8))
+    session.fail_image_on = len(session.images) + 2
+
+    with pytest.raises(RuntimeError, match="failed to create MLX display"):
+        window.recreate((20, 16))
+
+    assert window.size() == (10, 8)
+    assert first.size() == (10, 8)
+    assert second.size() == (10, 8)
+    assert session.destroyed == [
+        ("image", "image-3"), ("window", "window-2")
+    ]

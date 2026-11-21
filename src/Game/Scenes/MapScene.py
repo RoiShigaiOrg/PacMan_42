@@ -20,12 +20,10 @@ from ..Ghosts.Blinky import Blinky
 from ..Ghosts.Clyde import Clyde
 from ..Ghosts.Inky import Inky
 from ..Ghosts.Pinky import Pinky
-from typing import Tuple, Dict
+from typing import Dict
 from Game.UI.Lives import Lives
 from Game.UI.Score import Score
 from Game.UI.PowerTime import PowerTimer
-
-Region = Tuple[int, int, int, int]
 
 
 class MapScene(Scene):
@@ -36,21 +34,13 @@ class MapScene(Scene):
             self, engine: Engine,
             display: MlxDisplay,
             stats: GameState) -> None:
+        super().__init__()
         self.__engine = engine
         self.stats = stats
         self.display = display
         self.map = Map(engine)
         self.display.clear(0xFF000000)
-        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
-        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
-        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
-        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
-        self.map.set_colliders(
-                map_x,
-                map_y,
-                map_width,
-                map_height,
-            )
+        self.__configure_map_layout()
         self.map.draw(display)
         self.__player: Player = Player(engine)
         self.__player.InitPlayer(display, self.map)
@@ -96,9 +86,7 @@ class MapScene(Scene):
                 target_plan.pathfinding,
             )
         self.__physics = engine.physics
-        self.__dirty_region: Region | None = (
-            0, 0, display.width, display.height
-        )
+        self.mark_full_screen_dirty(display)
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
         self.lives = Lives(10, 10, max_lives=4, scale=2)
@@ -109,16 +97,7 @@ class MapScene(Scene):
         """ Generate a New map and Reset the entity position """
         self.map = Map(self.__engine)
         self.display.clear(0xFF000000)
-        map_x = self.display.relative_width(RELATIVE_MAP_POS_X)
-        map_y = self.display.relative_height(RELATIVE_MAP_POS_Y)
-        map_width = self.display.relative_width(RELATIVE_MAP_WIDTH)
-        map_height = self.display.relative_height(RELATIVE_MAP_HEIGHT)
-        self.map.set_colliders(
-                map_x,
-                map_y,
-                map_width,
-                map_height,
-            )
+        self.__configure_map_layout()
         self.map.draw(self.display)
         self.__player = Player(self.__engine)
         self.__player.InitPlayer(self.display, self.map)
@@ -154,11 +133,45 @@ class MapScene(Scene):
                 target_plan.allowed_cells,
                 target_plan.pathfinding,
             )
-        self.__dirty_region = (
-            0, 0, self.display.width, self.display.height
-        )
+        self.mark_full_screen_dirty(self.display)
         self.__consume_player_pellet()
         self.__static_layer = self.display.snapshot()
+
+    def __configure_map_layout(self) -> None:
+        """Recalculate the map grid and cell colliders for this display."""
+        self.map.set_colliders(
+            self.display.relative_width(RELATIVE_MAP_POS_X),
+            self.display.relative_height(RELATIVE_MAP_POS_Y),
+            self.display.relative_width(RELATIVE_MAP_WIDTH),
+            self.display.relative_height(RELATIVE_MAP_HEIGHT),
+        )
+
+    def on_resolution_changed(self) -> None:
+        """Resize the existing map and actors without resetting game state."""
+        player_position = self.map.world_to_grid_position(
+            self.__player.collider.world_position
+        )
+        ghost_positions = {
+            ghost: self.map.world_to_grid_position(
+                ghost.collider.world_position
+            )
+            for ghost in self.__ghosts.values()
+        }
+
+        self.__configure_map_layout()
+        self.__player.update_layout(self.map, player_position)
+        for ghost, position in ghost_positions.items():
+            ghost.update_layout(self.map, position)
+
+        self.__ghost_targets.clear()
+        self.score.x = self.display.relative_width(0.6)
+        self.power_timer.x = self.display.relative_width(0.35)
+        self.display.clear(0xFF000000)
+        self.map.draw(self.display)
+        self.__static_layer = self.display.snapshot()
+        self.clear_dirty_regions()
+        self.mark_full_screen_dirty(self.display)
+        self.lives.redraw()
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """ Update method for the MapScene Object """
@@ -173,10 +186,7 @@ class MapScene(Scene):
             self.__reset_map()
             self.__engine.scene_manager.change_scene("endlevel_scene")
         if self.map.update_pellet_animation(delta_time):
-            self.__dirty_region = self.union_regions(
-                self.__dirty_region,
-                self.map.pellet_bounds,
-            )
+            self.mark_dirty(*self.map.animated_pellet_regions)
         if input_handler.was_key_pressed(KEY_C):
             self.__engine.scene_manager.change_scene("main_scene")
         if input_handler.was_key_pressed(KEY_R):
@@ -224,10 +234,7 @@ class MapScene(Scene):
                 regions.append(
                     self.movement_region(self.__player.size, old_position)
                 )
-            self.__dirty_region = self.union_regions(
-                self.__dirty_region,
-                *regions,
-            )
+            self.mark_dirty(*regions)
 
     def __update_ghosts(
             self, delta_time: float,
@@ -273,10 +280,7 @@ class MapScene(Scene):
                     regions.append(
                         self.movement_region(ghost.size, old_ghost_position)
                     )
-                self.__dirty_region = self.union_regions(
-                    self.__dirty_region,
-                    *regions,
-                )
+                self.mark_dirty(*regions)
 
     def __consume_player_pellet(self) -> None:
         """Consume and score the pellet in Pac-Man's current map cell."""
@@ -289,10 +293,7 @@ class MapScene(Scene):
             self.stats.eat_fruit()
         else:
             self.stats.eat_pac_dot()
-        self.__dirty_region = self.union_regions(
-            self.__dirty_region,
-            self.map.cell_region(pellet.coordinate),
-        )
+        self.mark_dirty(self.map.cell_region(pellet.coordinate))
 
     def __check_player_ghost_collision(self) -> None:
         """
@@ -321,18 +322,16 @@ class MapScene(Scene):
                 break
 
     def render(self) -> None:
-        """ Render Method for the MapScene Object"""
-        if self.__dirty_region is not None:
-            x, y, width, height = self.__dirty_region
-            self.display.restore_region(
-                self.__static_layer, x, y, width, height
-            )
-            self.__dirty_region = None
-        self.map.render_pellets(self.display)
+        """Restore and redraw only the changed areas of the backbuffer."""
+        dirty_regions = self.restore_dirty_regions(
+            self.display, self.__static_layer
+        )
+        self.map.render_pellets(self.display, dirty_regions)
         self.__player.draw(self.display)
         for ghost in self.__ghosts.values():
             ghost.draw(self.display)
         self.display.render()
+        self.clear_dirty_regions()
         self.power_timer.draw(self.display)
         self.lives.draw(self.display, 0xFF000000)
         self.score.draw(self.display)
@@ -341,6 +340,7 @@ class MapScene(Scene):
         """ Render on change method of MainScreen """
         self.display.clear_window()
         self.display.clear(0xFFFF0000)
+        self.mark_full_screen_dirty(self.display)
         self.lives.redraw()
         self.__dirty_region = (
             0, 0, self.display.width, self.display.height
