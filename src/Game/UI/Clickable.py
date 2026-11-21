@@ -71,7 +71,7 @@ class Clickable(Component):
         margin = min(4, max(0, visible_width - indicator_size))
         square_x = pos[0] + visible_width - indicator_size - margin
         square_y = pos[1] + max(0, (shape_height - indicator_size) // 2)
-        color = self.ENABLED_COLOR if self.__value else self.DISABLED_COLOR
+        color: int = self.ENABLED_COLOR if self.__value else self.DISABLED_COLOR
 
         if not self.__square:
             self.__square = Rect(
@@ -84,7 +84,7 @@ class Clickable(Component):
             self.__square.update_pos(square_x, square_y)
             self.__square.update_color(color)
 
-        color: int = 0xFF0A0A0A if self._selected else 0xFF000000
+        color = 0xFF0A0A0A if self._selected else 0xFF000000
         self.__shape.update_color(color)
         self.__shape.fill(display)
         self.__square.fill(display)
