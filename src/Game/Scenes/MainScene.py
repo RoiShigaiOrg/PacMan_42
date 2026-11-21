@@ -1,18 +1,18 @@
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.InputHandler.InputHandler import InputHandler
-from Engine.InputHandler.KeyCode import (
-    KEY_ESC, KEY_ENTER
-)
+from Engine.InputHandler.KeyCode import KEY_ENTER
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Engine import Engine
 from typing import List
 from ..UI.TextPannel import TextPannel
 
 PANNEL_POSITIONS: tuple[tuple[float, float], ...] = (
-    (0.35, 0.4),
-    (0.35, 0.45),
-    (0.35, 0.5),
+    (0.3, 0.5),
+    (0.3, 0.55),
+    (0.3, 0.6),
+    (0.3, 0.65),
 )
+PANNEL_SIZE: tuple[float, float] = (0.4, 0.05)
 
 
 class MainScene(Scene):
@@ -32,34 +32,27 @@ class MainScene(Scene):
         super().__init__()
         self.__engine = engine
         self.__display = display
+        self.__static_layer: bytes | None = None
+        self.__pannel: List[TextPannel] = [
+                TextPannel(*PANNEL_SIZE, self._start_game),
+                TextPannel(*PANNEL_SIZE, self._leaderboard),
+                TextPannel(*PANNEL_SIZE, self._settings),
+                TextPannel(*PANNEL_SIZE, self._exit),
+            ]
+        for pannel, label in zip(
+                self.__pannel,
+                ("Start Game", "LeaderBoard", "Settings", "Exit"),
+        ):
+            pannel.add_label(label)
+        self.__select_iter = 0
+        self.__pannel[self.__select_iter].select()
         self.__rebuild_layout()
         self.mark_full_screen_dirty(display)
-        self.__pannel: List[TextPannel] = [
-                TextPannel(
-                    0.4, 0.05,
-                    self._start_game).add_label("Start Game"),
-                TextPannel(
-                    0.4, 0.05,
-                    self._leaderboard).add_label("LeaderBoard"),
-                TextPannel(
-                    0.4, 0.05,
-                    self._settings).add_label("Settings"),
-                TextPannel(
-                    0.4, 0.05,
-                    self._exit).add_label("Exit")
-            ]
 
     def __rebuild_layout(self) -> None:
-        """Recreate pixel-based menu geometry for the current display size."""
+        """Cache the clean background for the current display size."""
         self.__display.clear(0xFF000000)
-        for i, pannel in enumerate(self.__pannel):
-            print(f"enumerate i : {i}")
-            pannel.render(
-                    self.__display,
-                    (0.3, 0.4 + (i * 0.1))
-                )
         self.__static_layer = self.__display.snapshot()
-        self.__select_iter: int = 0
 
     def on_resolution_changed(self) -> None:
         """Refresh menu shapes and their cached background image."""
@@ -75,20 +68,6 @@ class MainScene(Scene):
                 in the scene depending on the user input
                 and Engine Calculation.
         """
-        if self.__input.key_capture_active:
-            if input_handler.was_key_pressed(KEY_ESC):
-                self.__input.end_key_capture()
-                self.__input_target = None
-                self.__mark_input_dirty()
-                return
-            keycode = self.__input.capture_key(input_handler)
-            if keycode is not None and self.__input_target is not None:
-                self.__engine.set_config_key(self.__input_target, keycode)
-                self.__input.end_key_capture()
-                self.__input_target = None
-                self.__mark_input_dirty()
-            return
-
         if input_handler.was_key_pressed(
                 self.__engine.get_config_key("UP")):
             self.__process_up()
@@ -104,19 +83,29 @@ class MainScene(Scene):
     def render_on_change(self) -> None:
         """ Render on change method of MainScreen """
         self.__display.clear_window()
-        self.__display.clear(0xFFFF0000)
+        self.__rebuild_layout()
         self.mark_full_screen_dirty(self.__display)
 
     def render(self) -> None:
         """ Render all the the current frame in the Window """
-        if self.dirty_regions:
-            self.restore_dirty_regions(self.__display, self.__static_layer)
-            self.__display.render()
-            self.clear_dirty_regions()
+        if not self.dirty_regions or self.__static_layer is None:
+            return
 
-    def __update_selected(self, input_handler: InputHandler) -> None:
-        """ Update the selected Component in the Option Scene."""
-        component = self.__config_option[self.__select_iter]
+        dirty_regions = self.restore_dirty_regions(
+            self.__display, self.__static_layer
+        )
+        for index, (pannel, pos) in enumerate(zip(
+                self.__pannel, self.__pannel_positions()
+        )):
+            if self.intersects_regions(
+                    self.__pannel_region(index), dirty_regions
+            ):
+                pannel.render(self.__display, pos)
+
+        self.__display.render()
+        for pannel, pos in zip(self.__pannel, self.__pannel_positions()):
+            pannel.render_label(self.__display, pos)
+        self.clear_dirty_regions()
 
     def __process_up(self) -> None:
         """ Process the Up key for the Option Scene. """
@@ -160,3 +149,21 @@ class MainScene(Scene):
 
     def __mark_pannel_dirty(self, *indices: int) -> None:
         self.mark_dirty(*(self.__pannel_region(index) for index in indices))
+
+    def __pannel_positions(self) -> tuple[tuple[int, int], ...]:
+        return tuple(
+            (
+                self.__display.relative_width(x),
+                self.__display.relative_height(y),
+            )
+            for x, y in PANNEL_POSITIONS
+        )
+
+    def __pannel_region(self, index: int) -> tuple[int, int, int, int]:
+        x, y = self.__pannel_positions()[index]
+        return (
+            x,
+            y,
+            max(1, self.__display.relative_width(PANNEL_SIZE[0])),
+            max(1, self.__display.relative_height(PANNEL_SIZE[1])),
+        )
