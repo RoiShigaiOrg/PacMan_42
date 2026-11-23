@@ -4,7 +4,7 @@ from Engine import InputHandler, Scene
 from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler.KeyCode import KEY_ENTER, KEY_ESC
-from Game.GameState import GameState
+from Game.GameState.GameStateFactory import GameStateFactory
 from Game.UI.XpmAlphabet import XpmAlphabet
 
 FILE_ALPHABET = "assets/alphabet"
@@ -31,11 +31,11 @@ class EndLevel(Scene):
             self,
             engine: Engine,
             display: MlxDisplay,
-            stats: GameState) -> None:
+            game: GameStateFactory) -> None:
         super().__init__()
         self.__engine = engine
         self.__display = display
-        self.stats = stats
+        self.game = game
         self.__title_font = XpmAlphabet(FILE_ALPHABET)
         self.__base_layer: bytes | None = None
 
@@ -64,7 +64,7 @@ class EndLevel(Scene):
             input_handler: InputHandler) -> None:
         """Advance the animation or leave the results scene immediately."""
         if input_handler.was_key_pressed(KEY_ENTER):
-            self.stats.next_level()
+            self.game.state.next_level()
             self.__engine.scene_manager.change_scene("game_scene")
             return
         if input_handler.was_key_pressed(KEY_ESC):
@@ -154,18 +154,18 @@ class EndLevel(Scene):
         """Calculate the earned bonuses and apply them to the game score."""
         if (
                 self.__bonus_applied
-                and self.stats.level == self.__cached_level
-                and self.stats.scores >= self.__final_score):
+                and self.game.state.level == self.__cached_level
+                and self.game.state.scores >= self.__final_score):
             return
 
-        self.__cached_level = self.stats.level
-        self.__cached_score = self.stats.scores
-        self.__cached_lives = max(0, self.stats.lives)
+        self.__cached_level = self.game.state.level
+        self.__cached_score = self.game.state.scores
+        self.__cached_lives = max(0, self.game.state.lives)
         self.__time_limit = max(
             0, int(self.__engine.get_config_key("level_time"))
         )
         remaining_time = min(
-            float(self.__time_limit), max(0.0, self.stats.level_time)
+            float(self.__time_limit), max(0.0, self.game.state.level_time)
         )
         remaining_seconds = min(
             self.__time_limit, max(0, int(remaining_time))
@@ -176,7 +176,7 @@ class EndLevel(Scene):
         self.__final_score = (
             self.__cached_score + self.__time_bonus + self.__life_bonus
         )
-        self.stats.scores = self.__final_score
+        self.game.state.scores = self.__final_score
         self.__bonus_applied = True
 
     def __reset_animation(self) -> None:

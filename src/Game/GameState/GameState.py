@@ -1,14 +1,15 @@
+from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
+from typing import ClassVar
 
 PELLET_POINTS: int = 10
 POWER_PELLET_POINTS: int = 50
 POWER_DURATION: float = 10.0
 GHOST_POINTS: tuple[int, ...] = (200, 400, 800, 1600)
-EXTRA_LIFE_SCORE: int = 3000
+EXTRA_LIFE_SCORE: int = 10000
 LEVEL_TIME: float = 120.0
 DEATH_RECOVERY_DURATION: float = 3.0
-MAX_LEVEL = 10
 SPEED_STEP_LEVELS: int = 3
 SPEED_INCREASE: float = 0.1
 MAX_SPEED = 3.0
@@ -27,17 +28,37 @@ class GameMode(Enum):
     INFINITE = "infinite"
 
 
-class GameState:
+class GameState(ABC):
+    """
+        GameState Abstract Class Definition
+
+        Everything that is the same in every game mode:
+            score, lives, level, timers, speed, power mode, death.
+        What changes from one mode to the other is abstract and
+            written in the child classes (ArcadeMode, InfinityMode).
+    """
+
+    SCORE_FILE: ClassVar[Path]
+
     def __init__(self, lives: int = 3) -> None:
         """init class variables"""
         self.__start_lives = lives
-        self.game_mode: GameMode = GameMode.NORMAL
         self.cheat: bool = False
         self.reset_stats()
-        self.SCORE_FILES: dict[GameMode, Path] = {
-            GameMode.NORMAL: Path("score/scores_normal.json"),
-            GameMode.INFINITE: Path("score/scores_infinit.json")
-            }
+
+    @property
+    @abstractmethod
+    def mode(self) -> GameMode:
+        """ The game mode of this class """
+
+    @abstractmethod
+    def has_won(self) -> bool:
+        """ True when the game is won (never in some modes) """
+
+    @property
+    def score_file(self) -> Path:
+        """ The leaderboard file of this mode """
+        return self.SCORE_FILE
 
     def reset_stats(self) -> None:
         """ initialize variables for the start of a game/level"""
@@ -52,18 +73,6 @@ class GameState:
         self._death_recovery_remaining: float = 0.0
         self.play_time: float = 0.0
         self._power_remaining: float = 0.0
-
-    @property
-    def game_mode(self) -> GameMode:
-        """ return Infinite/Normal mode"""
-        return self.__game_mode
-
-    @game_mode.setter
-    def game_mode(self, mode: GameMode) -> None:
-        """Change the mode of the game."""
-        if not isinstance(mode, GameMode):
-            raise TypeError(f"game_mode must be a GameMode, not {mode!r}")
-        self.__game_mode = mode
 
     @property
     def speed(self) -> float:
@@ -122,7 +131,7 @@ class GameState:
 
     @property
     def power_remaining(self) -> float:
-        """Return the remaining shared Pac-Man/ghost recovery duration."""
+        """Return the remaining power mode duration."""
         return self._power_remaining
 
     def update_power_remaining(self, delta_time: float) -> None:
@@ -167,10 +176,6 @@ class GameState:
         if self._death_recovery_remaining == 0:
             self.state = PacManState.NORMAL
 
-    def has_won(self) -> bool:
-        """In NORMAL mode, the player wins after the last level."""
-        return self.game_mode is GameMode.NORMAL and self.level > MAX_LEVEL
-
     def next_level(self) -> None:
         """ init the next level"""
         if (self.level - 1) % SPEED_STEP_LEVELS == 0:
@@ -179,9 +184,7 @@ class GameState:
         self.ghost_combo = 0
         self.level_time = 0.0
         self.state = PacManState.NORMAL
-        self.lives = 3
         self._death_recovery_remaining = 0.0
-        print("reset level stats")
 
     def is_over(self) -> bool:
         """ init the end of game"""

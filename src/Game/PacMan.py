@@ -9,7 +9,7 @@ from Engine.Graphics.MlxDisplay import MlxDisplay
 from typing import Tuple
 from pathlib import Path
 from .Scenes.GameOverScene import GameOverScene
-from .GameState import GameState
+from .GameState.GameStateFactory import GameStateFactory
 from .Scenes.ScoreScene import ScoreScene
 from .Config import GameConfigLoader
 
@@ -25,7 +25,7 @@ class PacMan(Application):
     def __init__(self, config_file: Path) -> None:
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
-        self.stats: GameState = GameState()
+        self.game: GameStateFactory = GameStateFactory()
         self.color: str
         self.dimension: Tuple[int, int] = self.engine.get_config_key(
             "dimension"
@@ -40,29 +40,29 @@ class PacMan(Application):
                 "game_scene": MapScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.stats
+                    self.game
                 ),
                 "game_over_scene": GameOverScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.stats
+                    self.game
                 ),
                 "score_scene": ScoreScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.stats,
+                    self.game,
                     False
                 ),
                 "leaderboard_scene": ScoreScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.stats,
+                    self.game,
                     True
                 ),
                 "endlevel_scene": EndLevel(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.stats
+                    self.game,
                 ),
                 "option_scene": OptionScene(
                     self.engine,

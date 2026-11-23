@@ -12,6 +12,11 @@
         },
         {
             "login": "leo",
+            "score": 300,
+            "time": 16
+        },
+        {
+            "login": "leo",
             "score": 0,
             "time": 0
         },
