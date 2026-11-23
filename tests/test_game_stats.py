@@ -1,4 +1,5 @@
 from Game.GameState import GameState, PacManState
+from Game.GameState.ArcadeMode import ArcadeMode
 
 
 def test_new_game() -> None:
@@ -9,7 +10,7 @@ def test_new_game() -> None:
 
 
 def test_ghost_combo_doubles() -> None:
-    stats = GameState()
+    stats = ArcadeMode()
     stats.eat_fruit()
     assert stats.state == PacManState.SUPER
     assert [stats.eat_ghost() for _ in range(5)] == [200, 400, 800, 1600, 1600]
@@ -31,7 +32,7 @@ def test_losing_every_life_ends_the_game() -> None:
 
 
 def test_death_state_expires_after_shared_recovery_duration() -> None:
-    stats = GameState()
+    stats = ArcadeMode()
     stats.lose_life()
 
     assert stats.state is PacManState.DEAD
@@ -49,7 +50,7 @@ def test_death_state_expires_after_shared_recovery_duration() -> None:
 
 
 def test_reset_keeps_modes() -> None:
-    stats = GameState()
+    stats = ArcadeMode()
     stats.cheat_mod(True)
     stats.add_point(500)
     stats.reset_stats()

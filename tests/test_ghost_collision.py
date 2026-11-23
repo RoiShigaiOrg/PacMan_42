@@ -1,9 +1,10 @@
 from Engine.Graphics import MlxDisplay
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
-from Game.GameState import GameState, PacManState
+from Game.GameState import PacManState
 from Game.Ghosts.Ghost import Behaviour, Ghost
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
+from Game.GameState.ArcadeMode import ArcadeMode
 
 
 class CollisionGhost(Ghost):
@@ -36,7 +37,7 @@ def make_scene(
         }
     )()
     scene._MapScene__physics = PhysicsEngine()
-    scene.stats = GameState()
+    scene.stats = ArcadeMode()
     return scene
 
 
