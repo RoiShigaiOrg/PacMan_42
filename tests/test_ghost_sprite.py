@@ -18,7 +18,6 @@ from Game.Ghosts.Pinky import Pinky
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
-from Game.GameState.ArcadeMode import ArcadeMode
 
 
 class FakeShape:

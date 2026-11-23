@@ -1,8 +1,8 @@
+
 from typing import Any
 
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler.KeyCode import KEY_ESC
-from Game.GameState import GameState
 from Game.Scenes.EndLevelScene import EndLevel
 from Game.GameState.GameStateFactory import GameStateFactory
 
@@ -68,13 +68,13 @@ class FakeInputHandler:
 
 
 def make_scene(
-        stats: GameState,
+        game: GameStateFactory,
         level_time: int = 120,
 ) -> tuple[EndLevel, FakeEngine, FakeMlx]:
     engine = FakeEngine(level_time)
     session = FakeMlx(400, 300)
     display = MlxDisplay(session, "image", "mlx", "window", (400, 300))
-    return EndLevel(engine, display, stats), engine, session
+    return EndLevel(engine, display, game), engine, session
 
 
 def displayed_text(session: FakeMlx) -> list[str]:
@@ -88,7 +88,7 @@ def test_end_level_applies_time_and_life_bonus_once() -> None:
     stats = game.state
     stats.scores = 500
     stats.level_time = 90.5
-    scene, _, _ = make_scene(stats)
+    scene, _, _ = make_scene(game)
 
     scene.render_on_change()
 
@@ -103,7 +103,7 @@ def test_end_level_animates_time_then_lives_then_final_score() -> None:
     stats = game.state
     stats.scores = 500
     stats.level_time = 90.5
-    scene, _, session = make_scene(stats)
+    scene, _, session = make_scene(game)
     scene.render_on_change()
 
     scene.render()
@@ -131,11 +131,11 @@ def test_end_level_animates_time_then_lives_then_final_score() -> None:
 
 
 def test_escaping_end_level_keeps_the_bonus_already_awarded() -> None:
-    game = GameStateFactory(lives=2)
+    game = GameStateFactory(lives=1)
     stats = game.state
     stats.scores = 300
     stats.level_time = 100.0
-    scene, engine, _ = make_scene(stats)
+    scene, engine, _ = make_scene(game)
     scene.render_on_change()
 
     scene.update(0.0, FakeInputHandler({KEY_ESC}))
