@@ -86,16 +86,13 @@ class Rect(Components):
             display.draw_pixel(
                     self.__pos[0] + self.__width - 1, y, self.__color
                     )
-        if self.__text_flag:
-            self.__draw_text(display)
+        self.__draw_text(display)
 
     def fill(self, display: Any) -> None:
         """ Draw a filled Rect """
         for y in range(self.__pos[1], self.__pos[1] + self.__height):
             for x in range(self.__pos[0], self.__pos[0] + self.__width):
                 display.draw_pixel(x, y, self.__color)
-        if self.__text_flag:
-            self.__draw_text(display)
 
     def draw_text(
             self,

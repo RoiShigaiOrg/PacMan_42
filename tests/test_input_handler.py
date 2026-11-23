@@ -9,6 +9,7 @@ Callback = Callable[..., None]
 class FakeMlx:
     def __init__(self) -> None:
         self.hooks: dict[int, Callback] = {}
+        self.registered_windows: list[Any] = []
         self.loop_exit_calls: list[Any] = []
 
     def mlx_hook(
@@ -20,6 +21,7 @@ class FakeMlx:
             param: object,
     ) -> None:
         self.hooks[event] = callback
+        self.registered_windows.append(window)
 
     def mlx_loop_exit(self, mlx_ptr: Any) -> None:
         self.loop_exit_calls.append(mlx_ptr)
@@ -66,11 +68,15 @@ def test_key_state_tracks_held_keys_and_transitions() -> None:
 
     assert handler.is_key_down(119)
     assert handler.was_key_pressed(119)
+    assert handler.last_key_pressed == 119
 
     session.hooks[3](119, None)
 
     assert not handler.is_key_down(119)
     assert handler.was_key_released(119)
+
+    handler.end_frame()
+    assert handler.last_key_pressed is None
 
 
 def test_close_requests_loop_exit() -> None:
@@ -79,3 +85,14 @@ def test_close_requests_loop_exit() -> None:
     session.hooks[33](None)
 
     assert session.loop_exit_calls == ["mlx"]
+
+
+def test_attach_window_rebinds_hooks_and_clears_previous_input_state() -> None:
+    handler, session = make_handler()
+    session.hooks[2](119, None)
+
+    handler.attach_window("replacement")
+
+    assert session.registered_windows[-6:] == ["replacement"] * 6
+    assert not handler.is_key_down(119)
+    assert not handler.was_key_pressed(119)

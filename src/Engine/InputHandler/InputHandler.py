@@ -22,35 +22,59 @@ class InputHandler:
         self.__keys_down: set[int] = set()
         self.__keys_pressed: set[int] = set()
         self.__keys_released: set[int] = set()
+        self.__last_key_pressed: int | None = None
         self.__mouse_position = (0, 0)
         self.__mouse_buttons_down: set[int] = set()
         self.__mouse_buttons_pressed: set[int] = set()
         self.__mouse_buttons_released: set[int] = set()
+        self.__hooks_registered = False
 
     def register_hooks(self) -> None:
         """Register all input events on the owned MLX window."""
-        self.__session.mlx_hook(
-            self.__window, 2, 1, self.__on_key_press, None
+        self.__register_hooks(self.__window)
+        self.__hooks_registered = True
+
+    def attach_window(self, window: Any) -> None:
+        """Move input handling to a replacement native window."""
+        if self.__hooks_registered:
+            self.__register_hooks(window)
+        self.__window = window
+        self.__clear_state()
+
+    def __register_hooks(self, window: Any) -> None:
+        """Install the event callbacks on ``window``."""
+        hooks = (
+            (2, 1, self.__on_key_press),
+            (3, 2, self.__on_key_release),
+            (4, 4, self.__on_mouse_press),
+            (5, 8, self.__on_mouse_release),
+            (6, 64, self.__on_mouse_move),
+            (33, 0, self.__on_close),
         )
-        self.__session.mlx_hook(
-            self.__window, 3, 2, self.__on_key_release, None
-        )
-        self.__session.mlx_hook(
-            self.__window, 4, 4, self.__on_mouse_press, None
-        )
-        self.__session.mlx_hook(
-            self.__window, 5, 8, self.__on_mouse_release, None
-        )
-        self.__session.mlx_hook(
-            self.__window, 6, 64, self.__on_mouse_move, None
-        )
-        self.__session.mlx_hook(
-            self.__window, 33, 0, self.__on_close, None
-        )
+        for event, mask, callback in hooks:
+            result = self.__session.mlx_hook(
+                window, event, mask, callback, None
+            )
+            if result not in (None, 0):
+                raise RuntimeError(
+                    f"failed to register MLX input hook for event {event}"
+                )
+
+    def __clear_state(self) -> None:
+        """Discard input state belonging to the previous window."""
+        self.__keys_down.clear()
+        self.__keys_pressed.clear()
+        self.__keys_released.clear()
+        self.__last_key_pressed = None
+        self.__mouse_position = (0, 0)
+        self.__mouse_buttons_down.clear()
+        self.__mouse_buttons_pressed.clear()
+        self.__mouse_buttons_released.clear()
 
     def __on_key_press(self, key: int, _: object) -> None:
         self.__keys_down.add(key)
         self.__keys_pressed.add(key)
+        self.__last_key_pressed = key
 
     def __on_key_release(self, key: int, _: object) -> None:
         self.__keys_down.discard(key)
@@ -84,6 +108,11 @@ class InputHandler:
         """Return whether a key was pressed during the current frame."""
         return key in self.__keys_pressed
 
+    @property
+    def last_key_pressed(self) -> int | None:
+        """Return the most recently pressed key during the current frame."""
+        return self.__last_key_pressed
+
     def was_key_released(self, key: int) -> bool:
         """Return whether a key was released during the current frame."""
         return key in self.__keys_released
@@ -109,6 +138,7 @@ class InputHandler:
         """Clear input events that are only meaningful for one frame."""
         self.__keys_pressed.clear()
         self.__keys_released.clear()
+        self.__last_key_pressed = None
         self.__mouse_buttons_pressed.clear()
         self.__mouse_buttons_released.clear()
 

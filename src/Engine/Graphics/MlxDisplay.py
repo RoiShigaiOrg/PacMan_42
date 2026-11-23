@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Tuple, Literal
 
 
@@ -20,18 +22,25 @@ class MlxDisplay:
         self.__mlx_ptr = mlx_ptr
         self.__image = image_ptr
         self.__window_ptr = window_ptr
+        self.__image_destroyed = False
         self.__width = dimension[0]
         self.__height = dimension[1]
-        (
-            self.__data,
-            self.__bits_per_pixel,
-            self.__stride,
-            self.__format,
-        ) = self.__session.mlx_get_data_addr(image_ptr)
+        try:
+            (
+                self.__data,
+                self.__bits_per_pixel,
+                self.__stride,
+                self.__format,
+            ) = self.__session.mlx_get_data_addr(image_ptr)
+        except Exception:
+            self.__session.mlx_destroy_image(mlx_ptr, image_ptr)
+            self.__image_destroyed = True
+            raise
         if self.__bits_per_pixel != 32:
             self.__session.mlx_destroy_image(
                     mlx_ptr, image_ptr
                     )
+            self.__image_destroyed = True
             raise RuntimeError("MLX screen buffer is not a 32-bit image")
 
     @property
@@ -183,6 +192,69 @@ class MlxDisplay:
     def close(self) -> None:
         """ Close the Window link to this Display """
         self.__session.mlx_loop_exit(self.__mlx_ptr)
+
+    def swap_buffer(self, other: MlxDisplay) -> None:
+        """Swap image resources while preserving this display's identity."""
+        if self.__session is not other.__session:
+            raise ValueError("displays must use the same MLX session")
+        if self.__mlx_ptr is not other.__mlx_ptr:
+            raise ValueError("displays must use the same MLX context")
+
+        current_resources = (
+            self.__dimension,
+            self.__image,
+            self.__window_ptr,
+            self.__width,
+            self.__height,
+            self.__data,
+            self.__bits_per_pixel,
+            self.__stride,
+            self.__format,
+            self.__image_destroyed,
+        )
+        replacement_resources = (
+            other.__dimension,
+            other.__image,
+            other.__window_ptr,
+            other.__width,
+            other.__height,
+            other.__data,
+            other.__bits_per_pixel,
+            other.__stride,
+            other.__format,
+            other.__image_destroyed,
+        )
+        (
+            self.__dimension,
+            self.__image,
+            self.__window_ptr,
+            self.__width,
+            self.__height,
+            self.__data,
+            self.__bits_per_pixel,
+            self.__stride,
+            self.__format,
+            self.__image_destroyed,
+        ) = replacement_resources
+        (
+            other.__dimension,
+            other.__image,
+            other.__window_ptr,
+            other.__width,
+            other.__height,
+            other.__data,
+            other.__bits_per_pixel,
+            other.__stride,
+            other.__format,
+            other.__image_destroyed,
+        ) = current_resources
+
+    def destroy_image(self) -> None:
+        """Release this display's MLX image exactly once."""
+        if self.__image_destroyed:
+            return
+        self.__session.mlx_destroy_image(self.__mlx_ptr, self.__image)
+        self.__image_destroyed = True
 
     def fill(self, color: int) -> None:
         """ Fill the entire Display with a given color """

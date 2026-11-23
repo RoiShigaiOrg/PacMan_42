@@ -12,6 +12,7 @@ from Engine.Entity.Entity import Entity
 from Engine.Entity.PathFinding import HeuristicType, PathFinding
 from Engine.Physics.Collider import Collider
 from Engine.Physics.Physics import PhysicsEngine
+from Engine.Physics.Shapes import AABB
 from Engine.Physics.Vector2 import Vector2
 from ..BehaviourHandler.BehaviourHandler import BehaviourHandler
 from ..GameState import GameState
@@ -39,6 +40,9 @@ FLEA_ROAM_RADIUS: int = 5
 
 class Ghost(Entity):
     """Shared movement and path mechanics for the game's ghosts."""
+
+    _width: int
+    _height: int
 
     def __init__(
             self,
@@ -173,6 +177,24 @@ class Ghost(Entity):
     def size(self) -> Tuple[int, int]:
         """Return graphical dimensions used for dirty-region redraws."""
         return self._width, self._height
+
+    def update_layout(
+            self, actual_map: Map, grid_position: Vector2
+    ) -> None:
+        """Resize the ghost while retaining its continuous map position."""
+        old_width = self._width
+        self._width, self._height = actual_map.cell_size
+        self._movement_speed *= self._width / old_width
+        self._collider.shape = AABB(Vector2(
+            self._width * COLLIDER_SIZE_RATIO / 2,
+            self._height * COLLIDER_SIZE_RATIO / 2,
+        ))
+        self._collider.position = (
+            actual_map.grid_to_world_position(grid_position)
+            - self._collider.offset
+        )
+        self._graphical_shape.update_size((self._width, self._height))
+        self._sync_graphics_position()
 
     @property
     def direction(self) -> str:

@@ -11,7 +11,6 @@ from Engine.FileManager.Loader import ScoreLoader
 FILE_ALPHABET = "assets/alphabet"
 
 BLACK: int = 0xFF000000
-BLUE: int = 0xFF0000FF
 WHITE: int = 0xFFFFFFFF
 LOGIN_MAX_LEN: int = 18
 
@@ -28,22 +27,19 @@ class GameOverScene(Scene):
             self, engine: Engine, display: MlxDisplay,
             stats: GameState) -> None:
         """ Init Method of the GameOverScene Class """
+        super().__init__()
         self.__engine = engine
         self.__display = display
         self.__stats = stats
         self.__title_font = XpmAlphabet(FILE_ALPHABET)
-        width = display.relative_width(0.3)
         self.__bar = InputBar(
-            (display.width - width) // 2,
-            display.relative_height(0.5),
-            width,
-            LOGIN_MAX_LEN
+            0.3, 0.1, max_len=LOGIN_MAX_LEN
         )
         self.__file_manager = engine.file_manager
 
     def render_on_change(self) -> None:
         """ Draw the static part of the scene once """
-        self.__bar.text = ""
+        self.__bar.reset()
         self.__display.clear_window()
         self.__display.clear(BLACK)
         title = "game  over"
@@ -53,7 +49,6 @@ class GameOverScene(Scene):
                                 self.__display.relative_height(0.1),
                                 title,
                                 spacing=4)
-        self.__bar.draw(self.__display, BLACK, BLUE)
 
     def update(
             self, delta_time: float, input_handler: InputHandler
@@ -98,9 +93,14 @@ class GameOverScene(Scene):
 
     def render(self) -> None:
         """ Present the image, then write the texts over it """
+        bar_pos = (
+            self.__display.relative_width(0.35),
+            self.__display.relative_height(0.6),
+        )
+        self.__bar.render(self.__display, bar_pos)
         self.__display.render()
-        self.__bar.draw_text(self.__display, WHITE)
-        self.__display.write_text(self.__bar.x + 100, self.__bar.y - 70, WHITE,
+        self.__bar.render_text(self.__display, bar_pos)
+        self.__display.write_text(bar_pos[0] + 100, bar_pos[1] - 70, WHITE,
                                   f"Your score : {self.__stats.scores}")
-        self.__display.write_text(self.__bar.x + 100, self.__bar.y - 40, WHITE,
+        self.__display.write_text(bar_pos[0] + 100, bar_pos[1] - 40, WHITE,
                                   f"Your time  : {self.__format_time()}")

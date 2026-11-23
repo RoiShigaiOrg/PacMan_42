@@ -11,7 +11,9 @@ from .ConfigHandler.ConfigHandler import ConfigHandler
 from .FileManager.Loader.SpriteLoader import SpriteLoader
 from .Sprite.SpriteSheet import SpriteSheet
 from pathlib import Path
+from pydantic import BaseModel
 import mlx
+import time
 
 
 class Engine:
@@ -44,7 +46,7 @@ class Engine:
         if not self._mlx_ptr:
             raise RuntimeError("failed to initialize MLX")
         self.__file_manager: FileManager = FileManager()
-        self.__config: ConfigHandler = ConfigHandler(
+        self.__config: ConfigHandler[BaseModel] = ConfigHandler(
                 self.__file_manager.load(
                     config_loader
                 )
@@ -102,6 +104,25 @@ class Engine:
                     size
                 )
 
+    def apply_resolution(self, size: tuple[int, int]) -> None:
+        """Replace the window and refresh scenes for an allowed resolution."""
+        available = self.get_config_key("available_dimension")
+        if not isinstance(available, dict):
+            raise ValueError("available resolutions must be a mapping")
+        allowed_sizes = {
+            tuple(dimension)
+            for dimension in available.values()
+            if isinstance(dimension, (list, tuple))
+        }
+        if size not in allowed_sizes:
+            raise ValueError(f"unsupported resolution: {size}")
+        if size == self._window.size():
+            return
+
+        self._window.recreate(size, self._input_handler.attach_window)
+        self.set_config_key("dimension", list(size))
+        self.scene_manager.resolution_changed()
+
     def load_sprite_sheet(
             self,
             image_path: Path,
@@ -122,11 +143,20 @@ class Engine:
         Args:
             application: Application object to update and render.
         """
+        fps_frames = 0
+        fps_started = time.perf_counter()
 
         def frame(_param: object) -> None:
+            nonlocal fps_frames, fps_started
             delta_time = self._clock.tick()
             application.update(delta_time, self._input_handler)
             application.render()
+            fps_frames += 1
+            now = time.perf_counter()
+            elapsed = now - fps_started
+            if elapsed >= 1.0:
+                fps_frames = 0
+                fps_started = now
             self._input_handler.end_frame()
 
         self._input_handler.register_hooks()

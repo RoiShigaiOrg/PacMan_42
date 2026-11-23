@@ -4,7 +4,7 @@ import math
 from pathlib import Path
 
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
-from Engine.InputHandler.KeyCode import KEY_D, KEY_Z
+from Engine.InputHandler.KeyCode import KEY_D, KEY_RIGHT, KEY_Z
 from Engine.Sprite import Sprite, SpriteFrame
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
@@ -55,6 +55,18 @@ class FakeMap:
         return (
             math.floor((position.x - self.grid_origin[0]) / self.cell_size[0]),
             math.floor((position.y - self.grid_origin[1]) / self.cell_size[1]),
+        )
+
+    def world_to_grid_position(self, position: Vector2) -> Vector2:
+        return Vector2(
+            (position.x - self.grid_origin[0]) / self.cell_size[0],
+            (position.y - self.grid_origin[1]) / self.cell_size[1],
+        )
+
+    def grid_to_world_position(self, position: Vector2) -> Vector2:
+        return Vector2(
+            self.grid_origin[0] + position.x * self.cell_size[0],
+            self.grid_origin[1] + position.y * self.cell_size[1],
         )
 
     def is_walkable_cell(self, column: int, row: int) -> bool:
@@ -110,10 +122,21 @@ class FakeSpriteSheet:
 
 
 class FakeEngine:
+    def __init__(self) -> None:
+        self.config = {
+            "UP": KEY_Z,
+            "DOWN": ord("s"),
+            "LEFT": ord("q"),
+            "RIGHT": KEY_D,
+        }
+
     def load_sprite_sheet(
             self, _image_path: Path, _metadata_path: Path,
     ) -> FakeSpriteSheet:
         return FakeSpriteSheet()
+
+    def get_config_key(self, key: str) -> int:
+        return self.config[key]
 
 
 def make_player(walls: tuple[Collider, ...] = ()) -> Player:
@@ -141,6 +164,22 @@ def test_player_moves_smoothly_and_graphics_follow_collider() -> None:
     assert player.direction == Vector2(1.0, 0.0)
 
 
+def test_player_uses_the_engine_movement_key_config() -> None:
+    engine = FakeEngine()
+    engine.config["RIGHT"] = KEY_RIGHT
+    player = Player(engine, movement_speed=120.0)
+    player.InitPlayer(FakeDisplay(), FakeMap())  # type: ignore[arg-type]
+
+    player.update_direction(
+        FakeInput(pressed={KEY_RIGHT}, down={KEY_RIGHT}),
+        FakeMap(),  # type: ignore[arg-type]
+        PhysicsEngine(),
+        0.05,
+    )
+
+    assert player.direction == Vector2(1.0, 0.0)
+
+
 def test_player_collider_is_smaller_than_a_map_cell() -> None:
     player = make_player()
 
@@ -148,6 +187,25 @@ def test_player_collider_is_smaller_than_a_map_cell() -> None:
 
     assert isinstance(shape, AABB)
     assert shape.half_size == Vector2(4.0, 4.0)
+
+
+def test_player_layout_update_preserves_cell_position_and_scales_speed() -> None:
+    player = make_player()
+    old_map = FakeMap()
+    grid_position = old_map.world_to_grid_position(
+        player.collider.world_position
+    )
+    new_map = FakeMap()
+    new_map.grid_origin = (20, 30)
+    new_map.cell_size = (20, 20)
+
+    player.update_layout(new_map, grid_position)  # type: ignore[arg-type]
+
+    assert grid_position == Vector2(1.5, 1.5)
+    assert player.collider.world_position == Vector2(50.0, 60.0)
+    assert player.size == (20, 20)
+    assert player.collider.shape == AABB(Vector2(8.0, 8.0))
+    assert player._movement_speed == 240.0
 
 
 def test_player_does_not_shift_sideways_when_a_turn_is_blocked() -> None:
