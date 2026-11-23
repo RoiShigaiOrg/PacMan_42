@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from Game.GameState.GameStateFactory import GameStateFactory
 
 import pytest
 
@@ -140,7 +141,7 @@ def test_idle_ghost_animation_frame_change_invalidates_its_region() -> None:
     scene = MapScene.__new__(MapScene)
     Scene.__init__(scene)
     scene.map = actual_map
-    scene.stats = ArcadeMode()
+    scene.game = GameStateFactory()
     scene._MapScene__player = SimpleNamespace(
         collider=Collider(AABB(Vector2(4, 4)), Vector2(5, 5))
     )

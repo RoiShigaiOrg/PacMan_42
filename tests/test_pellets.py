@@ -8,7 +8,7 @@ from Engine.Animation import Animation, AnimationHandler
 from Engine.Physics import Vector2
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.Sprite import Sprite, SpriteFrame
-from Game.GameState import GameState
+from Game.GameState.ArcadeMode import ArcadeMode
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene

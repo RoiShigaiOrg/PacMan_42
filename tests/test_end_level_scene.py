@@ -4,6 +4,7 @@ from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler.KeyCode import KEY_ESC
 from Game.GameState import GameState
 from Game.Scenes.EndLevelScene import EndLevel
+from Game.GameState.GameStateFactory import GameStateFactory
 
 
 class FakeMlx:
@@ -83,7 +84,8 @@ def displayed_text(session: FakeMlx) -> list[str]:
 
 
 def test_end_level_applies_time_and_life_bonus_once() -> None:
-    stats = GameState(lives=2)
+    game = GameStateFactory(lives=2)
+    stats = game.state
     stats.scores = 500
     stats.level_time = 90.5
     scene, _, _ = make_scene(stats)
@@ -97,7 +99,8 @@ def test_end_level_applies_time_and_life_bonus_once() -> None:
 
 
 def test_end_level_animates_time_then_lives_then_final_score() -> None:
-    stats = GameState(lives=2)
+    game = GameStateFactory(lives=2)
+    stats = game.state
     stats.scores = 500
     stats.level_time = 90.5
     scene, _, session = make_scene(stats)
@@ -128,7 +131,8 @@ def test_end_level_animates_time_then_lives_then_final_score() -> None:
 
 
 def test_escaping_end_level_keeps_the_bonus_already_awarded() -> None:
-    stats = GameState(lives=1)
+    game = GameStateFactory(lives=2)
+    stats = game.state
     stats.scores = 300
     stats.level_time = 100.0
     scene, engine, _ = make_scene(stats)

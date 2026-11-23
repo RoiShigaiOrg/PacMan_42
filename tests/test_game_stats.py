@@ -1,9 +1,9 @@
-from Game.GameState import GameState, PacManState
+from Game.GameState import PacManState
 from Game.GameState.ArcadeMode import ArcadeMode
 
 
 def test_new_game() -> None:
-    stats = GameState(lives=3)
+    stats = ArcadeMode(lives=3)
     assert (stats.scores, stats.lives, stats.level) == (0, 3, 1)
     assert stats.state == PacManState.NORMAL
     assert not stats.is_over()
@@ -17,14 +17,14 @@ def test_ghost_combo_doubles() -> None:
 
 
 def test_extra_life_given_once() -> None:
-    stats = GameState(lives=3)
+    stats = ArcadeMode(lives=3)
     stats.add_point(10000)
     stats.add_point(10000)
     assert stats.lives == 4
 
 
 def test_losing_every_life_ends_the_game() -> None:
-    stats = GameState(lives=2)
+    stats = ArcadeMode(lives=2)
     stats.lose_life()
     assert stats.state == PacManState.DEAD
     stats.lose_life()

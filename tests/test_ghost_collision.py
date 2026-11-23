@@ -4,7 +4,7 @@ from Game.GameState import PacManState
 from Game.Ghosts.Ghost import Behaviour, Ghost
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
-from Game.GameState.ArcadeMode import ArcadeMode
+from Game.GameState.GameStateFactory import GameStateFactory
 
 
 class CollisionGhost(Ghost):
@@ -37,7 +37,7 @@ def make_scene(
         }
     )()
     scene._MapScene__physics = PhysicsEngine()
-    scene.stats = ArcadeMode()
+    scene.game = GameStateFactory()
     return scene
 
 
@@ -51,8 +51,8 @@ def test_non_overlapping_ghost_does_not_affect_pacman() -> None:
 
     check_collisions(scene)
 
-    assert scene.stats.lives == 3
-    assert scene.stats.state is PacManState.NORMAL
+    assert scene.game.state.lives == 3
+    assert scene.game.state.state is PacManState.NORMAL
     assert ghost.behaviour is Behaviour.CHASE
 
 
@@ -62,32 +62,32 @@ def test_chasing_ghost_collision_costs_one_life() -> None:
 
     check_collisions(scene)
 
-    assert scene.stats.lives == 2
-    assert scene.stats.state is PacManState.DEAD
+    assert scene.game.state.lives == 2
+    assert scene.game.state.state is PacManState.DEAD
     assert ghost.behaviour is Behaviour.CHASE
 
 
 def test_fleeing_ghost_collision_awards_points_and_kills_ghost() -> None:
     ghost = CollisionGhost(Vector2(18.0, 10.0), Behaviour.FLEAT)
     scene = make_scene({"blinky": ghost})
-    scene.stats.state = PacManState.SUPER
+    scene.game.state.state = PacManState.SUPER
 
     check_collisions(scene)
 
-    assert scene.stats.scores == 200
-    assert scene.stats.lives == 3
+    assert scene.game.state.scores == 200
+    assert scene.game.state.lives == 3
     assert ghost.behaviour is Behaviour.DEAD
 
 
 def test_dead_ghost_collision_has_no_effect() -> None:
     ghost = CollisionGhost(Vector2(18.0, 10.0), Behaviour.DEAD)
     scene = make_scene({"blinky": ghost})
-    scene.stats.state = PacManState.SUPER
+    scene.game.state.state = PacManState.SUPER
 
     check_collisions(scene)
 
-    assert scene.stats.scores == 0
-    assert scene.stats.lives == 3
+    assert scene.game.state.scores == 0
+    assert scene.game.state.lives == 3
     assert ghost.behaviour is Behaviour.DEAD
 
 
@@ -98,5 +98,5 @@ def test_overlapping_chase_ghost_does_not_cost_lives_after_death() -> None:
     check_collisions(scene)
     check_collisions(scene)
 
-    assert scene.stats.lives == 2
-    assert scene.stats.state is PacManState.DEAD
+    assert scene.game.state.lives == 2
+    assert scene.game.state.state is PacManState.DEAD
