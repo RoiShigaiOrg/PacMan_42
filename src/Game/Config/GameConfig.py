@@ -15,6 +15,12 @@ class GameConfig(EngineConfig):
     step_level: int
     speed_increase: float
     max_speed: float
+    power_pellet_points: int
+    power_duration: float
+    extra_life_score: float
+    death_recovery_duration: float
+    speed_step_levels: int
+    max_ghost_combo: int
 
 
 class GameConfigLoader(Loader):

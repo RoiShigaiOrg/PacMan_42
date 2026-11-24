@@ -13,6 +13,7 @@ from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Player import Player
 from Game.GameState.ArcadeMode import ArcadeMode
+from game_engine_stub import FakeGameEngine
 
 
 class RoamingGhost(Ghost):
@@ -81,7 +82,7 @@ def test_flea_roaming_keeps_target_until_arrival_then_selects_another(
     class PlayerStub:
         collider = Collider(AABB(Vector2(4.0, 4.0)), Vector2(85.0, 5.0))
 
-    game_state = ArcadeMode()
+    game_state = ArcadeMode(FakeGameEngine())
     game_state.state = PacManState.SUPER
     monkeypatch.setattr(ghost_random, "choice", lambda cells: cells[0])
 
