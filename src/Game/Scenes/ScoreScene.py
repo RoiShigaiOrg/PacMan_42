@@ -5,7 +5,8 @@ from Engine.InputHandler import InputHandler
 from Game.UI.XpmAlphabet import XpmAlphabet
 from Engine.InputHandler.KeyCode import KEY_ESC
 from Engine.FileManager.Loader import ScoreLoader
-from Game.GameState import GameState, GameMode
+from Game.GameState import GameMode
+from Game.GameState.GameStateFactory import GameStateFactory, GAME_STATES
 
 FILE_ALPHABET = "assets/alphabet"
 
@@ -38,7 +39,7 @@ class ScoreScene(Scene):
             self,
             engine: Engine,
             display: MlxDisplay,
-            stats: GameState,
+            game: GameStateFactory,
             can_switch: bool = False) -> None:
         """Init Method of the ScoreScene Class"""
         super().__init__()
@@ -48,14 +49,14 @@ class ScoreScene(Scene):
         self.__rows: list[Row] = []
         self.__next_row: int = 0
         self.__wait: int = 0
-        self.stats = stats
+        self.game = game
         self.__ready: bool = False
         self.__can_switch = can_switch
 
     def render_on_change(self) -> None:
         """ Load the scores and draw the whole leaderboard once """
         self.__ready = False
-        self.__mode = self.stats.game_mode
+        self.__mode = self.game.state.mode
         self.__show()
 
     def update(
@@ -108,7 +109,7 @@ class ScoreScene(Scene):
                                 spacing=4)
         self.__display.render()
         scores = self.__engine.file_manager.load(
-            ScoreLoader(self.stats.SCORE_FILES[self.__mode]))["scores"]
+            ScoreLoader(GAME_STATES[self.__mode].SCORE_FILE))["scores"]
         scores.sort(key=lambda entry: int(entry.get("score", 0)),
                     reverse=True)
         self.__rows = []

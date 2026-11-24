@@ -2,7 +2,7 @@ from Engine import Scene
 from Engine.Engine import Engine
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.InputHandler import InputHandler
-from ..GameState import GameState, PacManState
+from ..GameState import PacManState
 from Engine.InputHandler.KeyCode import (
         KEY_ESC, KEY_C, KEY_B, KEY_X, KEY_H, KEY_R
     )
@@ -24,6 +24,7 @@ from typing import Dict
 from Game.UI.Lives import Lives
 from Game.UI.Score import Score
 from Game.UI.PowerTime import PowerTimer
+from Game.GameState.GameStateFactory import GameStateFactory
 
 
 class MapScene(Scene):
@@ -33,10 +34,10 @@ class MapScene(Scene):
     def __init__(
             self, engine: Engine,
             display: MlxDisplay,
-            stats: GameState) -> None:
+            game: GameStateFactory) -> None:
         super().__init__()
         self.__engine = engine
-        self.stats = stats
+        self.game = game
         self.display = display
         self.map = Map(engine)
         self.display.clear(0xFF000000)
@@ -72,7 +73,7 @@ class MapScene(Scene):
             )
             target_plan = ghost.compute_target(
                 ghost.behaviour_context(
-                    self.__player, self.map, self.stats, self.__ghosts
+                    self.__player, self.map, self.game.state, self.__ghosts
                 )
             )
             self.__ghost_targets[ghost] = (
@@ -120,7 +121,7 @@ class MapScene(Scene):
             )
             target_plan = ghost.compute_target(
                 ghost.behaviour_context(
-                    self.__player, self.map, self.stats, self.__ghosts
+                    self.__player, self.map, self.game.state, self.__ghosts
                 )
             )
             self.__ghost_targets[ghost] = (
@@ -175,10 +176,10 @@ class MapScene(Scene):
 
     def update(self, delta_time: float, input_handler: InputHandler) -> None:
         """ Update method for the MapScene Object """
-        self.stats.time_in_level(delta_time)
-        self.stats.update_death_recovery(delta_time)
-        self.stats.update_power_remaining(delta_time)
-        if self.stats.is_over():
+        self.game.state.time_in_level(delta_time)
+        self.game.state.update_death_recovery(delta_time)
+        self.game.state.update_power_remaining(delta_time)
+        if self.game.state.is_over():
             self.__reset_map()
             self.__engine.scene_manager.change_scene("game_over_scene")
             return
@@ -195,10 +196,10 @@ class MapScene(Scene):
             for ghost in self.__ghosts.values():
                 ghost.change_behaviour(Behaviour.DEAD)
         if input_handler.was_key_pressed(KEY_B):
-            if self.stats.state == PacManState.NORMAL:
-                self.stats.state = PacManState.SUPER
-            elif self.stats.state == PacManState.SUPER:
-                self.stats.state = PacManState.NORMAL
+            if self.game.state.state == PacManState.NORMAL:
+                self.game.state.state = PacManState.SUPER
+            elif self.game.state.state == PacManState.SUPER:
+                self.game.state.state = PacManState.NORMAL
         if input_handler.was_key_pressed(KEY_H):
             self.__engine.scene_manager.change_scene("endlevel_scene")
         if input_handler.was_key_pressed(KEY_ESC):
@@ -206,9 +207,9 @@ class MapScene(Scene):
         self.__update_player(input_handler, delta_time)
         self.__update_ghosts(delta_time)
         self.__check_player_ghost_collision()
-        self.lives.set_lives(self.stats.lives)
-        self.score.set_score(self.stats.scores)
-        self.power_timer.set_time(self.stats.power_remaining)
+        self.lives.set_lives(self.game.state.lives)
+        self.score.set_score(self.game.state.scores)
+        self.power_timer.set_time(self.game.state.power_remaining)
 
     def __update_player(
             self,
@@ -249,7 +250,7 @@ class MapScene(Scene):
             )
             target_plan = ghost.compute_target(
                 ghost.behaviour_context(
-                    self.__player, self.map, self.stats, self.__ghosts
+                    self.__player, self.map, self.game.state, self.__ghosts
                 )
             )
             behaviour_target = (ghost.behaviour, target_plan)
@@ -266,7 +267,7 @@ class MapScene(Scene):
             old_ghost_center = ghost.collider.world_position
             old_visual_state = ghost.visual_state
             ghost.update_movement(
-                self.map, self.__physics, delta_time, self.stats
+                self.map, self.__physics, delta_time, self.game.state
             )
             position_changed = (
                 ghost.collider.world_position != old_ghost_center
@@ -290,9 +291,9 @@ class MapScene(Scene):
         if pellet is None:
             return
         if self.map.is_corner(self.__player.collider.world_position):
-            self.stats.eat_fruit()
+            self.game.state.eat_fruit()
         else:
-            self.stats.eat_pac_dot()
+            self.game.state.eat_pac_dot()
         self.mark_dirty(self.map.cell_region(pellet.coordinate))
 
     def __check_player_ghost_collision(self) -> None:
@@ -304,7 +305,7 @@ class MapScene(Scene):
         for ghost in self.__ghosts.values():
             if ghost.behaviour is Behaviour.DEAD:
                 continue
-            if self.stats.state is PacManState.DEAD:
+            if self.game.state.state is PacManState.DEAD:
                 continue
 
             collision = self.__physics.handle_collision(
@@ -313,11 +314,11 @@ class MapScene(Scene):
             if collision is None:
                 continue
             if ghost.behaviour is Behaviour.FLEAT:
-                self.stats.eat_ghost()
+                self.game.state.eat_ghost()
                 ghost.change_behaviour(Behaviour.DEAD)
             elif ghost.behaviour is Behaviour.CHASE:
                 print("Player lost a life")
-                self.stats.lose_life()
+                self.game.state.lose_life()
                 self.__player.set_to_origin()
                 break
 

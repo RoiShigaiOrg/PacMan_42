@@ -7,11 +7,12 @@ import pytest
 
 from Engine.Graphics.MlxDisplay import MlxDisplay
 from Engine.Physics import AABB, Collider, Vector2
-from Game.GameState import GameState, PacManState
+from Game.GameState import PacManState
 from Game.Ghosts.Ghost import Behaviour, Ghost
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Player import Player
+from Game.GameState.ArcadeMode import ArcadeMode
 
 
 class RoamingGhost(Ghost):
@@ -80,7 +81,7 @@ def test_flea_roaming_keeps_target_until_arrival_then_selects_another(
     class PlayerStub:
         collider = Collider(AABB(Vector2(4.0, 4.0)), Vector2(85.0, 5.0))
 
-    game_state = GameState()
+    game_state = ArcadeMode()
     game_state.state = PacManState.SUPER
     monkeypatch.setattr(ghost_random, "choice", lambda cells: cells[0])
 

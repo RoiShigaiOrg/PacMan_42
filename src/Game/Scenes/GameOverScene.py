@@ -5,8 +5,9 @@ from Engine.InputHandler import InputHandler
 from Game.UI.XpmAlphabet import XpmAlphabet
 from Engine.InputHandler.KeyCode import KEY_ESC
 from Game.UI.InputBar import InputBar
-from Game.GameState import GameState
+from Game.GameState.GameStateFactory import GameStateFactory
 from Engine.FileManager.Loader import ScoreLoader
+from Game.GameState import GameState
 
 FILE_ALPHABET = "assets/alphabet"
 
@@ -25,17 +26,22 @@ class GameOverScene(Scene):
 
     def __init__(
             self, engine: Engine, display: MlxDisplay,
-            stats: GameState) -> None:
+            game: GameStateFactory) -> None:
         """ Init Method of the GameOverScene Class """
         super().__init__()
         self.__engine = engine
         self.__display = display
-        self.__stats = stats
+        self.__game = game
         self.__title_font = XpmAlphabet(FILE_ALPHABET)
         self.__bar = InputBar(
             0.3, 0.1, max_len=LOGIN_MAX_LEN
         )
         self.__file_manager = engine.file_manager
+
+    @property
+    def __stats(self) -> GameState:
+        """ The game in progress """
+        return self.__game.state
 
     def render_on_change(self) -> None:
         """ Draw the static part of the scene once """
@@ -57,7 +63,7 @@ class GameOverScene(Scene):
         login = self.__bar.update(input_handler)
         if login is not None:
             self.__file_manager.store(ScoreLoader(
-                    self.__stats.SCORE_FILES[self.__stats.game_mode],
+                    self.__stats.score_file,
                     score={"login": login,
                            "score": self.__stats.scores,
                            "time": int(self.__stats.play_time)}))

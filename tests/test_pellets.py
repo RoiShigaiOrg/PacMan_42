@@ -8,7 +8,7 @@ from Engine.Animation import Animation, AnimationHandler
 from Engine.Physics import Vector2
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.Sprite import Sprite, SpriteFrame
-from Game.GameState import GameState
+from Game.GameState.GameStateFactory import GameStateFactory
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
@@ -136,11 +136,11 @@ def test_only_corner_pellets_animate_and_other_cells_use_pacgum() -> None:
 
 def test_scene_scores_only_a_pellet_that_was_removed() -> None:
     actual_map = make_map([[True, True, True]] * 3)
-    stats = GameState()
     scene = MapScene.__new__(MapScene)
     Scene.__init__(scene)
     scene.map = actual_map
-    scene.stats = stats
+    scene.game = GameStateFactory()
+    stats = scene.game.state
     scene._MapScene__player = type(
         "PlayerStub",
         (),

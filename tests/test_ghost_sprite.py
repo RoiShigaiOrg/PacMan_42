@@ -3,13 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from Game.GameState.GameStateFactory import GameStateFactory
 
 import pytest
 
 from Engine.Physics import AABB, Collider, PhysicsEngine, Vector2
 from Engine.SceneManager.Scene.Scene import Scene
 from Engine.Sprite import Sprite, SpriteFrame
-from Game.GameState import GameState
 from Game.Ghosts.Blinky import Blinky
 from Game.Ghosts.Clyde import Clyde
 from Game.Ghosts.Ghost import Behaviour, Ghost
@@ -140,7 +140,7 @@ def test_idle_ghost_animation_frame_change_invalidates_its_region() -> None:
     scene = MapScene.__new__(MapScene)
     Scene.__init__(scene)
     scene.map = actual_map
-    scene.stats = GameState()
+    scene.game = GameStateFactory()
     scene._MapScene__player = SimpleNamespace(
         collider=Collider(AABB(Vector2(4, 4)), Vector2(5, 5))
     )
