@@ -110,13 +110,13 @@ class GameState(ABC):
 
     def eat_ghost(self) -> int:
         """ add value of consumed ghost: doubled for each ghost in a row"""
-        base = self.engine.get_config_key("ghost_points")
-        combo = min(self.ghost_combo, self.engine.get_config_key(
-            "max_ghost_combo"))
+        base = int(self.engine.get_config_key("ghost_points"))
+        combo = min(self.ghost_combo, int(self.engine.get_config_key(
+            "max_ghost_combo")))
         points = base * 2 ** combo
         self.ghost_combo += 1
         self.add_point(points)
-        return points
+        return int(points)
 
     def end_power_mode(self) -> None:
         """ state of end power mode"""

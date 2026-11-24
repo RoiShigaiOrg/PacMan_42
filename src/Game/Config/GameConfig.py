@@ -21,6 +21,7 @@ class GameConfig(EngineConfig):
     death_recovery_duration: float
     speed_step_levels: int
     max_ghost_combo: int
+    max_level: int
 
 
 class GameConfigLoader(Loader):

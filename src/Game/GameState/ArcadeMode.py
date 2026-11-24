@@ -3,8 +3,6 @@ from typing import ClassVar
 
 from .GameState import GameMode, GameState
 
-MAX_LEVEL: int = 10
-
 
 class ArcadeMode(GameState):
     """
@@ -22,4 +20,4 @@ class ArcadeMode(GameState):
 
     def has_won(self) -> bool:
         """ Won after the last level """
-        return self.level > MAX_LEVEL
+        return self.level > int(self.engine.get_config_key("max_level"))

@@ -25,5 +25,6 @@
     "extra_life_score": 120.0,
     "death_recovery_duration": 3.0,
     "speed_step_levels": 3,
-    "max_ghost_combo": 3
+    "max_ghost_combo": 3,
+    "max_level": 10
 }
