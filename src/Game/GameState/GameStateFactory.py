@@ -1,6 +1,7 @@
 from .ArcadeMode import ArcadeMode
 from .GameState import GameMode, GameState
 from .InfinityMode import InfinityMode
+from Engine.Engine import Engine
 
 GAME_STATES: dict[GameMode, type[GameState]] = {
     GameMode.NORMAL: ArcadeMode,
@@ -19,15 +20,15 @@ class GameStateFactory:
     """
 
     def __init__(
-            self, lives: int = 3,
+            self, engine: Engine,
             mode: GameMode = GameMode.NORMAL) -> None:
         """ Init Method of the GameStateFactory Class """
-        self.__lives = lives
-        self.__state: GameState = GAME_STATES[mode](lives)
+        self.__engine = engine
+        self.__state: GameState = GAME_STATES[mode](engine)
 
     def start(self, mode: GameMode) -> GameState:
         """ Create a new game of this mode """
-        self.__state = GAME_STATES[mode](self.__lives)
+        self.__state = GAME_STATES[mode](self.__engine)
         return self.__state
 
     @property

@@ -107,4 +107,4 @@ def test_main_scene_activates_selected_panel() -> None:
 
     scene.update(0.0, FakeInput(KEY_ENTER))
 
-    assert engine.scene_manager.changed_scenes == ["game_scene"]
+    assert engine.scene_manager.changed_scenes == ["mode_scene"]

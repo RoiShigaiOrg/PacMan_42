@@ -18,6 +18,7 @@ from Game.Ghosts.Pinky import Pinky
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
+from game_engine_stub import FakeGameEngine
 
 
 class FakeShape:
@@ -140,7 +141,7 @@ def test_idle_ghost_animation_frame_change_invalidates_its_region() -> None:
     scene = MapScene.__new__(MapScene)
     Scene.__init__(scene)
     scene.map = actual_map
-    scene.game = GameStateFactory()
+    scene.game = GameStateFactory(FakeGameEngine())
     scene._MapScene__player = SimpleNamespace(
         collider=Collider(AABB(Vector2(4, 4)), Vector2(5, 5))
     )

@@ -10,6 +10,7 @@ from Game.Ghosts.Pinky import Pinky
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.GameState.ArcadeMode import ArcadeMode
+from game_engine_stub import FakeGameEngine
 
 
 def make_map(walkability: list[list[bool]]) -> Map:
@@ -56,7 +57,7 @@ def make_ghost(
 def make_game_state(
         state: PacManState = PacManState.NORMAL,
 ) -> GameState:
-    game_state = ArcadeMode()
+    game_state = ArcadeMode(FakeGameEngine())
     game_state.state = state
     return game_state
 

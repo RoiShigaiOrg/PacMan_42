@@ -133,7 +133,7 @@ class MainScene(Scene):
 
     def _start_game(self) -> None:
         """ Go the Game Selection Scene. """
-        self.__engine.scene_manager.change_scene("game_scene")
+        self.__engine.scene_manager.change_scene("mode_scene")
 
     def _leaderboard(self) -> None:
         """ Go to the LeaderBoard Scene """

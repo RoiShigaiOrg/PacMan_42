@@ -10,6 +10,7 @@ from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.MapGeneration.MapNode import MapNode
 from Game.GameState.ArcadeMode import ArcadeMode
+from game_engine_stub import FakeGameEngine
 
 
 class FakeShape:
@@ -151,7 +152,7 @@ def test_dead_ghost_waits_then_chases_after_three_seconds() -> None:
     ghost = MovementGhost()
     ghost._origin = (1, 0)
     ghost.change_behaviour(Behaviour.DEAD)
-    game_state = ArcadeMode()
+    game_state = ArcadeMode(FakeGameEngine())
 
     ghost.update_movement(actual_map, PhysicsEngine(), 0.1, game_state)
     home_position = ghost.collider.world_position
@@ -170,7 +171,7 @@ def test_dead_ghost_uses_current_super_state_when_respawning() -> None:
     ghost = MovementGhost()
     ghost._origin = (1, 0)
     ghost.change_behaviour(Behaviour.DEAD)
-    game_state = ArcadeMode()
+    game_state = ArcadeMode(FakeGameEngine())
 
     ghost.update_movement(actual_map, PhysicsEngine(), 0.1, game_state)
     game_state.state = PacManState.SUPER

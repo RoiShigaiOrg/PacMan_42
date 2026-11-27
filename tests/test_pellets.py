@@ -12,6 +12,7 @@ from Game.GameState.GameStateFactory import GameStateFactory
 from Game.MapGeneration.Cell import Cell
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
+from game_engine_stub import FakeGameEngine
 
 
 class RecordingDisplay:
@@ -139,7 +140,7 @@ def test_scene_scores_only_a_pellet_that_was_removed() -> None:
     scene = MapScene.__new__(MapScene)
     Scene.__init__(scene)
     scene.map = actual_map
-    scene.game = GameStateFactory()
+    scene.game = GameStateFactory(FakeGameEngine())
     stats = scene.game.state
     scene._MapScene__player = type(
         "PlayerStub",

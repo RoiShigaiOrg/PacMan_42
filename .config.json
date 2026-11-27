@@ -19,5 +19,12 @@
 	"extra_life": 10000,
 	"step_level": 3,
 	"speed_increase": 0.1,
-	"max_speed": 3.0
+	"max_speed": 3.0,
+    "power_pellet_points": 50,
+    "power_duration": 10.0,
+    "extra_life_score": 120.0,
+    "death_recovery_duration": 3.0,
+    "speed_step_levels": 3,
+    "max_ghost_combo": 3,
+    "max_level": 10
 }

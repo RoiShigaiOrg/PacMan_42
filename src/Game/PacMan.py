@@ -12,6 +12,7 @@ from .Scenes.GameOverScene import GameOverScene
 from .GameState.GameStateFactory import GameStateFactory
 from .Scenes.ScoreScene import ScoreScene
 from .Config import GameConfigLoader
+from Game.Scenes.ModeScene import ModeScene
 
 
 class PacMan(Application):
@@ -25,7 +26,7 @@ class PacMan(Application):
     def __init__(self, config_file: Path) -> None:
         """ Init Method of the PacMan """
         self.engine: Engine = Engine("Pac-Man", GameConfigLoader(config_file))
-        self.game: GameStateFactory = GameStateFactory()
+        self.game: GameStateFactory = GameStateFactory(self.engine)
         self.color: str
         self.dimension: Tuple[int, int] = self.engine.get_config_key(
             "dimension"
@@ -67,7 +68,11 @@ class PacMan(Application):
                 "option_scene": OptionScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                )
+                ),
+                "mode_scene": ModeScene(
+                    self.engine,
+                    self.engine.create_display(self.dimension),
+                    self.game)
             }
         )
 

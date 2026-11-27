@@ -5,6 +5,7 @@ from Game.Ghosts.Ghost import Behaviour, Ghost
 from Game.MapGeneration.MapGeneration import Map
 from Game.Scenes.MapScene import MapScene
 from Game.GameState.GameStateFactory import GameStateFactory
+from game_engine_stub import FakeGameEngine
 
 
 class CollisionGhost(Ghost):
@@ -37,7 +38,7 @@ def make_scene(
         }
     )()
     scene._MapScene__physics = PhysicsEngine()
-    scene.game = GameStateFactory()
+    scene.game = GameStateFactory(FakeGameEngine())
     return scene
 
 
