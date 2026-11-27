@@ -19,7 +19,7 @@ class InputBar(Component):
     def __init__(
             self, width: float, height: float,
             callback: Callable[[str], None] | None = None,
-            max_len: int = 30) -> None:
+            max_len: int = 10) -> None:
         """ Init Method of the InputBar Widget """
         if width <= 0 or height <= 0:
             raise ValueError("InputBar: Invalid dimension values")
@@ -80,6 +80,9 @@ class InputBar(Component):
             self.inputed_text = ""
             return None
         for code in range(0x20, 0x7F):
+            char = chr(code)
+            if not (char.isalnum() or char == " "):
+                continue
             if (input_handler.was_key_pressed(code)
                     and len(self.inputed_text) < self.max_len):
                 self.inputed_text += chr(code)

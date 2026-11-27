@@ -12,8 +12,23 @@
         },
         {
             "login": "leo",
+            "score": 3170,
+            "time": 177
+        },
+        {
+            "login": "leo",
             "score": 300,
             "time": 16
+        },
+        {
+            "login": "leo 42",
+            "score": 230,
+            "time": 17
+        },
+        {
+            "login": "leo",
+            "score": 210,
+            "time": 34
         },
         {
             "login": "leo",

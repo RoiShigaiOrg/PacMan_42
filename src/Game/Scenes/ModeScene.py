@@ -27,7 +27,7 @@ TEXT_HEIGHT: int = 20
 
 
 MODE_TEXTS: dict[GameMode, tuple[str, str]] = {
-    GameMode.NORMAL: ("Arcade", "Clear every level to win"),
+    GameMode.ARCADE: ("Arcade", "Clear every level to win"),
     GameMode.INFINITE: ("Infinity", "Endless levels, survive"),
 }
 

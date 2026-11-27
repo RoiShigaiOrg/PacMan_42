@@ -1,7 +1,7 @@
 from .Loader import Loader
 from pathlib import Path
 from typing import Any, cast
-import json
+from Engine.FileManager.JsonHandler import JsonHandler
 
 
 class ScoreLoader(Loader):
@@ -23,9 +23,8 @@ class ScoreLoader(Loader):
     def load(self) -> dict:
         """ Load method for the ScoreLoader """
         try:
-            with open(self.__file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except (OSError, json.JSONDecodeError):
+            data = JsonHandler.load(self.__file)
+        except (OSError):
             data = {"scores": []}
         if isinstance(data, list):
             data = {"scores": data}
@@ -48,5 +47,4 @@ class ScoreLoader(Loader):
     def __write(self, data: dict[str, Any]) -> None:
         """ Save the leaderboard in the JSON file """
         self.__file.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.__file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+        JsonHandler.dump(data, self.__file)

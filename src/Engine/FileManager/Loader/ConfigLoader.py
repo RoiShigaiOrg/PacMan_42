@@ -2,7 +2,7 @@ from .Loader import Loader
 from pathlib import Path
 from typing import List, Dict, cast
 from pydantic import BaseModel
-import json
+from Engine.FileManager.JsonHandler import JsonHandler
 
 
 class EngineConfig(BaseModel):
@@ -35,8 +35,7 @@ class ConfigLoader(Loader):
 
     def load(self) -> EngineConfig:
         """ Load the config from the JSON config file """
-        with open(self.__file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = JsonHandler.load(self.__file)
         return cast(EngineConfig, EngineConfig.model_validate(data))
 
     def store(self) -> None:

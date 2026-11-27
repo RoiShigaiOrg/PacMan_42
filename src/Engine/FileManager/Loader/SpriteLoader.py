@@ -1,4 +1,4 @@
-import json
+from Engine.FileManager.JsonHandler import JsonHandler
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -56,8 +56,7 @@ class SpriteLoader(Loader):
         """
         if self.__json is None:
             raise RuntimeError("No metadata JSON file was provided")
-        with self.__json.open("r", encoding="utf-8") as metadata_file:
-            data = json.load(metadata_file)
+        data = JsonHandler.load(self.__json)
         return cast(AsepriteMetadata, AsepriteMetadata.model_validate(data))
 
     def __extract_pixel(self) -> list[list[int]]:

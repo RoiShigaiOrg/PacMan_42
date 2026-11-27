@@ -16,7 +16,7 @@ class ArcadeMode(GameState):
     @property
     def mode(self) -> GameMode:
         """ This class is the NORMAL mode """
-        return GameMode.NORMAL
+        return GameMode.ARCADE
 
     def has_won(self) -> bool:
         """ Won after the last level """

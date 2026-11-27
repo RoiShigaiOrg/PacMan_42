@@ -46,7 +46,8 @@ class PacMan(Application):
                 "game_over_scene": GameOverScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.game
+                    self.game,
+                    "game  over"
                 ),
                 "score_scene": ScoreScene(
                     self.engine,
@@ -72,8 +73,16 @@ class PacMan(Application):
                 "mode_scene": ModeScene(
                     self.engine,
                     self.engine.create_display(self.dimension),
-                    self.game)
+                    self.game
+                ),
+                "victory_scene": GameOverScene(
+                    self.engine,
+                    self.engine.create_display(self.dimension),
+                    self.game,
+                    "victory"
+                )
             }
+
         )
 
     def update(

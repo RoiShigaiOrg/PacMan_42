@@ -66,7 +66,7 @@ class EndLevel(Scene):
         if input_handler.was_key_pressed(KEY_ENTER):
             self.game.state.next_level()
             if self.game.state.has_won():
-                self.__engine.scene_manager.change_scene("game_over_scene")
+                self.__engine.scene_manager.change_scene("victory_scene")
             else:
                 self.__engine.scene_manager.change_scene("game_scene")
             return
