@@ -1,7 +1,7 @@
 from Engine.FileManager.Loader import EngineConfig, Loader
 from pathlib import Path
 from typing import cast
-import json
+from Engine.FileManager.JsonHandler import JsonHandler
 
 
 class GameConfig(EngineConfig):
@@ -41,8 +41,7 @@ class GameConfigLoader(Loader):
 
     def load(self) -> GameConfig:
         """ load Method for the GameConfigLoader """
-        with open(self.__file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = JsonHandler.load(self.__file)
         return cast(GameConfig, GameConfig.model_validate(data))
 
     def store(self) -> None:

@@ -14,7 +14,7 @@ class PacManState(Enum):
 class GameMode(Enum):
     """How the game is played."""
 
-    NORMAL = "normal"
+    ARCADE = "arcade"
     INFINITE = "infinite"
 
 

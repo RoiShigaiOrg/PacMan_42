@@ -26,13 +26,14 @@ class GameOverScene(Scene):
 
     def __init__(
             self, engine: Engine, display: MlxDisplay,
-            game: GameStateFactory) -> None:
+            game: GameStateFactory, title: str) -> None:
         """ Init Method of the GameOverScene Class """
         super().__init__()
         self.__engine = engine
         self.__display = display
         self.__game = game
         self.__title_font = XpmAlphabet(FILE_ALPHABET)
+        self.__title = title
         self.__bar = InputBar(
             0.3, 0.1, max_len=LOGIN_MAX_LEN
         )
@@ -48,12 +49,11 @@ class GameOverScene(Scene):
         self.__bar.reset()
         self.__display.clear_window()
         self.__display.clear(BLACK)
-        title = "game  over"
-        width = self.__title_font.length_texte(title, spacing=4)
+        width = self.__title_font.length_texte(self.__title, spacing=4)
         self.__title_font.write(self.__display,
                                 (self.__display.width - width) // 2,
                                 self.__display.relative_height(0.1),
-                                title,
+                                self.__title,
                                 spacing=4)
 
     def update(
